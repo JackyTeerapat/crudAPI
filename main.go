@@ -4,57 +4,73 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
+type User struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}
+
+var users = []User{
+	{ID: "1", Username: "champInwZa007", Role: "Admin"},
+}
+
+var dsn = "postgres://navjsbdt:CXbvdzgydzdeZKUi_WYzMxzxAjJqnYbF@satao.db.elephantsql.com/navjsbdt"
+var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
 func main() {
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.AutoMigrate(&users)
 	r := gin.New()
 
-	r.GET("/books", listBooksHandler)
-	r.POST("/books", createBookHandler)
-	r.DELETE("/books/:id", deleteBookHandler)
+	r.GET("/user", listUser)
+	r.POST("/user", createUserHandler)
+	r.DELETE("/user/:id", deleteUserHandler)
 
 	r.Run()
 }
 
-type Book struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
+func listUser(c *gin.Context) {
+	r := db.Find(&users)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, users)
 }
 
-var books = []Book{
-	{ID: "1", Username: "Professional1"},
-	{ID: "2", Username: "Professional2"},
-	{ID: "3", Username: "Professional3"},
-}
+func createUserHandler(c *gin.Context) {
+	var user User
 
-func listBooksHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, books)
-}
-
-func createBookHandler(c *gin.Context) {
-	var book Book
-
-	if err := c.ShouldBindJSON(&book); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	books = append(books, book)
-
-	c.JSON(http.StatusCreated, book)
+	//รับมาแล้วสร้างเป็น ข้อมูล ลง Table
+	r := db.Create(&user)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, user)
 }
 
-func deleteBookHandler(c *gin.Context) {
+func deleteUserHandler(c *gin.Context) {
 	id := c.Param("id")
 
-	for i, a := range books {
-		if a.ID == id {
-			books = append(books[:i], books[i+1:]...)
-			break
-		}
+	//รับมาแล้วสร้างเป็น ข้อมูล ลง Tables
+	r := db.Delete(&User{}, id)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.Status(http.StatusNoContent)
 }
