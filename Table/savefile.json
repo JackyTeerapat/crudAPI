@@ -1,10 +1,10 @@
 {
-    "เจ้าของไฟล์ id":"1",
-    "ตัวไฟล์":
+    "file_ownerid":"1",
+    "file":
     {
-        "ประวัติ":"path",
-        "คำสั่งแต่งตั้งผู้ทรงคุณวุฒิ":"path",
-        "แนบสำเนาบัญชี":"path",
-        "แนบสำเนาบัตรประชาชน":"path"
+        "history":"path",
+        "qualifield_person":"path",
+        "account_copy":"path",
+        "idcard_copy":"path"
     }
 }

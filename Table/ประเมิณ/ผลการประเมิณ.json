@@ -1,9 +1,9 @@
 {
-    "งบประเมิณเริ่มต้น":"12/3/2555",
-    "งบประเมิณสินสุด":"13/3/2555",
-    "profileId":5,
-    "ข้อเสนองานวิจัยid":5,
-    "รายงานความก้าวหน้างานวิจัยid":2,
-    "รายงานการวิจัยid":1,
-    "บทความวิจัย":2
+    "intitial_budget":"12/3/2555",
+    "final_budget":"13/3/2555",
+    "profile_Id":5,
+    "research_proposal":5,
+    "research_progress":2,
+    "research_report":1,
+    "research_article":2
 }

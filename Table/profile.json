@@ -1,48 +1,48 @@
 {   
     "profileID":"1",
-    "ชื่อ-สกุล": "นางสาวหยก หย๊กหยก",
-    "ตำแหน่งทางวิชาการ": "ศาสตราจารย์เกียรติคุณ",
-    "วุฒิการศึกษา": [
+    "name_surname": "นางสาวหยก หย๊กหยก",
+    "academic_position": "ศาสตราจารย์เกียรติคุณ",
+    "education_background": [
       {
-        "ระดับ": "ปริญญาเอก",
-        "สาขา": "GodReact3",
-        "มหาวิทยาลัย": "มหาวิทยาลัยreact"
+        "level": "ปริญญาเอก",
+        "branch": "GodReact3",
+        "university": "มหาวิทยาลัยreact"
       },
       {
-        "ระดับ": "ปริญญาโท",
-        "สาขา": "GodReact2",
-        "มหาวิทยาลัย": "มหาวิทยาลัยreact"
+        "level": "ปริญญาโท",
+        "branch": "GodReact2",
+        "university": "มหาวิทยาลัยreact"
       },
       {
-        "ระดับ": "ปริญญาตรี",
-        "สาขา": "GodReact",
-        "มหาวิทยาลัย": "มหาวิทยาลัยreact"
+        "level": "ปริญญาตรี",
+        "branch": "GodReact",
+        "university": "มหาวิทยาลัยreact"
       }
     ],
-    "สังกัดมหาวิทยาลัย": "มหาวิทยาลัยreact",
-    "ที่อยู่":[{
+    "university affiliation": "มหาวิทยาลัยreact",
+    "address":[{
         
-        "ที่อยู่ที่สามารถติดต่อได้ (ที่บ้าน)": {
-        "ที่อยู่": "",
-        "จังหวัด": "",
-        "รหัสไปรษณีย์": "",
-        "เบอร์ติดต่อ": "",
-        "E-mail address": ""
+        "contact_address": {
+        "address": "",
+        "province": "",
+        "zip_code": "",
+        "contact_number": "",
+        "email_address": ""
         },
-        "ที่อยู่ที่สามารถติดต่อได้ (ที่ทำงาน)": {
-        "ที่อยู่": "",
-        "จังหวัด": "",
-        "รหัสไปรษณีย์": "",
-        "เบอร์ติดต่อ": "",
-        "E-mail address": ""
+        "contact_address": {
+        "address": "",
+        "province": "",
+        "zip_code": "",
+        "contact_number": "",
+        "email_address": ""
         }
     }],
-    "สาขาวิชาที่เชี่ยวชาญ": [
+    "major_expert": [
         "React",
         "CSS"
       ],
    
-    "ผลงานวิจัยที่ตีพิมพ์":[{
-          "รายละเอียด":"gg"
+    "[publish_research]":[{
+          "detail":"gg"
     }]
 }
