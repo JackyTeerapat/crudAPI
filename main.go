@@ -31,6 +31,7 @@ func main() {
 	r.GET("/user", listUser)
 	r.POST("/user", createUserHandler)
 	r.DELETE("/user/:id", deleteUserHandler)
+	r.PUT("/user/:id", updateUserHandler)
 
 	r.Run()
 }
@@ -73,4 +74,34 @@ func deleteUserHandler(c *gin.Context) {
 		return
 	}
 
+}
+
+func updateUserHandler(c *gin.Context) {
+	id := c.Param("id")
+	var updatedUser User
+
+	if err := c.ShouldBindJSON(&updatedUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var user User
+	r := db.First(&user, "id = ?", id)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// อัพเดท User
+	user.Username = updatedUser.Username
+	user.Role = updatedUser.Role
+	r = db.Save(&user)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
