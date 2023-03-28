@@ -3,7 +3,7 @@ GET http://localhost:8080/profile
 
 ###
 
-GET http://localhost:8080/profile/3
+GET http://localhost:8080/profile/2
 
 ###
 
@@ -14,7 +14,7 @@ Content-Type: application/json
 {
    "first_name": "JACKKENG",
     "last_name": "JACKKENG",
-    "position_id": 1,
+    "position_id": 2,
     "university":"5",
     "address_home":"NEWYORK",
     "address_work":"WORLD",

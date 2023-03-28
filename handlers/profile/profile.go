@@ -20,13 +20,15 @@ func NewProfileHandler(db *gorm.DB) *ProfileHandler {
 func (u *ProfileHandler) ListProfile(c *gin.Context) {
 	var profiles []models.Profile
 
-	r := u.db.Table("profile").Find(&profiles)
+	r := u.db.Table("profile").Preload("Position").Find(&profiles)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, profiles)
 }
+
 func (u *ProfileHandler) GetProfileHandler(c *gin.Context) {
 	var profile models.Profile
 	id := c.Param("id")
@@ -65,7 +67,7 @@ func (u *ProfileHandler) DeleteProfileHandler(c *gin.Context) {
 
 	if id == "all" {
 		// ลบข้อมูลทั้งหมดในตาราง profiles
-		if err := u.db.Exec("TRUNCATE TABLE profile RESTART IDENTITY CASCADE").Error; err != nil {		
+		if err := u.db.Exec("TRUNCATE TABLE profile RESTART IDENTITY CASCADE").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -116,4 +118,3 @@ func (u *ProfileHandler) UpdateProfileHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"Status": "Success"})
 }
-
