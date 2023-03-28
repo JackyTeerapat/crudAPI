@@ -1,0 +1,36 @@
+
+GET http://localhost:8080/position
+
+###
+
+GET http://localhost:8080/position/1
+
+###
+
+POST http://localhost:8080/position
+Content-Type: application/json
+
+{
+    "position": "นางสาว",
+    "created_by": "Champlnwza007",
+    "updated_by": "Champlnwza007"
+}
+
+
+
+###
+PUT http://localhost:8080/position/2
+Content-Type: application/json
+
+{
+  "positionname": "Jacky",
+  "role": "position"
+}
+###
+DELETE http://localhost:8080/position/18
+###
+DELETE http://localhost:8080/position/all
+
+
+
+# 
