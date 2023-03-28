@@ -1,6 +1,7 @@
 package main
 
 import (
+	"CRUD-API/handlers/minioclient"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/user"
 
@@ -35,6 +36,11 @@ func main() {
 	r.POST("/position", positionHandler.CreatePositionHandler)
 	r.PUT("/position/:id", positionHandler.UpdatePositionHandler)
 	r.DELETE("/position/:id", positionHandler.DeletePositionHandler)
+
+	//minio upload
+	minioClient := minioclient.MinioClientConnect()
+	r.POST("/minio", minioClient.UploadFile)
+	r.GET("/minio/:filename", minioClient.GetFile)
 
 	r.Run()
 }
