@@ -71,3 +71,42 @@ func (u *UserHandler) DeleteUserHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusAccepted, gin.H{"Status": "Success"})
 }
+
+
+
+func (u *UserHandler) UpdateUserHandler(c *gin.Context) {
+	id := c.Param("id")
+
+	// ตรวจสอบว่ามี id นั้นจริงมั้ย
+	var user models.User
+	r := u.db.Table("users").Where("id = ?", id).First(&user)
+	if r.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var newUser models.User
+	if err := c.ShouldBindJSON(&newUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// อัพเดท user
+
+	user.ID = newUser.ID
+	user.ID = newUser.ID
+	user.ID = newUser.ID
+	r = u.db.Save(&user)
+	if err := r.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"Status": "Success"})
+}
