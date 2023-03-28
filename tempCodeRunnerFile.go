@@ -1,1 +1,0 @@
-	r := db.Create(&users)

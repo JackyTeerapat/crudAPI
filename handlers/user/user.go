@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
 
 	"CRUD-API/models"
@@ -63,46 +64,52 @@ func (u *UserHandler) CreateUserHandler(c *gin.Context) {
 func (u *UserHandler) DeleteUserHandler(c *gin.Context) {
 	id := c.Param("id")
 
-	//รับมาแล้วสร้างเป็น ข้อมูล ลง Tables
+	if id == "all" {
+		// ลบข้อมูลทั้งหมดในตาราง Users
+		if err := u.db.Exec("TRUNCATE TABLE users CASCADE").Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// ตั้งค่า auto increment primary key เป็น 1
+		if err := u.db.Exec("ALTER SEQUENCE users_id_seq RESTART WITH 1").Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "All user data have been deleted."})
+		return
+	}
+
+	// ลบข้อมูล User ตาม id ที่ระบุ
 	r := u.db.Delete(&models.User{}, id)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusAccepted, gin.H{"Status": "Success"})
+
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("User with id %s has been deleted.", id)})
 }
 
-
-
 func (u *UserHandler) UpdateUserHandler(c *gin.Context) {
+	var user models.User
 	id := c.Param("id")
 
-	// ตรวจสอบว่ามี id นั้นจริงมั้ย
-	var user models.User
+	//ตรวจสอบว่ามี User นี้อยู่หรือไม่
 	r := u.db.Table("users").Where("id = ?", id).First(&user)
 	if r.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	if err := r.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+	//แปลงข้อมูลที่ส่งเข้ามาเป็น JSON
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var newUser models.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	// อัพเดท user
-
-	user.ID = newUser.ID
-	user.ID = newUser.ID
-	user.ID = newUser.ID
-	r = u.db.Save(&user)
+	//อัปเดตข้อมูล User ด้วย ID ที่กำหนด
+	r = u.db.Table("users").Where("id = ?", id).Updates(&user)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
