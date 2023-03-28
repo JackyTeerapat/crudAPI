@@ -1,11 +1,10 @@
 package main
 
 import (
-	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/position"
-	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/user"
-	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/degree"
+	"CRUD-API/handlers/profile"
 	// . "CRUD-API/models"
 
 	"github.com/gin-gonic/gin"
@@ -54,13 +53,6 @@ func main() {
 	r.PUT("/profile/:id", profileHandler.UpdateProfileHandler)
 	r.DELETE("/profile/:id", profileHandler.DeleteProfileHandler)
 
-	//Program Zones
-	programHandler := program.NewProgramHandler(db)
-	r.GET("program/", programHandler.ListProgram)
-	r.GET("/program/:id", programHandler.GetProgramHandler)
-	r.POST("/program", programHandler.CreateProgramHandler)
-	r.PUT("/program/:id", programHandler.UpdateProgramHandler)
-	r.DELETE("/program/:id", programHandler.DeleteProgramHandler)
 
 	r.Run()
 }
