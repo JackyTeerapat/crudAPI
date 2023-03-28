@@ -1,0 +1,40 @@
+
+GET http://localhost:8080/program
+
+###
+
+GET http://localhost:8080/program/3
+
+###
+
+POST http://localhost:8080/program
+Content-Type: application/json
+
+	
+{
+    "Program_name": "TOSLOW",
+    "Profile_id"  : 2,
+    "created_by": "Champlnwza008",
+    "updated_by": "Champlnwza008"
+}
+
+
+
+###
+PUT http://localhost:8080/program/2
+Content-Type: application/json
+
+
+{ "Program_name": "TOSLOW",
+    "Profile_id"  : 3,
+    "created_by": "Champlnwza009",
+    "updated_by": "Champlnwza009"
+}
+###
+DELETE http://localhost:8080/program/1
+###
+DELETE http://localhost:8080/program/all
+
+
+
+# 
