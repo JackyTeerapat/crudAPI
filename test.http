@@ -7,10 +7,10 @@ POST http://localhost:8080/user
 Content-Type: application/json
 
 {
-    "id": "3",
-    "username": "GG33",
-    "role": "Admi2n"
-  },
+    "id": "2",
+    "username": "GG322",
+    "role": "Admin"
+},
 
 ###
 
