@@ -3,7 +3,7 @@ GET http://localhost:8080/position
 
 ###
 
-GET http://localhost:8080/position/13
+GET http://localhost:8080/position/1
 
 ###
 

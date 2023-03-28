@@ -7,6 +7,7 @@ type Profile struct {
 	First_name   string    `json:"first_name"`
 	Last_name    string    `json:"last_name"`
 	Position_id  int       `json:"position_id"`
+	Position     Position  `json:"position" gorm:"foreignkey:Position_id"`
 	University   string    `json:"university"`
 	Address_home string    `json:"address_home"`
 	Address_work string    `json:"address_work"`
