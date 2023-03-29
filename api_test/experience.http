@@ -1,0 +1,49 @@
+
+GET http://localhost:8080/experience
+
+###
+
+GET http://localhost:8080/experience/3
+
+###
+
+POST http://localhost:8080/experience
+Content-Type: application/json
+
+	
+{
+    "experience_type":"TESTEX",
+    "experience_start":"TEST",
+    "experience_end":"TEST",
+    "experience_university":"TEST",
+    "experience_remark":"TEST",
+    "profile_id": 1,
+    "created_by": "Champlnwza008",
+    "updated_by": "Champlnwza008"
+}
+
+
+
+###
+PUT http://localhost:8080/experience/2
+Content-Type: application/json
+
+{ 
+    "experience_type":"TEST",
+    "experience_start":"TESTTTT",
+    "experience_end":"TEST",
+    "experience_university":"TEST",
+    "experience_remark":"TEST",
+    "profile_id": 1,
+    "created_by": "Champlnwza008",
+    "updated_by": "Champlnwza008"
+}
+
+###
+DELETE http://localhost:8080/experience/1
+###
+DELETE http://localhost:8080/experience/all
+
+
+
+# 

@@ -1,0 +1,44 @@
+
+GET http://localhost:8080/exploration
+
+###
+
+GET http://localhost:8080/exploration/3
+
+###
+
+POST http://localhost:8080/exploration
+Content-Type: application/json
+
+	
+{
+    "explore_name":"TEST",
+    "explore_year":"TEST",
+    "explore_detail":"TEST",
+    "profile_id": 1,
+    "created_by": "Champlnwza008",
+    "updated_by": "Champlnwza008"
+}
+
+
+
+###
+PUT http://localhost:8080/exploration/1
+Content-Type: application/json
+
+{ 
+  "explore_name":"TEST1",
+    "explore_year":"TEST",
+    "explore_detail":"TEST",
+    "profile_id": 1,
+    "created_by": "Champlnwza008",
+    "updated_by": "Champlnwza008"
+}
+
+###
+DELETE http://localhost:8080/exploration/1
+###
+DELETE http://localhost:8080/exploration/all
+
+
+
