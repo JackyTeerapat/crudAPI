@@ -1,4 +1,4 @@
-package article
+package assessment_article
 
 import (
 	"fmt"

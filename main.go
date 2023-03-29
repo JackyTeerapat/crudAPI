@@ -1,7 +1,7 @@
 package main
 
 import (
-	"CRUD-API/handlers/article"
+	"CRUD-API/handlers/assessment_article"
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_report"
 	"CRUD-API/handlers/degree"
@@ -94,7 +94,7 @@ func main() {
 	r.DELETE("/profile_attach/:id", profile_attachHandler.DeleteProfile_attachHandler)
 
 	//Article Zones
-	articleHandler := article.NewArticleHandler(db)
+	articleHandler := assessment_article.NewArticleHandler(db)
 	r.GET("/article/", articleHandler.ListArticle)
 	r.GET("/article/:id", articleHandler.GetArticleHandler)
 	r.POST("/article", articleHandler.CreateArticleHandler)
