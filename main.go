@@ -6,12 +6,13 @@ import (
 	"CRUD-API/handlers/exploration"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
+	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
 	"CRUD-API/handlers/user"
-	"CRUD-API/handlers/profile_attach"
 
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_report"
+
 	// . "CRUD-API/models"
 
 	"github.com/gin-gonic/gin"
@@ -88,9 +89,9 @@ func main() {
 	profile_attachHandler := profile_attach.NewProfile_attachHandler(db)
 	r.GET("profile_attach/", profile_attachHandler.ListProfile_attach)
 	r.GET("/profile_attach/:id", profile_attachHandler.GetProfile_attachHandler)
-	r.POST("/profile_attach",profile_attachHandler.CreateProfile_attachHandler)
-	r.PUT("/profile_attach/:id",profile_attachHandler.UpdateProfile_attachHandler)
-	r.DELETE("/profile_attach/:id",profile_attachHandler.DeleteProfile_attachHandler)
+	r.POST("/profile_attach", profile_attachHandler.CreateProfile_attachHandler)
+	r.PUT("/profile_attach/:id", profile_attachHandler.UpdateProfile_attachHandler)
+	r.DELETE("/profile_attach/:id", profile_attachHandler.DeleteProfile_attachHandler)
 
 	//AssessmentProgress Zones
 	progressHandler := assessment_progress.NewProgressHandler(db)
@@ -102,13 +103,11 @@ func main() {
 
 	//AssessmentReport Zones
 	reportHandler := assessment_report.NewReportHandler(db)
-	r.GET("progress/", reportHandler.ListReport)
-	r.GET("/progress/:id", reportHandler.GetReportHandler)
-	r.POST("/progress", reportHandler.CreateReportHandler)
-	r.PUT("/progress/:id", reportHandler.UpdateReportHandler)
-	r.DELETE("/progress/:id", reportHandler.DeleteReportHandler)
-
-
+	r.GET("report/", reportHandler.ListReport)
+	r.GET("/report/:id", reportHandler.GetReportHandler)
+	r.POST("/report", reportHandler.CreateReportHandler)
+	r.PUT("/report/:id", reportHandler.UpdateReportHandler)
+	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
 
 	r.Run()
 }
