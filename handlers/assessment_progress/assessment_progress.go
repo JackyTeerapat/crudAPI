@@ -71,7 +71,7 @@ func (u *ProgressHandler) DeleteProgressHandler(c *gin.Context) {
 		}
 
 		// ตั้งค่า auto increment primary key เป็น 1
-		if err := u.db.Exec("ALTER SEQUENCE assessment_progress RESTART WITH 1").Error; err != nil {
+		if err := u.db.Exec("ALTER TABLE profile ALTER COLUMN id SET DEFAULT nextval('assessment_progress_id_seq'::regclass)").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
