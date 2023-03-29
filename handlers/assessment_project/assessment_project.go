@@ -71,12 +71,12 @@ func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context
 		}
 
 		// ตั้งค่า auto increment primary key เป็น 1
-		if err := u.db.Exec("ALTER SEQUENCE assessment_project RESTART WITH 1").Error; err != nil {
+		if err := u.db.Exec("ALTER TABLE assessment_project ALTER COLUMN id SET DEFAULT nextval('assessment_project_id_seq'::regclass)").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "All assessment project data have been deleted."})
+		c.JSON(http.StatusOK, gin.H{"message": "All project data have been deleted."})
 		return
 	}
 
@@ -87,7 +87,7 @@ func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("assessment project with id %s has been deleted.", id)})
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("project with id %s has been deleted.", id)})
 }
 
 func (u *AssessmentProjectHandler) UpdateAssessmentProjectHandler(c *gin.Context) {
@@ -97,7 +97,7 @@ func (u *AssessmentProjectHandler) UpdateAssessmentProjectHandler(c *gin.Context
 	//ตรวจสอบว่ามี degree นี้อยู่หรือไม่
 	r := u.db.Table("assessment_project").Where("id = ?", id).First(&assessmentProject)
 	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "assessment project not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
 		return
 	}
 

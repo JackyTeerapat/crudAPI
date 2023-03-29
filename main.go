@@ -3,12 +3,11 @@ package main
 import (
 	"CRUD-API/handlers/assessment_article"
 	"CRUD-API/handlers/assessment_progress"
+	"CRUD-API/handlers/assessment_project"
 	"CRUD-API/handlers/assessment_report"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
-	"CRUD-API/handlers/assessment_project"
-	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
@@ -119,12 +118,12 @@ func main() {
 	r.PUT("/report/:id", reportHandler.UpdateReportHandler)
 	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
 	//Assessment Project Zones
-	assessmentProjectHandler := assessment_project.NewAssessmentProjectHandler(db)
-	r.GET("/project", assessmentProjectHandler.ListAssessmentProjects)
-	r.GET("/project/:id", assessmentProjectHandler.GetAssessmentProjectHandler)
-	r.POST("/project", assessmentProjectHandler.CreateAssessmentProjectHandler)
-	r.PUT("/project/:id", assessmentProjectHandler.UpdateAssessmentProjectHandler)
-	r.DELETE("/project/:id", assessmentProjectHandler.DeleteAssessmentProjectHandler)
+	projectHandler := assessment_project.NewAssessmentProjectHandler(db)
+	r.GET("/project", projectHandler.ListAssessmentProjects)
+	r.GET("/project/:id", projectHandler.GetAssessmentProjectHandler)
+	r.POST("/project", projectHandler.CreateAssessmentProjectHandler)
+	r.PUT("/project/:id", projectHandler.UpdateAssessmentProjectHandler)
+	r.DELETE("/project/:id", projectHandler.DeleteAssessmentProjectHandler)
 
 	r.Run()
 }
