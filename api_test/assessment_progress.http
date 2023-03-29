@@ -1,0 +1,125 @@
+
+GET http://localhost:8080/progress
+
+###
+
+GET http://localhost:8080/progress/2
+
+###
+
+POST http://localhost:8080/progress
+Content-Type: application/json
+
+	
+{
+    "progress_year": "2213",
+    "progress_title": "GGEZ",
+    "progress_estimate": true,
+    "estimate_remark": "GOOD",
+    "progress_recommend": true,
+    "recommend_remark": "EEEE",
+    "file_name": "YO",
+    "file_storage": "DLDK",
+    "period": true,
+    "created_by": "fff",
+    "updated_by": "dddd",
+    "created_at": "2023-03-27T17:01:36.046396Z",
+    "updated_at": "2023-03-27T17:01:36.046396Z"
+
+}
+
+
+
+###
+PUT http://localhost:8080/progress/7
+Content-Type: application/json
+
+{
+    "progress_year": "1999",
+    "progress_title": "GGEZ",
+    "progress_estimate": true,
+    "estimate_remark": "GOOD",
+    "progress_recommend": true,
+    "recommend_remark": "EEEE",
+    "file_name": "YO",
+    "file_storage": "DLDK",
+    "period": true,
+    "created_by": "fff",
+    "updated_by": "dddd",
+    "created_at": "2023-03-27T17:01:36.046396Z",
+    "updated_at": "2023-03-27T17:01:36.046396Z"
+
+}
+###
+DELETE http://localhost:8080/progress/7
+###
+DELETE http://localhost:8080/progress/all
+
+
+
+[
+    {
+        "id": 2,
+        "report_year": "2222",
+        "report_title": "FFFF",
+        "report_estimate": true,
+        "estimate_remark": "GOOD",
+        "report_recommend": true,
+        "recommend_remark": "EEEE",
+        "file_name": "YO",
+        "file_storage": "DLDK",
+        "period": true,
+        "created_by": "fff",
+        "updated_by": "dddd",
+        "created_at": "2023-03-27T17:01:36.046396Z",
+        "updated_at": "2023-03-27T17:01:36.046396Z"
+    },
+    {
+        "id": 3,
+        "report_year": "1233",
+        "report_title": "FFFF",
+        "report_estimate": true,
+        "estimate_remark": "GOOD",
+        "report_recommend": true,
+        "recommend_remark": "EEEE",
+        "file_name": "YO",
+        "file_storage": "DLDK",
+        "period": true,
+        "created_by": "fff",
+        "updated_by": "dddd",
+        "created_at": "2023-03-27T17:01:36.046396Z",
+        "updated_at": "2023-03-27T17:01:36.046396Z"
+    },
+    {
+        "id": 4,
+        "report_year": "4444",
+        "report_title": "FFFF",
+        "report_estimate": true,
+        "estimate_remark": "GOOD",
+        "report_recommend": true,
+        "recommend_remark": "EEEE",
+        "file_name": "YO",
+        "file_storage": "DLDK",
+        "period": true,
+        "created_by": "fff",
+        "updated_by": "dddd",
+        "created_at": "2023-03-27T17:01:36.046396Z",
+        "updated_at": "2023-03-27T17:01:36.046396Z"
+    },
+    {
+        "id": 5,
+        "report_year": "2342",
+        "report_title": "FFFF",
+        "report_estimate": true,
+        "estimate_remark": "GOOD",
+        "report_recommend": true,
+        "recommend_remark": "EEEE",
+        "file_name": "YO",
+        "file_storage": "DLDK",
+        "period": true,
+        "created_by": "fff",
+        "updated_by": "dddd",
+        "created_at": "2023-03-27T17:01:36.046396Z",
+        "updated_at": "2023-03-27T17:01:36.046396Z"
+    }
+]

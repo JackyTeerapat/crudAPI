@@ -2,6 +2,8 @@ package main
 
 import (
 	"CRUD-API/handlers/article"
+	"CRUD-API/handlers/assessment_progress"
+	"CRUD-API/handlers/assessment_report"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
@@ -98,6 +100,22 @@ func main() {
 	r.POST("/article", articleHandler.CreateArticleHandler)
 	r.PUT("/article/:id", articleHandler.UpdateArticleHandler)
 	r.DELETE("/article/:id", articleHandler.DeleteArticleHandler)
+
+	//AssessmentProgress Zones
+	progressHandler := assessment_progress.NewProgressHandler(db)
+	r.GET("progress/", progressHandler.ListProgress)
+	r.GET("/progress/:id", progressHandler.GetProgressHandler)
+	r.POST("/progress", progressHandler.CreateProgressHandler)
+	r.PUT("/progress/:id", progressHandler.UpdateProgressHandler)
+	r.DELETE("/progress/:id", progressHandler.DeleteProgressHandler)
+
+	//AssessmentReport Zones
+	reportHandler := assessment_report.NewReportHandler(db)
+	r.GET("report/", reportHandler.ListReport)
+	r.GET("/report/:id", reportHandler.GetReportHandler)
+	r.POST("/report", reportHandler.CreateReportHandler)
+	r.PUT("/report/:id", reportHandler.UpdateReportHandler)
+	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
 
 	r.Run()
 }
