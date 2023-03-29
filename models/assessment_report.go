@@ -1,6 +1,6 @@
 package models
 
-type assessment_report struct {
+type Report struct {
 	Id               int    `json:"id"`
 	Report_year      string `json:"report_year"`
 	Report_title     string `json:"report_title"`
@@ -15,4 +15,8 @@ type assessment_report struct {
 	Updated_by       string `json:"updated_by"`
 	Created_at       string `json:"created_at"`
 	Updated_at       string `json:"updated_at"`
+}
+
+func (p *Report) TableName() string {
+	return "assessment_report"
 }

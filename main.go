@@ -6,6 +6,8 @@ import (
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/assessment_progress"
+	"CRUD-API/handlers/assessment_report"
 	// . "CRUD-API/models"
 
 	"github.com/gin-gonic/gin"
@@ -62,6 +64,24 @@ func main() {
 	r.POST("/program", programHandler.CreateProgramHandler)
 	r.PUT("/program/:id", programHandler.UpdateProgramHandler)
 	r.DELETE("/program/:id", programHandler.DeleteProgramHandler)
+
+
+	//AssessmentProgress Zones
+	progressHandler := assessment_progress.NewProgressHandler(db)
+	r.GET("progress/", progressHandler.ListProgress)
+	r.GET("/progress/:id", progressHandler.GetProgressHandler)
+	r.POST("/progress", progressHandler.CreateProgressHandler)
+	r.PUT("/progress/:id", progressHandler.UpdateProgressHandler)
+	r.DELETE("/progress/:id", progressHandler.DeleteProgressHandler)
+
+	//AssessmentReport Zones
+	reportHandler := assessment_report.NewReportHandler(db)
+	r.GET("progress/", reportHandler.ListReport)
+	r.GET("/progress/:id", reportHandler.GetReportHandler)
+	r.POST("/progress", reportHandler.CreateReportHandler)
+	r.PUT("/progress/:id", reportHandler.UpdateReportHandler)
+	r.DELETE("/progress/:id", reportHandler.DeleteReportHandler)
+
 
 
 	r.Run()

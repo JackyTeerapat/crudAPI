@@ -1,6 +1,6 @@
 package models
 
-type assessment_progress struct {
+type Progress struct {
 	Id                 int    `json:"id"`
 	Progress_year      string `json:"progress_year"`
 	Progress_title     string `json:"progress_title"`
@@ -16,3 +16,8 @@ type assessment_progress struct {
 	Created_at         string `json:"created_at"`
 	Updated_at         string `json:"updated_at"`
 }
+
+func (p *Progress) TableName() string {
+	return "assessment_progress"
+}
+
