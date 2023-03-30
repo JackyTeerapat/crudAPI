@@ -1,0 +1,37 @@
+
+GET http://localhost:8080/researcher/profile_detail/1
+
+###
+
+POST http://localhost:8080/degree
+Content-Type: application/json
+
+	
+{
+    "degree_type": "ตรี",
+    "degree_program": "computer",
+    "degree_university": "KK",
+    "profile_id": 2,
+    "created_by": "Champlnwza007",
+    "updated_by": "Champlnwza007"
+}
+
+
+
+###
+PUT http://localhost:8080/degree/7
+Content-Type: application/json
+
+{
+    "degree_type": "นายสาว",
+    "degree_program": "computer",
+    "degree_university": "KK",
+    "profile_id": 1,
+    "created_by": "Champlnwza007",
+    "updated_by": "Champlnwza007"
+}
+###
+DELETE http://localhost:8080/degree/7
+###
+DELETE http://localhost:8080/degree/all
+

@@ -134,5 +134,9 @@ func main() {
 	r.PUT("/project/:id", projectHandler.UpdateAssessmentProjectHandler)
 	r.DELETE("/project/:id", projectHandler.DeleteAssessmentProjectHandler)
 
+	//researcher
+	researcherHandler := researcher.NewResearcherHandler(db)
+	r.GET("researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.Run()
+
 }
