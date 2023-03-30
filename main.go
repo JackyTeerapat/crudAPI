@@ -13,6 +13,7 @@ import (
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/researcher"
 	"CRUD-API/handlers/user"
 
 	// . "CRUD-API/models"
