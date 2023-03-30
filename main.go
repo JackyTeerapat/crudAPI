@@ -13,10 +13,15 @@ import (
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
 	"CRUD-API/handlers/user"
+	"CRUD-API/middlewares"
 
 	// . "CRUD-API/models"
 
+	_ "CRUD-API/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,11 +29,18 @@ import (
 var dsn = "postgres://navjsbdt:IrWX1ZnQiuYaMiTXCOwNCB-acHRKJgvT@satao.db.elephantsql.com/navjsbdt"
 var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
+// @title Researcher Service API
+// @version 1.0.0
+// @description This is a sample server for a researcher service.
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
 	r := gin.New()
+	r.Use(middlewares.CORSMiddleware())
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
@@ -117,13 +129,14 @@ func main() {
 	r.POST("/report", reportHandler.CreateReportHandler)
 	r.PUT("/report/:id", reportHandler.UpdateReportHandler)
 	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
+
 	//Assessment Project Zones
-	projectHandler := assessment_project.NewAssessmentProjectHandler(db)
-	r.GET("/project", projectHandler.ListAssessmentProjects)
-	r.GET("/project/:id", projectHandler.GetAssessmentProjectHandler)
-	r.POST("/project", projectHandler.CreateAssessmentProjectHandler)
-	r.PUT("/project/:id", projectHandler.UpdateAssessmentProjectHandler)
-	r.DELETE("/project/:id", projectHandler.DeleteAssessmentProjectHandler)
+	projectHandler := assessment_project.NewProjectHandler(db)
+	r.GET("/project", projectHandler.ListProjects)
+	r.GET("/project/:id", projectHandler.GetProjectHandler)
+	r.POST("/project", projectHandler.CreateProjectHandler)
+	r.PUT("/project/:id", projectHandler.UpdateProjectHandler)
+	r.DELETE("/project/:id", projectHandler.DeleteProjectHandler)
 
 	r.Run()
 }
