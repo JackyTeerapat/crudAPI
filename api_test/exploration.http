@@ -15,7 +15,7 @@ Content-Type: application/json
     "explore_name":"TEST",
     "explore_year":"TEST",
     "explore_detail":"TEST",
-    "profile_id": 1,
+    "profile_id": 2,
     "created_by": "Champlnwza008",
     "updated_by": "Champlnwza008"
 }

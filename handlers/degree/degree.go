@@ -71,7 +71,7 @@ func (u *DegreeHandler) DeleteDegreeHandler(c *gin.Context) {
 		}
 
 		// ตั้งค่า auto increment primary key เป็น 1
-		if err := u.db.Exec("ALTER SEQUENCE degree RESTART WITH 1").Error; err != nil {
+		if err := u.db.Exec("SELECT setval('degree_id_seq', 1, false)").Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
