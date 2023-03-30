@@ -40,7 +40,8 @@ func main() {
 	//minio upload
 	minioClient := minioclient.MinioClientConnect()
 	r.POST("/minio", minioClient.UploadFile)
-	r.GET("/minio/:filename", minioClient.GetFile)
+	r.GET("/minio/:directory/:filename", minioClient.GetFile)
+	r.DELETE("/minio/:directory/:filename", minioClient.DeleteFile)
 
 	r.Run()
 }
