@@ -1,6 +1,7 @@
 package main
 
 import (
+	"CRUD-API/handlers/assessment"
 	"CRUD-API/handlers/assessment_article"
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_project"
@@ -93,6 +94,14 @@ func main() {
 	r.POST("/profile_attach", profile_attachHandler.CreateProfile_attachHandler)
 	r.PUT("/profile_attach/:id", profile_attachHandler.UpdateProfile_attachHandler)
 	r.DELETE("/profile_attach/:id", profile_attachHandler.DeleteProfile_attachHandler)
+
+	//Article Zones
+	assessmentHandler := assessment.NewAssessmentHandler(db)
+	r.GET("/assessment/", assessmentHandler.ListAssessment)
+	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
+	r.POST("/assessment", assessmentHandler.CreateAssessmentHandler)
+	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
+	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
 	//Article Zones
 	articleHandler := assessment_article.NewArticleHandler(db)
