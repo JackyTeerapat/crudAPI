@@ -1,17 +1,21 @@
 
-GET http://localhost:8080/position
+GET http://localhost:8080/degree
 
 ###
 
-GET http://localhost:8080/position/13
+GET http://localhost:8080/degree/7
 
 ###
 
-POST http://localhost:8080/position
+POST http://localhost:8080/degree
 Content-Type: application/json
 
+	
 {
-    "position": "นางสาว",
+    "degree_type": "นางสาว",
+    "degree_program": "computer",
+    "degree_university": "KK",
+    "profile_id": 1,
     "created_by": "Champlnwza007",
     "updated_by": "Champlnwza007"
 }
@@ -19,17 +23,21 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8080/position/2
+PUT http://localhost:8080/degree/7
 Content-Type: application/json
 
 {
-  "positionname": "Jacky",
-  "role": "position"
+    "degree_type": "นายสาว",
+    "degree_program": "computer",
+    "degree_university": "KK",
+    "profile_id": 1,
+    "created_by": "Champlnwza007",
+    "updated_by": "Champlnwza007"
 }
 ###
-DELETE http://localhost:8080/position/18
+DELETE http://localhost:8080/degree/7
 ###
-DELETE http://localhost:8080/position/all
+DELETE http://localhost:8080/degree/all
 
 
 

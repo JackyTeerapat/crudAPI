@@ -1,0 +1,117 @@
+
+GET http://localhost:8080/position
+
+###
+
+GET http://localhost:8080/position/1
+
+###
+
+POST http://localhost:8080/position
+Content-Type: application/json
+
+{
+    "position": "นางสาว",
+    "created_by": "Champlnwza007",
+    "updated_by": "Champlnwza007"
+}
+
+
+
+###
+PUT http://localhost:8080/position/2
+Content-Type: application/json
+
+{
+  "positionname": "Jacky",
+  "role": "position"
+}
+###
+DELETE http://localhost:8080/position/18
+###
+DELETE http://localhost:8080/position/all
+
+
+
+# [
+#   {
+#     "id": 1,
+#     "position": "ศาสตราจารย์เกียรติคุณ",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:00:23.918529Z",
+#     "updated_at": "2023-03-27T17:00:23.918529Z"
+#   },
+#   {
+#     "id": 2,
+#     "position": "ศาสตราจารย์ ดร.",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.630697Z",
+#     "updated_at": "2023-03-27T17:01:35.630697Z"
+#   },
+#   {
+#     "id": 3,
+#     "position": "ศาสตราจารย์",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.69981Z",
+#     "updated_at": "2023-03-27T17:01:35.69981Z"
+#   },
+#   {
+#     "id": 4,
+#     "position": "ศาสตราจารย์",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.768835Z",
+#     "updated_at": "2023-03-27T17:01:35.768835Z"
+#   },
+#   {
+#     "id": 5,
+#     "position": "รองศาสตราจารย์",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.83767Z",
+#     "updated_at": "2023-03-27T17:01:35.83767Z"
+#   },
+#   {
+#     "id": 6,
+#     "position": "ผู้ช่วยศาสตราจารย์ ดร.",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.906158Z",
+#     "updated_at": "2023-03-27T17:01:35.906158Z"
+#   },
+#   {
+#     "id": 7,
+#     "position": "ผู้ช่วยศาสตราจารย์",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:35.97475Z",
+#     "updated_at": "2023-03-27T17:01:35.97475Z"
+#   },
+#   {
+#     "id": 8,
+#     "position": "ดร.",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:36.046396Z",
+#     "updated_at": "2023-03-27T17:01:36.046396Z"
+#   },
+#   {
+#     "id": 9,
+#     "position": "อาจารย์",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:36.115528Z",
+#     "updated_at": "2023-03-27T17:01:36.115528Z"
+#   },
+#   {
+#     "id": 10,
+#     "position": "อื่น ๆ ",
+#     "created_by": "champInwZa007",
+#     "updated_by": "champInwZa007",
+#     "created_at": "2023-03-27T17:01:36.184115Z",
+#     "updated_at": "2023-03-27T17:01:36.184115Z"
+#   }
+# ]
