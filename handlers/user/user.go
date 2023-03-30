@@ -27,6 +27,15 @@ func (u *UserHandler) ListUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, users)
 }
+
+// GetUser godoc
+// @Summary Get a user
+// @Description Get a data user from database.
+// @Tags User
+// @Produce  application/json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.User{}
+// @Router /user/{id} [get]
 func (u *UserHandler) GetUserHandler(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")
@@ -42,6 +51,14 @@ func (u *UserHandler) GetUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// CreateUser godoc
+// @Summary Create a user
+// @Description Create a data user to database.
+// @Tags User
+// @Produce  application/json
+// @Param user body models.User true "User"
+// @Success 200 {object} models.User{}
+// @Router /user [post]
 func (u *UserHandler) CreateUserHandler(c *gin.Context) {
 	var user models.User
 
@@ -61,6 +78,14 @@ func (u *UserHandler) CreateUserHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"Status": "Success"})
 }
 
+// DeleteUser godoc
+// @Summary Delete a user
+// @Description Delete a data user from database.
+// @Tags User
+// @Produce  application/json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.User{}
+// @Router /user/{id} [delete]
 func (u *UserHandler) DeleteUserHandler(c *gin.Context) {
 	id := c.Param("id")
 
@@ -91,6 +116,15 @@ func (u *UserHandler) DeleteUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("User with id %s has been deleted.", id)})
 }
 
+// UpdateUser godoc
+// @Summary Update a user
+// @Description Update a data user to database.
+// @Tags User
+// @Produce  application/json
+// @Param id path int true "User ID"
+// @Param user body models.User true "User"
+// @Success 200 {object} models.User{}
+// @Router /user/{id} [put]
 func (u *UserHandler) UpdateUserHandler(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")
