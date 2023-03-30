@@ -6,9 +6,10 @@ import (
 	"CRUD-API/handlers/exploration"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
-	"CRUD-API/handlers/program"
-	"CRUD-API/handlers/user"
 	"CRUD-API/handlers/profile_attach"
+	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/researcher"
+	"CRUD-API/handlers/user"
 
 	// . "CRUD-API/models"
 
@@ -17,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var dsn = "postgres://navjsbdt:CXbvdzgydzdeZKUi_WYzMxzxAjJqnYbF@satao.db.elephantsql.com/navjsbdt"
+var dsn = "postgres://navjsbdt:IrWX1ZnQiuYaMiTXCOwNCB-acHRKJgvT@satao.db.elephantsql.com/navjsbdt"
 var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 func main() {
@@ -86,9 +87,13 @@ func main() {
 	profile_attachHandler := profile_attach.NewProfile_attachHandler(db)
 	r.GET("profile_attach/", profile_attachHandler.ListProfile_attach)
 	r.GET("/profile_attach/:id", profile_attachHandler.GetProfile_attachHandler)
-	r.POST("/profile_attach",profile_attachHandler.CreateProfile_attachHandler)
-	r.PUT("/profile_attach/:id",profile_attachHandler.UpdateProfile_attachHandler)
-	r.DELETE("/profile_attach/:id",profile_attachHandler.DeleteProfile_attachHandler)
+	r.POST("/profile_attach", profile_attachHandler.CreateProfile_attachHandler)
+	r.PUT("/profile_attach/:id", profile_attachHandler.UpdateProfile_attachHandler)
+	r.DELETE("/profile_attach/:id", profile_attachHandler.DeleteProfile_attachHandler)
 
+	//researcher
+	researcherHandler := researcher.NewResearcherHandler(db)
+	r.GET("researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.Run()
+
 }

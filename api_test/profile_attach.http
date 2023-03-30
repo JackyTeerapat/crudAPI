@@ -12,10 +12,10 @@ Content-Type: application/json
 
 
 {
-    "file_name":"TEST",
+    "file_name":"TEST2",
     "file_action":"TEST",
     "file_storage":"TEST",
-    "profile_id": 1,
+    "profile_id": 2,
     "created_by": "Champlnwza008",
     "updated_by": "Champlnwza008"
 }
