@@ -18,7 +18,7 @@ func NewAssessmentProjectHandler(db *gorm.DB) *AssessmentProjectHandler {
 	return &AssessmentProjectHandler{db: db}
 }
 func (u *AssessmentProjectHandler) ListAssessmentProjects(c *gin.Context) {
-	var assessmentProject []models.Assessment_project
+	var assessmentProject []models.Project
 
 	r := u.db.Table("assessment_project").Find(&assessmentProject)
 	if err := r.Error; err != nil {
@@ -28,7 +28,7 @@ func (u *AssessmentProjectHandler) ListAssessmentProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, assessmentProject)
 }
 func (u *AssessmentProjectHandler) GetAssessmentProjectHandler(c *gin.Context) {
-	var assessmentProject models.Assessment_project
+	var assessmentProject models.Project
 	id := c.Param("id")
 	r := u.db.Table("assessment_project").Where("id = ?", id).First(&assessmentProject)
 	if r.RowsAffected == 0 {
@@ -43,7 +43,7 @@ func (u *AssessmentProjectHandler) GetAssessmentProjectHandler(c *gin.Context) {
 }
 
 func (u *AssessmentProjectHandler) CreateAssessmentProjectHandler(c *gin.Context) {
-	var assessmentProject models.Assessment_project
+	var assessmentProject models.Project
 
 	if err := c.ShouldBindJSON(&assessmentProject); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -81,7 +81,7 @@ func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context
 	}
 
 	// ลบข้อมูลตาม id ที่ระบุ
-	r := u.db.Delete(&models.Assessment_project{}, id)
+	r := u.db.Delete(&models.Project{}, id)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
