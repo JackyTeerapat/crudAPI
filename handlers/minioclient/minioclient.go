@@ -87,6 +87,9 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 	filename := c.Param("filename")
 	directory := c.Param("directory")
 	ctx := context.Background()
+	if directory == "" {
+		directory = "upload"
+	}
 
 	reqParams := make(url.Values)
 	response := MinioResponse{
@@ -111,7 +114,9 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 	filename := c.Param("filename")
 	directory := c.Param("directory")
 	ctx := context.Background()
-
+	if directory == "" {
+		directory = "upload"
+	}
 	response := MinioResponse{
 		Status:       http.StatusOK,
 		FilePath:     "",
