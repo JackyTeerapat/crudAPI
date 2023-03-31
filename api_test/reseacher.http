@@ -1,3 +1,78 @@
 
-GET http://localhost:8080/researcher/profile_detail/1
+GET http://localhost:8080/api/v1/researcher/profile_detail/1
+###
+POST http://localhost:8080/api/v1/researcher/profile
+Content-Type: application/json
+
+{
+    "first_name": "Jacky",
+    "last_name": "KAK",
+    "position_id": 1,
+    "address_home": "178-180",
+    "address_work": "178-180",
+    "email": "jackKAK@email.com",
+    "phone_number": "123-456-7890",
+    "degree": [
+        {
+        "degree_type": "โท",
+        "degree_program": "Computer Science",
+        "degree_university": "KMUTNB"
+        },
+        {
+        "degree_type": "ตรี",
+        "degree_program": "Computer Science",
+        "degree_university": "KMUTNB"
+        }
+    ],
+    "program": [
+        {
+        "program_name": "Coding Bootcamp",
+        "university": "MIT"
+        },
+        {
+        "program_name": "Leadership Development",
+        "university": "Wharton School of the University of Pennsylvania"
+        }
+    ],
+    "experience": [
+        {
+        "experience_type": "Internship",
+        "experience_start": "2018-05-01",
+        "experience_end": "2018-08-31",
+        "experience_university": "Google",
+        "experience_remark": "Developed a web application for tracking employee performance"
+        },
+        {
+        "experience_type": "Full-time",
+        "experience_start": "2019-01-01",
+        "experience_end": null,
+        "experience_university": "Microsoft",
+        "experience_remark": "Led a team of software engineers in developing a new feature for a cloud-based productivity tool"
+        }
+    ],
+    "explore": [
+        {
+        "explore_name": "Study Abroad",
+        "explore_year": "2017",
+        "explore_detail": "Studied computer science and economics at the University of Tokyo for one semester"
+        },
+        {
+        "explore_name": "Volunteering",
+        "explore_year": "2019",
+        "explore_detail": "Organized a charity event for a local food bank, raising $10,000 in donations"
+        }
+    ],
+    "attach": [
+        {
+        "file_name": "resume.pdf",
+        "file_action": "Download"
+        },
+        {
+        "file_name": "cover_letter.docx",
+        "file_action": "Download"
+        }
+    ]
+}
+
+
 
