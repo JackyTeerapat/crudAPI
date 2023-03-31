@@ -139,6 +139,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/researcher/profile_detail/{id}": {
+            "get": {
+                "description": "Get a data profile_detail from database.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile detail"
+                ],
+                "summary": "Get a Profile_detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "researcher ProfileID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/researcher.Researcher"
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "post": {
                 "description": "Create a data user to database.",
@@ -324,6 +353,167 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.Researcher": {
+            "type": "object",
+            "properties": {
+                "address_home": {
+                    "type": "string"
+                },
+                "address_work": {
+                    "type": "string"
+                },
+                "attach": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempAttach"
+                    }
+                },
+                "degree": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempDegree"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempExperience"
+                    }
+                },
+                "explore": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempExplore"
+                    }
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempPosition"
+                    }
+                },
+                "profile_id": {
+                    "type": "integer"
+                },
+                "program": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/researcher.tempProgram"
+                    }
+                },
+                "university": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.tempAttach": {
+            "type": "object",
+            "properties": {
+                "file_action": {
+                    "type": "string"
+                },
+                "file_id": {
+                    "type": "integer"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_storage": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.tempDegree": {
+            "type": "object",
+            "properties": {
+                "degree_program": {
+                    "type": "string"
+                },
+                "degree_type": {
+                    "type": "string"
+                },
+                "degree_university": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "researcher.tempExperience": {
+            "type": "object",
+            "properties": {
+                "experience_end": {
+                    "type": "string"
+                },
+                "experience_id": {
+                    "type": "integer"
+                },
+                "experience_remark": {
+                    "type": "string"
+                },
+                "experience_start": {
+                    "type": "string"
+                },
+                "experience_type": {
+                    "type": "string"
+                },
+                "experience_university": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.tempExplore": {
+            "type": "object",
+            "properties": {
+                "explore_detail": {
+                    "type": "string"
+                },
+                "explore_id": {
+                    "type": "integer"
+                },
+                "explore_name": {
+                    "type": "string"
+                },
+                "explore_year": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.tempPosition": {
+            "type": "object",
+            "properties": {
+                "position_id": {
+                    "type": "integer"
+                },
+                "position_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "researcher.tempProgram": {
+            "type": "object",
+            "properties": {
+                "program_id": {
+                    "type": "integer"
+                },
+                "program_name": {
                     "type": "string"
                 }
             }

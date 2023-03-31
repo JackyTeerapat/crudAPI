@@ -154,7 +154,7 @@ func main() {
 
 	//researcher
 	researcherHandler := researcher.NewResearcherHandler(db)
-	r.GET("researcher/profile_detail/:id", researcherHandler.ListResearcher)
+	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.Run()
 
 }
