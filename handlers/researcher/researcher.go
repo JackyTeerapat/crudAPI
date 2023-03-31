@@ -17,7 +17,7 @@ func NewResearcherHandler(db *gorm.DB) *ResearcherHandler {
 	return &ResearcherHandler{db: db}
 }
 
-type researcher struct {
+type Researcher struct {
 	ProfileID   int              `json:"profile_id"`
 	FirstName   string           `json:"first_name"`
 	LastName    string           `json:"last_name"`
@@ -71,11 +71,19 @@ type tempExplore struct {
 	ExploreDetail string `json:"explore_detail"`
 }
 
+// researcher/profile_detail godoc
+// @Summary Get a Profile_detail
+// @Description Get a data profile_detail from database.
+// @Tags Profile detail
+// @Produce  application/json
+// @Param id path int true "researcher ProfileID"
+// @Success 200 {object} Researcher{}
+// @Router /researcher/profile_detail/{id} [get]
 func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	id := c.Param("id")
 
 	// Start getDate from Profile
-	var researcher researcher
+	var researcher Researcher
 
 	// Execute the query and scan the results into the researcher struct
 	result := h.db.Raw("SELECT id as profile_id, first_name, last_name, university, address_home, address_work, email,phone_number FROM profile WHERE id = ?", id).Scan(&researcher)

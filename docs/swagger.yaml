@@ -42,6 +42,111 @@ definitions:
       username:
         type: string
     type: object
+  researcher.Researcher:
+    properties:
+      address_home:
+        type: string
+      address_work:
+        type: string
+      attach:
+        items:
+          $ref: '#/definitions/researcher.tempAttach'
+        type: array
+      degree:
+        items:
+          $ref: '#/definitions/researcher.tempDegree'
+        type: array
+      email:
+        type: string
+      experience:
+        items:
+          $ref: '#/definitions/researcher.tempExperience'
+        type: array
+      explore:
+        items:
+          $ref: '#/definitions/researcher.tempExplore'
+        type: array
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      position:
+        items:
+          $ref: '#/definitions/researcher.tempPosition'
+        type: array
+      profile_id:
+        type: integer
+      program:
+        items:
+          $ref: '#/definitions/researcher.tempProgram'
+        type: array
+      university:
+        type: string
+    type: object
+  researcher.tempAttach:
+    properties:
+      file_action:
+        type: string
+      file_id:
+        type: integer
+      file_name:
+        type: string
+      file_storage:
+        type: string
+    type: object
+  researcher.tempDegree:
+    properties:
+      degree_program:
+        type: string
+      degree_type:
+        type: string
+      degree_university:
+        type: string
+      id:
+        type: integer
+    type: object
+  researcher.tempExperience:
+    properties:
+      experience_end:
+        type: string
+      experience_id:
+        type: integer
+      experience_remark:
+        type: string
+      experience_start:
+        type: string
+      experience_type:
+        type: string
+      experience_university:
+        type: string
+    type: object
+  researcher.tempExplore:
+    properties:
+      explore_detail:
+        type: string
+      explore_id:
+        type: integer
+      explore_name:
+        type: string
+      explore_year:
+        type: string
+    type: object
+  researcher.tempPosition:
+    properties:
+      position_id:
+        type: integer
+      position_name:
+        type: string
+    type: object
+  researcher.tempProgram:
+    properties:
+      program_id:
+        type: integer
+      program_name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -130,6 +235,25 @@ paths:
       summary: Update a project
       tags:
       - Project
+  /researcher/profile_detail/{id}:
+    get:
+      description: Get a data profile_detail from database.
+      parameters:
+      - description: researcher ProfileID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/researcher.Researcher'
+      summary: Get a Profile_detail
+      tags:
+      - Profile detail
   /user:
     post:
       description: Create a data user to database.
