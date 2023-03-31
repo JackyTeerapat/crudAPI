@@ -76,3 +76,80 @@ Content-Type: application/json
 
 
 
+###
+
+POST http://localhost:8080/researcher/profile_detail
+Content-Type: application/json
+
+
+{
+  "profile_id": 1,
+  "first_name": "JACKKENG",
+  "last_name": "JACKKENG",
+  "university": "5",
+  "address_home": "NEWYORK",
+  "address_work": "WORLD",
+  "email": "jkeng@gmail.com",
+  "phone_number": "9999",
+  "degree": [
+    {
+      "id": 1,
+      "degree_type": "ตรี",
+      "degree_program": "computer",
+      "degree_university": "KK"
+    },
+    {
+      "id": 2,
+      "degree_type": "โท",
+      "degree_program": "computer",
+      "degree_university": "KK"
+    },
+    {
+      "id": 3,
+      "degree_type": "เอก",
+      "degree_program": "computer",
+      "degree_university": "KK"
+    }
+  ],
+  "position": [
+    {
+      "position_id": 1,
+      "position_name": "นางสาว"
+    }
+  ],
+  "program": [
+    {
+      "program_id": 1,
+      "program_name": "TOSLOW"
+    }
+  ],
+  "experience": [
+    {
+      "experience_id": 1,
+      "experience_type": "TESTEX",
+      "experience_start": "TEST",
+      "experience_end": "TEST",
+      "experience_university": "TEST",
+      "experience_remark": "TEST"
+    }
+  ],
+  "attach": [
+    {
+      "file_id": 1,
+      "file_name": "TEST",
+      "file_action": "TEST",
+      "file_storage": "TEST"
+    }
+  ],
+  "explore": [
+    {
+      "explore_id": 1,
+      "explore_name": "TEST",
+      "explore_year": "TEST",
+      "explore_detail": "TEST"
+    }
+  ]
+}
+
+
+
