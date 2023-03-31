@@ -176,8 +176,3 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	// Return the researcher data as JSON
 	c.JSON(http.StatusOK, researcher)
 }
-
-func (h *ResearcherHandler) CreateProfile(c *gin.Context) {
-	// เริ่มจาก insert Profile id แล้วเอา profile id จากการ insert
-	// insert ทุกตารางยกเว้น position
-}
