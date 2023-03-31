@@ -2,13 +2,78 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
+	"gorm.io/gorm"
+
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type AuthHandler struct {
+	db *gorm.DB
+}
+
 var hmacSampleSecret = []byte("3HqC0s7224Ai0XTnPBhURakeGjPaPNcUWOtrz9N+hpQ=")
 
+func NewAuthHandler(db *gorm.DB) *AuthHandler {
+	return &AuthHandler{db: db}
+}
+
+func (u *AuthHandler) Login(c *gin.Context) {
+
+	token, err := GenerateToken()
+
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"token": token,
+		},
+	)
+
+	// var user models.User
+	// var userLogin models.User
+	// if err := c.ShouldBindJSON(&userLogin); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{
+	// 		"error": err.Error(),
+	// 	})
+	// 	return
+	// }
+	// r := u.db.Table("users").Where("username = ?", userLogin.Username).First(&user)
+	// if r.RowsAffected == 0 {
+	// 	c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+	// 	return
+	// }
+	// if err := r.Error; err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	// if userLogin.Password != user.Password {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
+	// 	return
+	// }
+	// token, err := GenerateToken()
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	// c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (u *AuthHandler) GetUser(c *gin.Context) {
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"userId": c.Param("id"),
+		},
+	)
+}
 func GenerateToken() (tokenString string, err error) {
 
 	// Create a new token object, specifying signing method and the claims

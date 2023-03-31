@@ -6,6 +6,7 @@ import (
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_project"
 	"CRUD-API/handlers/assessment_report"
+	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
@@ -13,6 +14,7 @@ import (
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/researcher"
 	"CRUD-API/handlers/user"
 	"CRUD-API/middlewares"
 
@@ -42,6 +44,9 @@ func main() {
 	r := gin.New()
 	r.Use(middlewares.CORSMiddleware())
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	auth := auth.NewAuthHandler(db)
+	r.POST("/api/v1/login", auth.Login)
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
