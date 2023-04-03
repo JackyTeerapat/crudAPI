@@ -6,6 +6,7 @@ import (
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_project"
 	"CRUD-API/handlers/assessment_report"
+	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
@@ -15,6 +16,7 @@ import (
 	"CRUD-API/handlers/program"
 	"CRUD-API/handlers/researcher"
 	"CRUD-API/handlers/user"
+	"CRUD-API/initializers"
 	"CRUD-API/middlewares"
 
 	// . "CRUD-API/models"
@@ -24,25 +26,29 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var dsn = "postgres://navjsbdt:IrWX1ZnQiuYaMiTXCOwNCB-acHRKJgvT@satao.db.elephantsql.com/navjsbdt"
-var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+var db *gorm.DB
+
+func init() {
+	initializers.LoadEnvVariables()
+	db = initializers.ConnectDb()
+}
 
 // @title Researcher Service API
 // @version 1.0.0
 // @description This is a sample server for a researcher service.
-// @host localhost:8080
+// @host localhost:9000
 // @BasePath /api/v1
 func main() {
-	if err != nil {
-		panic("failed to connect database")
-	}
 	r := gin.New()
 	r.Use(middlewares.CORSMiddleware())
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	auth := auth.NewAuthHandler(db)
+	r.POST("/api/v1/signup", auth.SignUp)
+	r.POST("/api/v1/login", auth.Login)
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
