@@ -77,7 +77,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 		return
 	}
-	var positions []models.TempPosition
+	var positions []models.TempPosition_get
 	positionRows, err := h.db.Raw("SELECT id, position_name FROM position WHERE id = ?", positionID).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching position data: %v", err.Error())})
@@ -98,7 +98,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	researcher.Position = positions
 
 	// Fetch and add TempProgram data
-	var programs []models.TempProgram
+	var programs []models.TempProgram_get
 	programRows, err := h.db.Raw("SELECT id, program_name FROM program WHERE profile_id = ?", id).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching program data: %v", err.Error())})
@@ -119,7 +119,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	researcher.Program = programs
 
 	// Fetch and add TempExperience data
-	var experiences []models.TempExperience
+	var experiences []models.TempExperience_get
 	experienceRows, err := h.db.Raw("SELECT id, experience_type, experience_start, experience_end, experience_university, experience_remark FROM experience WHERE profile_id = ?", id).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching experience data: %v", err.Error())})
@@ -140,7 +140,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	researcher.Experience = experiences
 
 	// Fetch and add TempAttach data
-	var attaches []models.TempAttach
+	var attaches []models.TempAttach_get
 	attachRows, err := h.db.Raw("SELECT id, file_name, file_action, file_storage FROM profile_attach WHERE profile_id = ?", id).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching attach data: %v", err.Error())})
@@ -161,7 +161,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	researcher.Attach = attaches
 
 	// Fetch and add TempExplore data
-	var explores []models.TempExplore
+	var explores []models.TempExplore_get
 	exploreRows, err := h.db.Raw("SELECT id, explore_name, explore_year, explore_detail FROM exploration WHERE profile_id = ?", id).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching explore data: %v", err.Error())})
@@ -255,4 +255,60 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("Profile ID : %v Created", profileID)})
+}
+
+
+func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
+	id := c.Param("id")
+
+	createdBy := "Champlnwza007"
+	updatedBy := "Champlnwza007"
+
+	// Parse the JSON payload from the request body into the ResearcherRequest struct
+	var req models.ResearcherRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Start updating the profile table
+	result := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ? WHERE id = ?", req.FirstName, req.LastName, req.University, req.AddressHome, req.AddressWork, req.Email, req.PhoneNumber, req.PositionID, id)
+
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the researcher data in profile: %v", result.Error)})
+		return
+	}
+
+	// Start updating degree data
+	h.db.Exec("DELETE FROM degree WHERE profile_id = ?", id)
+	for _, degree := range req.Degree {
+		h.db.Exec("INSERT INTO degree (profile_id, degree_type, degree_program, degree_university, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, createdBy, updatedBy)
+	}
+
+	// Start updating program data
+	h.db.Exec("DELETE FROM program WHERE profile_id = ?", id)
+	for _, program := range req.Program {
+		h.db.Exec("INSERT INTO program (profile_id, program_name, created_by, updated_by) VALUES (?, ?, ?, ?)", id, program.ProgramName, createdBy, updatedBy)
+	}
+
+	// Start updating experience data
+	h.db.Exec("DELETE FROM experience WHERE profile_id = ?", id)
+	for _, experience := range req.Experience {
+		h.db.Exec("INSERT INTO experience (profile_id, experience_type, experience_start, experience_end, experience_university, experience_remark, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, experience.ExperienceType, experience.ExperienceStart, experience.ExperienceEnd, experience.ExperienceUniversity, experience.ExperienceRemark, createdBy, updatedBy)
+	}
+
+	// Start updating explore data
+	h.db.Exec("DELETE FROM exploration WHERE profile_id = ?", id)
+	for _, explore := range req.Explore {
+		h.db.Exec("INSERT INTO exploration (profile_id, explore_name, explore_year, explore_detail, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, explore.ExploreName, explore.ExploreYear, explore.ExploreDetail, createdBy, updatedBy)
+	}
+
+	// Start updating attach data
+	h.db.Exec("DELETE FROM profile_attach WHERE profile_id = ?", id)
+	for _, attach := range req.Attach {
+		h.db.Exec("INSERT INTO profile_attach (profile_id, file_name, file_action, file_storage, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, attach.FileName, attach.FileAction, attach.File_storage, createdBy, updatedBy)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Researcher profile updated successfully."})
 }
