@@ -1,10 +1,12 @@
 package main
 
 import (
+	"CRUD-API/handlers/assessment"
 	"CRUD-API/handlers/assessment_article"
 	"CRUD-API/handlers/assessment_progress"
 	"CRUD-API/handlers/assessment_project"
 	"CRUD-API/handlers/assessment_report"
+	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
@@ -13,23 +15,41 @@ import (
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
+	"CRUD-API/handlers/researcher"
 	"CRUD-API/handlers/user"
+	"CRUD-API/initializers"
+	"CRUD-API/middlewares"
 
 	// . "CRUD-API/models"
 
+	_ "CRUD-API/docs"
+
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
-var dsn = "postgres://navjsbdt:IrWX1ZnQiuYaMiTXCOwNCB-acHRKJgvT@satao.db.elephantsql.com/navjsbdt"
-var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+var db *gorm.DB
 
+func init() {
+	initializers.LoadEnvVariables()
+	db = initializers.ConnectDb()
+}
+
+// @title Researcher Service API
+// @version 1.0.0
+// @description This is a sample server for a researcher service.
+// @host localhost:9000
+// @BasePath /api/v1
 func main() {
-	if err != nil {
-		panic("failed to connect database")
-	}
 	r := gin.New()
+	r.Use(middlewares.CORSMiddleware())
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	auth := auth.NewAuthHandler(db)
+	r.POST("/api/v1/signup", auth.SignUp)
+	r.POST("/api/v1/login", auth.Login)
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
@@ -101,6 +121,14 @@ func main() {
 	r.DELETE("/profile_attach/:id", profile_attachHandler.DeleteProfile_attachHandler)
 
 	//Article Zones
+	assessmentHandler := assessment.NewAssessmentHandler(db)
+	r.GET("/assessment/", assessmentHandler.ListAssessment)
+	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
+	r.POST("/assessment", assessmentHandler.CreateAssessmentHandler)
+	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
+	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
+
+	//Article Zones
 	articleHandler := assessment_article.NewArticleHandler(db)
 	r.GET("/article/", articleHandler.ListArticle)
 	r.GET("/article/:id", articleHandler.GetArticleHandler)
@@ -123,13 +151,19 @@ func main() {
 	r.POST("/report", reportHandler.CreateReportHandler)
 	r.PUT("/report/:id", reportHandler.UpdateReportHandler)
 	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
-	//Assessment Project Zones
-	projectHandler := assessment_project.NewAssessmentProjectHandler(db)
-	r.GET("/project", projectHandler.ListAssessmentProjects)
-	r.GET("/project/:id", projectHandler.GetAssessmentProjectHandler)
-	r.POST("/project", projectHandler.CreateAssessmentProjectHandler)
-	r.PUT("/project/:id", projectHandler.UpdateAssessmentProjectHandler)
-	r.DELETE("/project/:id", projectHandler.DeleteAssessmentProjectHandler)
 
+	//Assessment Project Zones
+	projectHandler := assessment_project.NewProjectHandler(db)
+	r.GET("/project", projectHandler.ListProjects)
+	r.GET("/project/:id", projectHandler.GetProjectHandler)
+	r.POST("/project", projectHandler.CreateProjectHandler)
+	r.PUT("/project/:id", projectHandler.UpdateProjectHandler)
+	r.DELETE("/project/:id", projectHandler.DeleteProjectHandler)
+
+	//researcher
+	researcherHandler := researcher.NewResearcherHandler(db)
+	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
+	r.POST("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.Run()
+
 }

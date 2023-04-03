@@ -10,49 +10,66 @@ import (
 	"gorm.io/gorm"
 )
 
-type AssessmentProjectHandler struct {
+type ProjectHandler struct {
 	db *gorm.DB
 }
 
-func NewAssessmentProjectHandler(db *gorm.DB) *AssessmentProjectHandler {
-	return &AssessmentProjectHandler{db: db}
+func NewProjectHandler(db *gorm.DB) *ProjectHandler {
+	return &ProjectHandler{db: db}
 }
-func (u *AssessmentProjectHandler) ListAssessmentProjects(c *gin.Context) {
-	var assessmentProject []models.Assessment_project
+func (u *ProjectHandler) ListProjects(c *gin.Context) {
+	var project []models.Project
 
-	r := u.db.Table("assessment_project").Find(&assessmentProject)
+	r := u.db.Table("assessment_project").Find(&project)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, assessmentProject)
+	c.JSON(http.StatusOK, project)
 }
-func (u *AssessmentProjectHandler) GetAssessmentProjectHandler(c *gin.Context) {
-	var assessmentProject models.Assessment_project
+
+// GetProject godoc
+// @Summary Get a project
+// @Description Get a data user from database.
+// @Tags Project
+// @Produce  application/json
+// @Param id path int true "Project ID"
+// @Success 200 {object} models.Project{}
+// @Router /project/{id} [get]
+func (u *ProjectHandler) GetProjectHandler(c *gin.Context) {
+	var project models.Project
 	id := c.Param("id")
-	r := u.db.Table("assessment_project").Where("id = ?", id).First(&assessmentProject)
+	r := u.db.Table("assessment_project").Where("id = ?", id).First(&project)
 	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Assessment project not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
 		return
 	}
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, assessmentProject)
+	c.JSON(http.StatusOK, project)
 }
 
-func (u *AssessmentProjectHandler) CreateAssessmentProjectHandler(c *gin.Context) {
-	var assessmentProject models.Assessment_project
+// CreateProject godoc
+// @Summary Create a project
+// @Description Create a data project to database.
+// @Tags Project
+// @Produce  application/json
+// @Param project body models.Project true "Project"
+// @Success 200 {object} models.Project{}
+// @Router /project [post]
+func (u *ProjectHandler) CreateProjectHandler(c *gin.Context) {
+	var project models.Project
 
-	if err := c.ShouldBindJSON(&assessmentProject); err != nil {
+	if err := c.ShouldBindJSON(&project); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 	//รับมาแล้วสร้างเป็น ข้อมูล ลง Table
-	r := u.db.Create(&assessmentProject)
+	r := u.db.Create(&project)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,7 +77,15 @@ func (u *AssessmentProjectHandler) CreateAssessmentProjectHandler(c *gin.Context
 	c.JSON(http.StatusCreated, gin.H{"Status": "Success"})
 }
 
-func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context) {
+// DeleteProject godoc
+// @Summary Delete a project
+// @Description Delete a data project from database.
+// @Tags Project
+// @Produce  application/json
+// @Param id path int true "Project ID"
+// @Success 200 {object} models.Project{}
+// @Router /project/{id} [delete]
+func (u *ProjectHandler) DeleteProjectHandler(c *gin.Context) {
 	id := c.Param("id")
 
 	if id == "all" {
@@ -81,7 +106,7 @@ func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context
 	}
 
 	// ลบข้อมูลตาม id ที่ระบุ
-	r := u.db.Delete(&models.Assessment_project{}, id)
+	r := u.db.Delete(&models.Project{}, id)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -90,25 +115,34 @@ func (u *AssessmentProjectHandler) DeleteAssessmentProjectHandler(c *gin.Context
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("project with id %s has been deleted.", id)})
 }
 
-func (u *AssessmentProjectHandler) UpdateAssessmentProjectHandler(c *gin.Context) {
-	var assessmentProject models.Degree
+// UpdateProject godoc
+// @Summary Update a project
+// @Description Update a data project to database.
+// @Tags Project
+// @Produce  application/json
+// @Param id path int true "Project ID"
+// @Param project body models.Project true "Project"
+// @Success 200 {object} models.Project{}
+// @Router /project/{id} [put]
+func (u *ProjectHandler) UpdateProjectHandler(c *gin.Context) {
+	var project models.Degree
 	id := c.Param("id")
 
 	//ตรวจสอบว่ามี degree นี้อยู่หรือไม่
-	r := u.db.Table("assessment_project").Where("id = ?", id).First(&assessmentProject)
+	r := u.db.Table("assessment_project").Where("id = ?", id).First(&project)
 	if r.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
 		return
 	}
 
 	//แปลงข้อมูลที่ส่งเข้ามาเป็น JSON
-	if err := c.ShouldBindJSON(&assessmentProject); err != nil {
+	if err := c.ShouldBindJSON(&project); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	//อัปเดตข้อมูล degree ด้วย ID ที่กำหนด
-	r = u.db.Table("assessment_project").Where("id = ?", id).Updates(&assessmentProject)
+	r = u.db.Table("assessment_project").Where("id = ?", id).Updates(&project)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
