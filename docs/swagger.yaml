@@ -147,7 +147,7 @@ definitions:
       program_name:
         type: string
     type: object
-host: localhost:8080
+host: localhost:9000
 info:
   contact: {}
   description: This is a sample server for a researcher service.
