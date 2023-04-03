@@ -1,5 +1,5 @@
 
-GET http://localhost:8080/researcher/profile_detail/1
+GET http://localhost:8080/api/v1/researcher/profile_detail/1
 
 ###
 
