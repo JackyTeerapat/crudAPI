@@ -50,7 +50,6 @@ func main() {
 	//minio upload
 	minioClient := minioclient.MinioClientConnect()
 	r.POST("/minio", minioClient.UploadFile)
-	r.GET("/minio/:directory/:filename", minioClient.GetFile)
 	r.DELETE("/minio/:directory/:filename", minioClient.DeleteFile)
 
 	//Degree Zones
