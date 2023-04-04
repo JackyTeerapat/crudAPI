@@ -19,7 +19,6 @@ import (
 	"CRUD-API/handlers/researcher_list"
 	"CRUD-API/handlers/user"
 	"CRUD-API/initializers"
-	"CRUD-API/middlewares"
 
 	// . "CRUD-API/models"
 
@@ -45,7 +44,7 @@ func init() {
 // @BasePath /api/v1
 func main() {
 	r := gin.New()
-	r.Use(middlewares.CORSMiddleware())
+	// r.Use(middlewares.CORSMiddleware())
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	auth := auth.NewAuthHandler(db)
