@@ -10,12 +10,15 @@ import (
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
+	"CRUD-API/handlers/minioclient"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
 	"CRUD-API/handlers/researcher"
+	"CRUD-API/handlers/researcher_list"
 	"CRUD-API/handlers/user"
+	"CRUD-API/initializers"
 	"CRUD-API/middlewares"
 
 	// . "CRUD-API/models"
@@ -25,27 +28,28 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var dsn = "postgres://navjsbdt:IrWX1ZnQiuYaMiTXCOwNCB-acHRKJgvT@satao.db.elephantsql.com/navjsbdt"
-var db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+var db *gorm.DB
+
+func init() {
+	initializers.LoadEnvVariables()
+	db = initializers.ConnectDb()
+}
 
 // @title Researcher Service API
 // @version 1.0.0
 // @description This is a sample server for a researcher service.
-// @host localhost:8080
+// @host localhost:9000
 // @BasePath /api/v1
 func main() {
-	if err != nil {
-		panic("failed to connect database")
-	}
 	r := gin.New()
 	r.Use(middlewares.CORSMiddleware())
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	auth := auth.NewAuthHandler(db)
+	r.POST("/api/v1/signup", auth.SignUp)
 	r.POST("/api/v1/login", auth.Login)
 
 	//User Zones
@@ -63,6 +67,11 @@ func main() {
 	r.POST("/position", positionHandler.CreatePositionHandler)
 	r.PUT("/position/:id", positionHandler.UpdatePositionHandler)
 	r.DELETE("/position/:id", positionHandler.DeletePositionHandler)
+
+	//minio upload
+	minioClient := minioclient.MinioClientConnect()
+	r.POST("/minio", minioClient.UploadFile)
+	r.DELETE("/minio/:directory/:filename", minioClient.DeleteFile)
 
 	//Degree Zones
 	degreeHandler := degree.NewDegreeHandler(db)
@@ -155,7 +164,12 @@ func main() {
 	//researcher
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
-	r.POST("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
+	r.POST("/api/v1/researcher/profile", researcherHandler.CreateResearcher)
+
+	//researcher list
+	researcherListHandler := researcher_list.ResearcherListConnection(db)
+	r.POST("/api/v1/researcherlist/", researcherListHandler.ListResearcher)
+
 	r.Run()
 
 }
