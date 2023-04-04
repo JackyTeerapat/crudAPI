@@ -11,7 +11,7 @@ POST http://localhost:8080/position
 Content-Type: application/json
 
 {
-    "position": "นางสาว",
+    "position": "ดร.",
     "created_by": "Champlnwza007",
     "updated_by": "Champlnwza007"
 }
