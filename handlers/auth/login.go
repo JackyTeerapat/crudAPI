@@ -7,11 +7,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (u *AuthHandler) Login(c *gin.Context) {
 	var body struct {
 		Username string
+		Password string
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -27,11 +29,12 @@ func (u *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-	// if err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid username or password"})
-	// 	return
-	// }
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid password or username"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 
 	token, err := GenerateToken(user.ID, user.Username)
 	if err != nil {

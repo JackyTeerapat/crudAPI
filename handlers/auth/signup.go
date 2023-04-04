@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (u *AuthHandler) SignUp(c *gin.Context) {
@@ -23,21 +24,21 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 	var userExist models.User
 	u.db.Where("username = ?", body.Username).First(&userExist)
 	if userExist.ID > 0 {
-		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("username is exist"))
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("username has already been exist"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	// Hash password
-	// hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	//Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	if err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("failed to hash password"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 
-	// if err != nil {
-	// 	res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("failed to hash password"))
-	// 	c.JSON(http.StatusBadRequest, res)
-	// 	return
-	// }
 	// Create user
-	user := models.User{Username: body.Username, Role: strings.ToUpper(body.Role)}
+	user := models.User{Username: body.Username, Password: string(hash), Role: strings.ToUpper(body.Role)}
 	data := u.db.Create(&user)
 	if data.Error != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, data.Error)
@@ -49,6 +50,7 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 	response := models.Register{
 		ID:       user.ID,
 		Username: user.Username,
+		Password: user.Password,
 		Role:     user.Role,
 	}
 	res := api.ResponseApi(http.StatusCreated, response, nil)

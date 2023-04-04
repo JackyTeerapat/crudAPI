@@ -27,8 +27,6 @@ func GenerateToken(id uint, username string) (tokenString string, err error) {
 		"username": username,
 		"id":       strconv.Itoa(int(id)),
 	})
-
-	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err = token.SignedString(secretKey)
 
 	if err != nil {
