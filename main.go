@@ -16,6 +16,7 @@ import (
 	"CRUD-API/handlers/profile_attach"
 	"CRUD-API/handlers/program"
 	"CRUD-API/handlers/researcher"
+	"CRUD-API/handlers/researcher_list"
 	"CRUD-API/handlers/user"
 	"CRUD-API/initializers"
 	"CRUD-API/middlewares"
@@ -164,6 +165,11 @@ func main() {
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.POST("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
+
+	//researcher list
+	researcherListHandler := researcher_list.ResearcherListConnection(db)
+	r.POST("/api/v1/researcherlist/", researcherListHandler.ListResearcher)
+
 	r.Run()
 
 }
