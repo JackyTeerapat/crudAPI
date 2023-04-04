@@ -312,3 +312,58 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Researcher profile updated successfully."})
 }
+
+func (h *ResearcherHandler) DeleteResearcher(c *gin.Context) {
+	id := c.Param("id")
+
+	// Start deleting degree data
+	result := h.db.Exec("DELETE FROM degree WHERE profile_id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting degree data for researcher with ID %s: %v", id, result.Error)})
+		return
+	}
+
+	// Start deleting program data
+	result = h.db.Exec("DELETE FROM program WHERE profile_id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting program data for researcher with ID %s: %v", id, result.Error)})
+		return
+	}
+
+	// Start deleting experience data
+	result = h.db.Exec("DELETE FROM experience WHERE profile_id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting experience data for researcher with ID %s: %v", id, result.Error)})
+		return
+	}
+
+	// Start deleting exploration data
+	result = h.db.Exec("DELETE FROM exploration WHERE profile_id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting exploration data for researcher with ID %s: %v", id, result.Error)})
+		return
+	}
+
+	// Start deleting attachment data
+	result = h.db.Exec("DELETE FROM profile_attach WHERE profile_id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting attachment data for researcher with ID %s: %v", id, result.Error)})
+		return
+	}
+
+	// Finally, start deleting the profile
+	result = h.db.Exec("DELETE FROM profile WHERE id = ?", id)
+	if result.Error != nil {
+		// Handle the error if the query fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting the researcher profile: %v", result.Error)})
+		return
+	}
+
+	// Return success message
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Researcher with ID %s has been deleted successfully.", id)})
+}
