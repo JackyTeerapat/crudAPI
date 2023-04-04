@@ -1,10 +1,10 @@
-package assessment_progress
+package assessment
 
 import (
 	"fmt"
 	"net/http"
 
-	"CRUD-API/handlers/api"
+	"CRUD-API/api"
 	"CRUD-API/models"
 
 	"github.com/gin-gonic/gin"
