@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  crudapi:
+    image: crudapi
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 9000:9000
+    env_file:
+      - .env
+    volumes:
+      - .:/go/src/app
+
