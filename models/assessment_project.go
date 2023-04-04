@@ -8,9 +8,7 @@ type Project struct {
 	Project_title     string    `json:"project_title"`
 	Project_point     int       `json:"project_point"`
 	Project_estimate  bool      `json:"project_estimate"`
-	Estimate_remark   string    `json:"estimate_remark"`
 	Project_recommend bool      `json:"project_recommend"`
-	Recommend_remark  string    `json:"recommend_remark"`
 	File_name         string    `json:"file_name"`
 	File_storage      string    `json:"file_storage"`
 	Period            bool      `json:"period"`
@@ -21,5 +19,5 @@ type Project struct {
 }
 
 func (p *Project) TableName() string {
-	return "project"
+	return "assessment_project"
 }
