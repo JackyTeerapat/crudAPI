@@ -1,11 +1,8 @@
 package main
 
 import (
+	"CRUD-API/api/middlewares"
 	"CRUD-API/handlers/assessment"
-	"CRUD-API/handlers/assessment_article"
-	"CRUD-API/handlers/assessment_progress"
-	"CRUD-API/handlers/assessment_project"
-	"CRUD-API/handlers/assessment_report"
 	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
@@ -44,7 +41,7 @@ func init() {
 // @BasePath /api/v1
 func main() {
 	r := gin.New()
-	// r.Use(middlewares.CORSMiddleware())
+	r.Use(middlewares.CORSMiddleware())
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	auth := auth.NewAuthHandler(db)
@@ -124,12 +121,12 @@ func main() {
 	assessmentHandler := assessment.NewAssessmentHandler(db)
 	r.GET("/assessment/", assessmentHandler.ListAssessment)
 	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
-	r.POST("/assessment", assessmentHandler.CreateAssessmentHandler)
+	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
 	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
 	//Article Zones
-	articleHandler := assessment_article.NewArticleHandler(db)
+	articleHandler := assessment.NewArticleHandler(db)
 	r.GET("/article/", articleHandler.ListArticle)
 	r.GET("/article/:id", articleHandler.GetArticleHandler)
 	r.POST("/article", articleHandler.CreateArticleHandler)
@@ -137,7 +134,7 @@ func main() {
 	r.DELETE("/article/:id", articleHandler.DeleteArticleHandler)
 
 	//AssessmentProgress Zones
-	progressHandler := assessment_progress.NewProgressHandler(db)
+	progressHandler := assessment.NewProgressHandler(db)
 	r.GET("progress/", progressHandler.ListProgress)
 	r.GET("/progress/:id", progressHandler.GetProgressHandler)
 	r.POST("/progress", progressHandler.CreateProgressHandler)
@@ -145,7 +142,7 @@ func main() {
 	r.DELETE("/progress/:id", progressHandler.DeleteProgressHandler)
 
 	//AssessmentReport Zones
-	reportHandler := assessment_report.NewReportHandler(db)
+	reportHandler := assessment.NewReportHandler(db)
 	r.GET("report/", reportHandler.ListReport)
 	r.GET("/report/:id", reportHandler.GetReportHandler)
 	r.POST("/report", reportHandler.CreateReportHandler)
@@ -153,7 +150,7 @@ func main() {
 	r.DELETE("/report/:id", reportHandler.DeleteReportHandler)
 
 	//Assessment Project Zones
-	projectHandler := assessment_project.NewProjectHandler(db)
+	projectHandler := assessment.NewProjectHandler(db)
 	r.GET("/project", projectHandler.ListProjects)
 	r.GET("/project/:id", projectHandler.GetProjectHandler)
 	r.POST("/project", projectHandler.CreateProjectHandler)

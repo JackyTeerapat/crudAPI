@@ -20,7 +20,7 @@ func NewProfileHandler(db *gorm.DB) *ProfileHandler {
 func (u *ProfileHandler) ListProfile(c *gin.Context) {
 	var profiles []models.Profile
 
-	r := u.db.Table("profile").Preload("Position").Find(&profiles)
+	r := u.db.Table("profile").Find(&profiles)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
