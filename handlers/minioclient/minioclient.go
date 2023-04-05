@@ -58,7 +58,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 	}
 	files := form.File["files"]
 
-	directory := c.PostForm("directory")
+	directory := c.Param("directory")
 	if directory == "" {
 		directory = "upload"
 	}
