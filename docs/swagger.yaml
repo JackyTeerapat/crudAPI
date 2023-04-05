@@ -1,338 +1,338 @@
 basePath: /api/v1
 definitions:
-  models.Project:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      estimate_remark:
-        type: string
-      file_name:
-        type: string
-      file_storage:
-        type: string
-      id:
-        type: integer
-      period:
-        type: boolean
-      project_estimate:
-        type: boolean
-      project_point:
-        type: integer
-      project_recommend:
-        type: boolean
-      project_title:
-        type: string
-      project_year:
-        type: string
-      recommend_remark:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: string
-    type: object
-  models.User:
-    properties:
-      id:
-        type: integer
-      role:
-        type: string
-      username:
-        type: string
-    type: object
-  researcher.Researcher:
-    properties:
-      address_home:
-        type: string
-      address_work:
-        type: string
-      attach:
-        items:
-          $ref: '#/definitions/researcher.tempAttach'
-        type: array
-      degree:
-        items:
-          $ref: '#/definitions/researcher.tempDegree'
-        type: array
-      email:
-        type: string
-      experience:
-        items:
-          $ref: '#/definitions/researcher.tempExperience'
-        type: array
-      explore:
-        items:
-          $ref: '#/definitions/researcher.tempExplore'
-        type: array
-      first_name:
-        type: string
-      last_name:
-        type: string
-      phone_number:
-        type: string
-      position:
-        items:
-          $ref: '#/definitions/researcher.tempPosition'
-        type: array
-      profile_id:
-        type: integer
-      program:
-        items:
-          $ref: '#/definitions/researcher.tempProgram'
-        type: array
-      university:
-        type: string
-    type: object
-  researcher.tempAttach:
-    properties:
-      file_action:
-        type: string
-      file_id:
-        type: integer
-      file_name:
-        type: string
-      file_storage:
-        type: string
-    type: object
-  researcher.tempDegree:
-    properties:
-      degree_program:
-        type: string
-      degree_type:
-        type: string
-      degree_university:
-        type: string
-      id:
-        type: integer
-    type: object
-  researcher.tempExperience:
-    properties:
-      experience_end:
-        type: string
-      experience_id:
-        type: integer
-      experience_remark:
-        type: string
-      experience_start:
-        type: string
-      experience_type:
-        type: string
-      experience_university:
-        type: string
-    type: object
-  researcher.tempExplore:
-    properties:
-      explore_detail:
-        type: string
-      explore_id:
-        type: integer
-      explore_name:
-        type: string
-      explore_year:
-        type: string
-    type: object
-  researcher.tempPosition:
-    properties:
-      position_id:
-        type: integer
-      position_name:
-        type: string
-    type: object
-  researcher.tempProgram:
-    properties:
-      program_id:
-        type: integer
-      program_name:
-        type: string
-    type: object
-host: localhost:9000
+    models.Project:
+        properties:
+            created_at:
+                type: string
+            created_by:
+                type: string
+            estimate_remark:
+                type: string
+            file_name:
+                type: string
+            file_storage:
+                type: string
+            id:
+                type: integer
+            period:
+                type: boolean
+            project_estimate:
+                type: boolean
+            project_point:
+                type: integer
+            project_recommend:
+                type: boolean
+            project_title:
+                type: string
+            project_year:
+                type: string
+            recommend_remark:
+                type: string
+            updated_at:
+                type: string
+            updated_by:
+                type: string
+        type: object
+    models.User:
+        properties:
+            id:
+                type: integer
+            role:
+                type: string
+            username:
+                type: string
+        type: object
+    researcher.Researcher:
+        properties:
+            address_home:
+                type: string
+            address_work:
+                type: string
+            attach:
+                items:
+                    $ref: "#/definitions/researcher.tempAttach"
+                type: array
+            degree:
+                items:
+                    $ref: "#/definitions/researcher.tempDegree"
+                type: array
+            email:
+                type: string
+            experience:
+                items:
+                    $ref: "#/definitions/researcher.tempExperience"
+                type: array
+            explore:
+                items:
+                    $ref: "#/definitions/researcher.tempExplore"
+                type: array
+            first_name:
+                type: string
+            last_name:
+                type: string
+            phone_number:
+                type: string
+            position:
+                items:
+                    $ref: "#/definitions/researcher.tempPosition"
+                type: array
+            profile_id:
+                type: integer
+            program:
+                items:
+                    $ref: "#/definitions/researcher.tempProgram"
+                type: array
+            university:
+                type: string
+        type: object
+    researcher.tempAttach:
+        properties:
+            file_action:
+                type: string
+            file_id:
+                type: integer
+            file_name:
+                type: string
+            file_storage:
+                type: string
+        type: object
+    researcher.tempDegree:
+        properties:
+            degree_program:
+                type: string
+            degree_type:
+                type: string
+            degree_university:
+                type: string
+            id:
+                type: integer
+        type: object
+    researcher.tempExperience:
+        properties:
+            experience_end:
+                type: string
+            experience_id:
+                type: integer
+            experience_remark:
+                type: string
+            experience_start:
+                type: string
+            experience_type:
+                type: string
+            experience_university:
+                type: string
+        type: object
+    researcher.tempExplore:
+        properties:
+            explore_detail:
+                type: string
+            explore_id:
+                type: integer
+            explore_name:
+                type: string
+            explore_year:
+                type: string
+        type: object
+    researcher.tempPosition:
+        properties:
+            position_id:
+                type: integer
+            position_name:
+                type: string
+        type: object
+    researcher.tempProgram:
+        properties:
+            program_id:
+                type: integer
+            program_name:
+                type: string
+        type: object
+host: 172.29.106.51:9000
 info:
-  contact: {}
-  description: This is a sample server for a researcher service.
-  title: Researcher Service API
-  version: 1.0.0
+    contact: {}
+    description: This is a sample server for a researcher service.
+    title: Researcher Service API
+    version: 1.0.0
 paths:
-  /project:
-    post:
-      description: Create a data project to database.
-      parameters:
-      - description: Project
-        in: body
-        name: project
-        required: true
-        schema:
-          $ref: '#/definitions/models.Project'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Project'
-      summary: Create a project
-      tags:
-      - Project
-  /project/{id}:
-    delete:
-      description: Delete a data project from database.
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Project'
-      summary: Delete a project
-      tags:
-      - Project
-    get:
-      description: Get a data user from database.
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Project'
-      summary: Get a project
-      tags:
-      - Project
-    put:
-      description: Update a data project to database.
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Project
-        in: body
-        name: project
-        required: true
-        schema:
-          $ref: '#/definitions/models.Project'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Project'
-      summary: Update a project
-      tags:
-      - Project
-  /researcher/profile_detail/{id}:
-    get:
-      description: Get a data profile_detail from database.
-      parameters:
-      - description: researcher ProfileID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/researcher.Researcher'
-      summary: Get a Profile_detail
-      tags:
-      - Profile detail
-  /user:
-    post:
-      description: Create a data user to database.
-      parameters:
-      - description: User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Create a user
-      tags:
-      - User
-  /user/{id}:
-    delete:
-      description: Delete a data user from database.
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Delete a user
-      tags:
-      - User
-    get:
-      description: Get a data user from database.
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Get a user
-      tags:
-      - User
-    put:
-      description: Update a data user to database.
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Update a user
-      tags:
-      - User
+    /project:
+        post:
+            description: Create a data project to database.
+            parameters:
+                - description: Project
+                  in: body
+                  name: project
+                  required: true
+                  schema:
+                      $ref: "#/definitions/models.Project"
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.Project"
+            summary: Create a project
+            tags:
+                - Project
+    /project/{id}:
+        delete:
+            description: Delete a data project from database.
+            parameters:
+                - description: Project ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.Project"
+            summary: Delete a project
+            tags:
+                - Project
+        get:
+            description: Get a data user from database.
+            parameters:
+                - description: Project ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.Project"
+            summary: Get a project
+            tags:
+                - Project
+        put:
+            description: Update a data project to database.
+            parameters:
+                - description: Project ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+                - description: Project
+                  in: body
+                  name: project
+                  required: true
+                  schema:
+                      $ref: "#/definitions/models.Project"
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.Project"
+            summary: Update a project
+            tags:
+                - Project
+    /researcher/profile_detail/{id}:
+        get:
+            description: Get a data profile_detail from database.
+            parameters:
+                - description: researcher ProfileID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/researcher.Researcher"
+            summary: Get a Profile_detail
+            tags:
+                - Profile detail
+    /user:
+        post:
+            description: Create a data user to database.
+            parameters:
+                - description: User
+                  in: body
+                  name: user
+                  required: true
+                  schema:
+                      $ref: "#/definitions/models.User"
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.User"
+            summary: Create a user
+            tags:
+                - User
+    /user/{id}:
+        delete:
+            description: Delete a data user from database.
+            parameters:
+                - description: User ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.User"
+            summary: Delete a user
+            tags:
+                - User
+        get:
+            description: Get a data user from database.
+            parameters:
+                - description: User ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.User"
+            summary: Get a user
+            tags:
+                - User
+        put:
+            description: Update a data user to database.
+            parameters:
+                - description: User ID
+                  in: path
+                  name: id
+                  required: true
+                  type: integer
+                - description: User
+                  in: body
+                  name: user
+                  required: true
+                  schema:
+                      $ref: "#/definitions/models.User"
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: OK
+                    schema:
+                        $ref: "#/definitions/models.User"
+            summary: Update a user
+            tags:
+                - User
 swagger: "2.0"

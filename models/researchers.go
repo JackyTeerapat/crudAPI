@@ -21,6 +21,7 @@ type TempDegree struct {
 	DegreeType       string `json:"degree_type"`
 	DegreeProgram    string `json:"degree_program"`
 	DegreeUniversity string `json:"degree_university"`
+	Activated        bool   `json:"activated"`
 }
 type TempPosition struct {
 	PositionID   int    `json:"position_id"`
@@ -29,6 +30,7 @@ type TempPosition struct {
 type TempProgram struct {
 	ProgramID   int    `json:"program_id"`
 	ProgramName string `json:"program_name"`
+	Activated   bool   `json:"activated"`
 }
 
 type TempExperience struct {
@@ -38,6 +40,7 @@ type TempExperience struct {
 	ExperienceEnd        string `json:"experience_end"`
 	ExperienceUniversity string `json:"experience_university"`
 	ExperienceRemark     string `json:"experience_remark"`
+	Activated            bool   `json:"activated"`
 }
 
 type TempAttach struct {
@@ -45,6 +48,7 @@ type TempAttach struct {
 	FileName    string `json:"file_name"`
 	FileAction  string `json:"file_action"`
 	FileStorage string `json:"file_storage"`
+	Activated   bool   `json:"activated"`
 }
 
 type TempExplore struct {
@@ -52,4 +56,5 @@ type TempExplore struct {
 	ExploreName   string `json:"explore_name"`
 	ExploreYear   string `json:"explore_year"`
 	ExploreDetail string `json:"explore_detail"`
+	Activated     bool   `json:"activated"`
 }
