@@ -51,7 +51,6 @@ func (u *DegreeHandler) CreateDegreeHandler(c *gin.Context) {
 		})
 		return
 	}
-	//รับมาแล้วสร้างเป็น ข้อมูล ลง Table
 	r := u.db.Create(&degree)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

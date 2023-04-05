@@ -1,7 +1,7 @@
 
-GET http://localhost:8080/api/v1/researcher/profile_detail/5
+GET http://localhost:9000/api/v1/researcher/profile_detail/24
 ###
-POST http://localhost:8080/api/v1/researcher/profile
+POST http://localhost:9000/api/v1/researcher/profile
 Content-Type: application/json
 
 {
@@ -9,10 +9,10 @@ Content-Type: application/json
     "last_name": "KAK",
     "address_home": "178-180",
     "position_id": 1,
-    "address_work": "178-180",
     "email": "jackKAK@email.com",
     "phone_number": "1234567890",
     "university": "MIT",
+    "address_work": "178-180",
     "degree": [
         {
         "degree_type": "โท",
@@ -75,3 +75,86 @@ Content-Type: application/json
         }
     ]
 }
+
+
+
+###
+PUT http://localhost:9000/api/v1/researcher/profile/5
+Content-Type: application/json
+
+
+{
+    "first_name": "Jackykengmak",
+    "last_name": "KAK",
+    "address_home": "178-180",
+    "position_id": 1,
+    "address_work": "178-180",
+    "email": "jackKAK@email.com",
+    "phone_number": "1234567890",
+    "university": "MIT",
+    "degree": [
+        {
+        "degree_type": "จัตวา",
+        "degree_program": "Computer Science",
+        "degree_university": "KMUTNB"
+        },
+        {
+        "degree_type": "ตรี",
+        "degree_program": "Computer Science",
+        "degree_university": "KMUTNB"
+        }
+    ],
+    "program": [
+        {
+        "program_name": "Coding1150"
+        },
+        {
+        "program_name": "Leadership Development"
+
+        }
+    ],
+    "experience": [
+        {
+        "experience_type": "Intern",
+        "experience_start": "2018",
+        "experience_end": "2018",
+        "experience_university": "Google",
+        "experience_remark": "Developed"
+        },
+        {
+        "experience_type": "Full",
+        "experience_start": "2019",
+        "experience_end": "2019",
+        "experience_university": "Microsoft",
+        "experience_remark": "Led a team"
+        }
+    ],
+    "explore": [
+        {
+        "explore_name": "Study",
+        "explore_year": "2017",
+        "explore_detail": "Studied"
+        },
+        {
+        "explore_name": "Volun",
+        "explore_year": "2019",
+        "explore_detail": "Organized"
+        }
+    ],
+    "attach": [
+        {
+        "file_name": "resume",
+        "file_action": "Download",
+        "file_storage":"file_path"
+        },
+        {
+        "file_name": "cover_letter",
+        "file_action": "Down",
+        "file_storage":"file_path"
+        }
+    ]
+}
+
+
+###
+DELETE  http://localhost:9000/api/v1/researcher/profile/24

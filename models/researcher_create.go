@@ -20,10 +20,12 @@ type TempDegree_create struct {
 	DegreeType       string `json:"degree_type"`
 	DegreeProgram    string `json:"degree_program"`
 	DegreeUniversity string `json:"degree_university"`
+	Activated        bool   `json:"activated" gorm:"default:true"`
 }
 
 type TempProgram_create struct {
 	ProgramName string `json:"program_name"`
+	Activated   bool   `json:"activated" gorm:"default:true"`
 }
 
 type TempExperience_create struct {
@@ -32,16 +34,19 @@ type TempExperience_create struct {
 	ExperienceEnd        *string `json:"experience_end"`
 	ExperienceUniversity string  `json:"experience_university"`
 	ExperienceRemark     string  `json:"experience_remark"`
+	Activated            bool    `json:"activated" gorm:"default:true"`
 }
 
 type TempExplore_create struct {
 	ExploreName   string `json:"explore_name"`
 	ExploreYear   string `json:"explore_year"`
 	ExploreDetail string `json:"explore_detail"`
+	Activated     bool   `json:"activated" gorm:"default:true"`
 }
 
 type TempAttach_create struct {
 	FileName     string `json:"file_name"`
 	FileAction   string `json:"file_action"`
 	File_storage string `json:"file_storage"`
+	Activated    bool   `json:"activated" gorm:"default:true"`
 }

@@ -29,6 +29,7 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, assessment)
 }
+
 func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	var assessment models.Assessment
 	id := c.Param("id")
@@ -134,9 +135,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequest) e
 func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	var assessment models.AssessmentRequest
 	if err := c.ShouldBindJSON(&assessment); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

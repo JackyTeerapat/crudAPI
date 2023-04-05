@@ -1,13 +1,13 @@
 
-GET http://localhost:8080/exploration
+GET http://localhost:9000/exploration
 
 ###
 
-GET http://localhost:8080/exploration/3
+GET http://localhost:9000/exploration/3
 
 ###
 
-POST http://localhost:8080/exploration
+POST http://localhost:9000/exploration
 Content-Type: application/json
 
 	
@@ -15,7 +15,8 @@ Content-Type: application/json
     "explore_name":"TEST",
     "explore_year":"TEST",
     "explore_detail":"TEST",
-    "profile_id": 2,
+    "profile_id": 1,
+    "activated": true,
     "created_by": "Champlnwza008",
     "updated_by": "Champlnwza008"
 }
@@ -23,7 +24,7 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8080/exploration/1
+PUT http://localhost:9000/exploration/1
 Content-Type: application/json
 
 { 
@@ -31,14 +32,15 @@ Content-Type: application/json
     "explore_year":"TEST",
     "explore_detail":"TEST",
     "profile_id": 1,
+    "activated": true,
     "created_by": "Champlnwza008",
     "updated_by": "Champlnwza008"
 }
 
 ###
-DELETE http://localhost:8080/exploration/1
+DELETE http://localhost:9000/exploration/1
 ###
-DELETE http://localhost:8080/exploration/all
+DELETE http://localhost:9000/exploration/all
 
 
 

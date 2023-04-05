@@ -12,13 +12,59 @@ Content-Type: application/json
 
 	
 {
-    "degree_type": "เอก",
-    "degree_program": "computer",
-    "degree_university": "KK",
-    "profile_id": 2,
-    "created_by": "Champlnwza007",
-    "updated_by": "Champlnwza007"
+    "assessment_start": "2012",
+    "assessment_end": "2013",
+    "assessment_file": {
+        "assessment_file_name": "my_evaluation_v2.pdf",
+        "assessment_file_storage": "https://example.com/files/my_evaluation_v2.pdf"
+    },
+    "assessment_project": {
+        "project_year": "2012",
+        "project_title": "Marketing Campaign",
+        "project_point": 8,
+        "project_estimate": true,
+        "project_recommend": false,
+        "project_file": {
+            "file_name": "marketing_campaign.pdf",
+            "file_storage": "https://example.com/files/marketing_campaign.pdf"
+        },
+        "period": false
+    },
+    "assessment_progress": {
+        "progress_year": "2012",
+        "progress_title": "Quarterly Progress Report",
+        "progress_estimate": true,
+        "progress_recommend": true,
+        "progress_file": {
+            "file_name": "quarterly_progress.pdf",
+            "file_storage": "https://example.com/files/quarterly_progress.pdf"
+        },
+        "period": true
+    },
+    "assessment_report": {
+        "report_year": "2012",
+        "report_title": "Environmental Report",
+        "report_estimate": true,
+        "report_recommend": false,
+        "report_file": {
+            "file_name": "environmental_report.pdf",
+            "file_storage": "https://example.com/files/environmental_report.pdf"
+        },
+        "period": false
+    },
+    "assessment_article": {
+        "article_year": "2012",
+        "article_title": "The Future of Tech",
+        "article_estimate": true,
+        "article_recommend": true,
+        "article_file": {
+            "file_name": "future_of_tech.pdf",
+            "file_storage": "https://example.com/files/future_of_tech.pdf"
+        },
+        "period": true
+    }
 }
+
 
 
 
@@ -27,13 +73,60 @@ PUT http://localhost:8080/assessment/7
 Content-Type: application/json
 
 {
-    "degree_type": "นายสาว",
-    "degree_program": "computer",
-    "degree_university": "KK",
-    "profile_id": 1,
-    "created_by": "Champlnwza007",
-    "updated_by": "Champlnwza007"
+    "assessment_start": "2020",
+    "assessment_end": "2021",
+    "assessment_file": {
+        "assessment_file_name": "my_evaluation_v3.pdf",
+        "assessment_file_storage": "https://example.com/files/my_evaluation_v3.pdf"
+    },
+    "assessment_project": {
+        "project_year": "2020",
+        "project_title": "Product Development",
+        "project_point": 9,
+        "project_estimate": false,
+        "project_recommend": true,
+        "project_file": {
+            "file_name": "product_development.pdf",
+            "file_storage": "https://example.com/files/product_development.pdf"
+        },
+        "period": false
+    },
+    "assessment_progress": {
+        "progress_year": "2020",
+        "progress_title": "Monthly Progress Report",
+        "progress_estimate": true,
+        "progress_recommend": false,
+        "progress_file": {
+            "file_name": "monthly_progress.pdf",
+            "file_storage": "https://example.com/files/monthly_progress.pdf"
+        },
+        "period": true
+    },
+    "assessment_report": {
+        "report_year": "2020",
+        "report_title": "CSR Report",
+        "report_estimate": false,
+        "report_recommend": true,
+        "report_file": {
+            "file_name": "csr_report.pdf",
+            "file_storage": "https://example.com/files/csr_report.pdf"
+        },
+        "period": true
+    },
+    "assessment_article": {
+        "article_year": "2020",
+        "article_title": "The Importance of Diversity in the Workplace",
+        "article_estimate": true,
+        "article_recommend": false,
+        "article_file": {
+            "file_name": "diversity_workplace.pdf",
+            "file_storage": "https://example.com/files/diversity_workplace.pdf"
+        },
+        "period": false
+    }
 }
+
+
 ###
 DELETE http://localhost:8080/assessment/7
 ###
