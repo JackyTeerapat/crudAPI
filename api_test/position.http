@@ -1,13 +1,13 @@
 
-GET http://localhost:8080/position
+GET http://localhost:9000/position
 
 ###
 
-GET http://localhost:8080/position/1
+GET http://localhost:9000/position/1
 
 ###
 
-POST http://localhost:8080/position
+POST http://localhost:9000/position
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8080/position/2
+PUT http://localhost:9000/position/2
 Content-Type: application/json
 
 {
@@ -27,9 +27,9 @@ Content-Type: application/json
   "role": "position"
 }
 ###
-DELETE http://localhost:8080/position/18
+DELETE http://localhost:9000/position/18
 ###
-DELETE http://localhost:8080/position/all
+DELETE http://localhost:9000/position/all
 
 
 

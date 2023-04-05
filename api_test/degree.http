@@ -1,29 +1,29 @@
 
-GET http://localhost:8080/degree
+GET http://localhost:9000/degree
 
 ###
 
-GET http://localhost:8080/degree/1
+GET http://localhost:9000/degree/1
 
 ###
 
-POST http://localhost:8080/degree
+POST http://localhost:9000/degree
 Content-Type: application/json
 
 	
 {
-    "degree_type": "เอก",
+    "degree_type": "โท",
     "degree_program": "computer",
     "degree_university": "KK",
-    "profile_id": 2,
+    "profile_id": 1,
     "created_by": "Champlnwza007",
-    "updated_by": "Champlnwza007"
+    "updated_by": "Champlnwza007",
+    "activated": true
 }
 
 
-
 ###
-PUT http://localhost:8080/degree/7
+PUT http://localhost:9000/degree/7
 Content-Type: application/json
 
 {
@@ -33,11 +33,12 @@ Content-Type: application/json
     "profile_id": 1,
     "created_by": "Champlnwza007",
     "updated_by": "Champlnwza007"
+    "isActivated": true
 }
 ###
-DELETE http://localhost:8080/degree/7
+DELETE http://localhost:9000/degree/7
 ###
-DELETE http://localhost:8080/degree/all
+DELETE http://localhost:9000/degree/all
 
 
 

@@ -121,7 +121,7 @@ func main() {
 	assessmentHandler := assessment.NewAssessmentHandler(db)
 	r.GET("/assessment/", assessmentHandler.ListAssessment)
 	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
-	r.POST("/assessment", assessmentHandler.CreateAssessmentHandler)
+	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
 	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
