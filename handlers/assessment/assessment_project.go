@@ -1,4 +1,4 @@
-package assessment_project
+package assessment
 
 import (
 	"fmt"
