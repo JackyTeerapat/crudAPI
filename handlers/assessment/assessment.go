@@ -31,7 +31,7 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	var assessment models.Assessment
 	id := c.Param("id")
-	r := u.db.Table("assessment").Where("id = ?", id).First(&assessment)
+	r := u.db.Table("assessment").Where("id = ?", id).Preload("Project").Preload("Progress").Preload("Report").Preload("Article").Preload("Profile").First(&assessment)
 	if r.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
 		return
@@ -104,20 +104,20 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	h.db.Last(&profile)
 	profileID := profile.ID
 
-	var assessmentid models.Assessment
-	h.db.Last(&assessmentid)
-	assessmentID := assessmentid.Id
-
 	//Assessment
 
 	// Update the INSERT statement for the assessment table
 	result := h.db.Exec("INSERT INTO assessment (assessment_start, assessment_end, assessment_file_name, assessment_file_storage, project_id, progress_id, report_id, article_id, profile_id, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ? , ? , ?, ?, ?, ?)",
-		assessment.AssessmentStart, assessment.AssessmentEnd, assessment.AssessmentFileName, assessment.AssessmentFileStorage, projectID, progressID, reportID, articleID, profileID, createdBy, updatedBy)
+		assessment.AssessmentStart, assessment.AssessmentEnd, assessment.AssessmentFile.FileName, assessment.AssessmentFile.FileStorage, projectID, progressID, reportID, articleID, profileID, createdBy, updatedBy)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting assessment data into the assessment table: %v", result.Error)})
 		return
 	}
+
+	var assessmentid models.Assessment
+	h.db.Last(&assessmentid)
+	assessmentID := assessmentid.Id
 
 	c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("assessment ID : %v Created", assessmentID)})
 }
