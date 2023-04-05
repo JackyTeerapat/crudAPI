@@ -3,13 +3,11 @@ package models
 import "time"
 
 type Progress struct {
-	Id                 int       `json:"id"`
+	ID                 int       `json:"id"`
 	Progress_year      string    `json:"progress_year"`
 	Progress_title     string    `json:"progress_title"`
 	Progress_estimate  bool      `json:"progress_estimate"`
-	Estimate_remark    string    `json:"estimate_remark"`
 	Progress_recommend bool      `json:"progress_recommend"`
-	Recommend_remark   string    `json:"recommend_remark"`
 	File_name          string    `json:"file_name"`
 	File_storage       string    `json:"file_storage"`
 	Period             bool      `json:"period"`
