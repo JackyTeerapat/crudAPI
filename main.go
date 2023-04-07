@@ -1,6 +1,7 @@
 package main
 
 import (
+	"CRUD-API/api/middlewares"
 	"CRUD-API/handlers/assessment"
 	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
