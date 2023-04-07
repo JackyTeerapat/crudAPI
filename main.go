@@ -65,8 +65,8 @@ func main() {
 
 	//minio upload
 	minioClient := minioclient.MinioClientConnect()
-	r.POST("/researcher/flie/:directory", minioClient.UploadFile)
-	r.DELETE("/researcher/flie/:directory/:filename", minioClient.DeleteFile)
+	r.POST("/api/v1//researcher/flie/:directory", minioClient.UploadFile)
+	r.DELETE("/api/v1//researcher/flie/:directory/:filename", minioClient.DeleteFile)
 
 	//Degree Zones
 	degreeHandler := degree.NewDegreeHandler(db)
