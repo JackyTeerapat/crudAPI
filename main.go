@@ -119,7 +119,7 @@ func main() {
 
 	//Article Zones
 	assessmentHandler := assessment.NewAssessmentHandler(db)
-	r.GET("/assessment/", assessmentHandler.ListAssessment)
+	r.GET("/api/v1/researcher/assessment/", assessmentHandler.ListAssessment)
 	r.GET("/api/v1/researcher/assessment/:id", assessmentHandler.GetAssessmentHandler)
 	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
 	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)

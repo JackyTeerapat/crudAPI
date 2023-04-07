@@ -20,7 +20,7 @@ func NewAssessmentHandler(db *gorm.DB) *AssessmentHandler {
 func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 	var assessment []models.Assessment
 
-	r := u.db.Table("assessment").Find(&assessment)
+	r := u.db.Table("assessment").Preload("Project").Preload("Progress").Preload("Report").Preload("Article").Preload("Profile").Find(&assessment)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
