@@ -22,13 +22,6 @@ type MinioClient struct {
 	bucketName string
 }
 
-type MinioResponse struct {
-	Status       int                `json:"status"`
-	Description  string             `json:"description"`
-	ErrorMessage string             `json:"error_message"`
-	FileData     []FileResponseData `json:"data"`
-}
-
 type FileResponseData struct {
 	FileId   string `json:"file_id"`
 	FileName string `json:"file_name"`
@@ -73,12 +66,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		directory = "upload"
 	}
 
-	response := MinioResponse{
-		Status:       http.StatusCreated,
-		Description:  "",
-		ErrorMessage: "",
-	}
-
+	resData := []FileResponseData{}
 	for _, file := range files {
 		timenow := time.Now()
 		id := timenow.Format("20060102150405") + "-" + file.Filename
@@ -97,22 +85,22 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		fileBuffer.Close()
 
 		if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-			response.Status = http.StatusInternalServerError
-			response.ErrorMessage = err.Error()
-			c.JSON(http.StatusBadRequest, response)
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
 			return
 		} else {
-			response.Description = "Success"
 			fileData := FileResponseData{
 				FileId:   id,
 				FileName: file.Filename,
 				FileType: directory,
 				FilePath: newName,
 			}
-			response.FileData = append(response.FileData, fileData)
+			resData = append(resData, fileData)
 		}
 	}
-	c.JSON(http.StatusCreated, response)
+	res := api.ResponseApi(http.StatusOK, resData, nil)
+	c.JSON(http.StatusCreated, res)
+	return
 }
 
 func (m *MinioClient) UploadFileBase64(c *gin.Context) {
@@ -132,12 +120,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		directory = "upload"
 	}
 
-	response := MinioResponse{
-		Status:       http.StatusCreated,
-		Description:  "",
-		ErrorMessage: "",
-	}
-
+	resData := []FileResponseData{}
 	for _, v := range req {
 
 		timenow := time.Now()
@@ -160,22 +143,22 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		size := int64(len(fileByte))
 
 		if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-			response.Status = http.StatusInternalServerError
-			response.ErrorMessage = err.Error()
-			c.JSON(http.StatusBadRequest, response)
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
 			return
 		} else {
-			response.Description = "Success"
 			fileData := FileResponseData{
 				FileId:   id,
 				FileName: v.FileName,
 				FileType: directory,
 				FilePath: newName,
 			}
-			response.FileData = append(response.FileData, fileData)
+			resData = append(resData, fileData)
 		}
 	}
-	c.JSON(http.StatusCreated, response)
+	res := api.ResponseApi(http.StatusOK, resData, nil)
+	c.JSON(http.StatusCreated, res)
+	return
 }
 
 func (m *MinioClient) DeleteFile(c *gin.Context) {
@@ -185,19 +168,15 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 	if directory == "" {
 		directory = "upload"
 	}
-	response := MinioResponse{
-		Status:       http.StatusOK,
-		ErrorMessage: "",
-	}
 
 	opts := minio.RemoveObjectOptions{GovernanceBypass: true}
 	err := m.mc.RemoveObject(ctx, m.bucketName, directory+"/"+filename, opts)
 	if err != nil {
-		response.Status = http.StatusInternalServerError
-		response.ErrorMessage = err.Error()
-		c.JSON(http.StatusBadRequest, response)
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
 	} else {
-		response.Description = "Success"
-		c.JSON(http.StatusOK, response)
+		res := api.ResponseApi(http.StatusOK, "Success", nil)
+		c.JSON(http.StatusOK, res)
 	}
+	return
 }
