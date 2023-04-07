@@ -120,7 +120,7 @@ func main() {
 	//Article Zones
 	assessmentHandler := assessment.NewAssessmentHandler(db)
 	r.GET("/assessment/", assessmentHandler.ListAssessment)
-	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
+	r.GET("/api/v1/researcher/assessment/:id", assessmentHandler.GetAssessmentHandler)
 	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
 	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
@@ -157,16 +157,16 @@ func main() {
 	r.PUT("/project/:id", projectHandler.UpdateProjectHandler)
 	r.DELETE("/project/:id", projectHandler.DeleteProjectHandler)
 
-	//researcher
+	//researcher get
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.POST("/api/v1/researcher/profile", researcherHandler.CreateResearcher)
-	// r.PUT("/api/v1/researcher/profile/:id", researcherHandler.UpdateResearcher)
-	// r.DELETE("/api/v1/researcher/profile/:id", researcherHandler.DeleteResearcher)
+	r.PUT("/api/v1/researcher/UpdateProfile/:id", researcherHandler.UpdateResearcher)
+	r.PUT("/api/v1/researcher/VSDeleteProfile/:id", researcherHandler.VSdeleteResearcher)
 
 	//researcher list
 	researcherListHandler := researcher_list.ResearcherListConnection(db)
-	r.POST("/api/v1/researcherlist/", researcherListHandler.ListResearcher)
+	r.POST("/api/v1/researcher/lists", researcherListHandler.ListResearcher)
 
 	r.Run()
 
