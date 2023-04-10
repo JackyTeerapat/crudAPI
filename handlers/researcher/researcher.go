@@ -142,7 +142,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 	// Fetch and add TempAttach data
 	var attaches []models.TempAttach_get
-	attachRows, err := h.db.Raw("SELECT id, file_name, file_action, file_storage,activated FROM profile_attach WHERE profile_id = ?", id).Rows()
+	attachRows, err := h.db.Raw("SELECT id, file_name, file_action,activated FROM profile_attach WHERE profile_id = ?", id).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching attach data: %v", err.Error())})
 		return
@@ -152,7 +152,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 	for attachRows.Next() {
 		var attach models.TempAttach_get
-		if err := attachRows.Scan(&attach.FileID, &attach.FileName, &attach.FileAction, &attach.FileStorage, &attach.Activated); err != nil {
+		if err := attachRows.Scan(&attach.FileID, &attach.FileName, &attach.FileAction, &attach.Activated); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while scanning attach data"})
 			return
 		}
