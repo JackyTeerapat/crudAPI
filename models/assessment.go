@@ -5,25 +5,48 @@ import (
 )
 
 type Assessment struct {
-	ID                      uint `gorm:"primarykey"`
-	Assessment_start        string
-	Assessment_end          string
-	Assessment_file_name    string
-	Assessment_file_storage string
-	ProjectID               int
-	Project                 AssessmentProject `gorm:"foreignKey:ProjectID"`
-	ProgressID              int
-	Progress                AssessmentProgress `gorm:"foreignKey:ProgressID"`
-	ReportID                int
-	Report                  AssessmentReport `gorm:"foreignKey:ReportID"`
-	ArticleID               int
-	Article                 AssessmentArticle `gorm:"foreignKey:ArticleID"`
-	ProfileID               int
-	Profile                 Profile `gorm:"foreignKey:ProfileID"`
-	Created_by              string
-	Updated_by              string
-	CreatedAt               time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
-	UpdatedAt               time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	ProfileID               int                `json:"-"`
+	Id                      int                `json:"assessment_id"`
+	Assessment_start        string             `json:"assessment_start"`
+	Assessment_end          string             `json:"assessment_end"`
+	Assessment_file_name    string             `json:"assessment_file_name"`
+	Assessment_FileId       int                `json:"assessment_file_id"`
+	Assessment_file_storage string             `json:"-"`
+	ProjectID               int                `json:"-"`
+	Project                 AssessmentProject  `gorm:"foreignkey:ProjectID"`
+	ProgressID              int                `json:"-"`
+	Progress                AssessmentProgress `gorm:"foreignkey:ProgressID"`
+	ReportID                int                `json:"-"`
+	Report                  AssessmentReport   `gorm:"foreignkey:ReportID"`
+	ArticleID               int                `json:"-"`
+	Article                 AssessmentArticle  `gorm:"foreignkey:ArticleID"`
+	Created_by              string             `json:"-"`
+	Updated_by              string             `json:"-"`
+	CreatedAt               time.Time          `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt               time.Time          `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+}
+
+type AssessmentResponse struct {
+	ProfileID                   int                `json:"profile_id"`
+	Id                          int                `json:"assessment_id"`
+	Assessment_start            string             `json:"assessment_start"`
+	Assessment_end              string             `json:"assessment_end"`
+	Assessment_file_name        string             `json:"-"`
+	Assessment_FileId           int                `json:"-"`
+	Assessment_file_storage     string             `json:"-"`
+	ProjectID                   int                `json:"-"`
+	Project                     AssessmentProject  `gorm:"foreignkey:ProjectID"`
+	ProgressID                  int                `json:"-"`
+	Progress                    AssessmentProgress `gorm:"foreignkey:ProgressID"`
+	ReportID                    int                `json:"-"`
+	Report                      AssessmentReport   `gorm:"foreignkey:ReportID"`
+	ArticleID                   int                `json:"-"`
+	Article                     AssessmentArticle  `gorm:"foreignkey:ArticleID"`
+	Created_by                  string             `json:"-"`
+	Updated_by                  string             `json:"-"`
+	CreatedAt                   time.Time          `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt                   time.Time          `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	AssessmentProjectResponseID int                `json:"-"`
 }
 
 type AssessmentRequests struct {
