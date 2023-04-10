@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"CRUD-API/api"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -30,13 +32,6 @@ type ResearcherOutput struct {
 	ResearcherId   int    `json:"researcher_id"`
 }
 
-type Response struct {
-	Status       int                 `json:"status"`
-	Description  string              `json:"description"`
-	ErrorMessage string              `json:"errorMessage"`
-	Data         ResponseDataContent `json:"data"`
-}
-
 type ResponseDataContent struct {
 	Content     []ResearcherOutput `json:"content"`
 	TotalPage   int                `json:"total_page"`
@@ -51,10 +46,8 @@ func ResearcherListConnection(db *gorm.DB) *ResearcherList {
 func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	var req RequestInput
 
-	var res Response
 	if err := c.BindJSON(&req); err != nil {
-		res.Status = http.StatusBadRequest
-		res.ErrorMessage = err.Error()
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -66,7 +59,6 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 	page = page * limit
 	isAddWhere := false
-	sqlCountStatement := "COUNT(*)"
 	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, exploration.explore_year, assessment_project.project_title"
 	sqlStatement := "SELECT #STATEMENT# FROM profile " +
 		"JOIN exploration ON profile.id = exploration.profile_id " +
@@ -104,8 +96,14 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 			sqlStatement += " WHERE assessment_project.project_title LIKE '%" + req.ProjectTitle + "%'"
 		}
 	}
+	count := 0
+	if v, err := CountTotalItem(sqlStatement, u); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+	} else {
+		count = v
+	}
 
-	count := CountTotalItem(sqlStatement, sqlCountStatement, u)
 	sqlStatement += " ORDER BY profile.id DESC OFFSET " + strconv.Itoa(page) + " ROWS FETCH NEXT " + strconv.Itoa(limit) + " ROWS ONLY"
 
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlQueryStatement, 1)
@@ -113,8 +111,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	defer list.Close()
 
 	if err != nil {
-		res.Status = http.StatusBadRequest
-		res.ErrorMessage = err.Error()
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		//c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("An error occurred while fetching data %v", err.Error())})
 		return
@@ -125,16 +122,13 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		tmp := ResearcherOutput{"", "", "", "", 0}
 		first, last := "", ""
 		if err := list.Scan(&tmp.ResearcherId, &first, &last, &tmp.University, &tmp.ExploreYear, &tmp.ProjectTitle); err != nil {
-			res.Status = http.StatusBadRequest
-			res.ErrorMessage = err.Error()
+			res := api.ResponseApi(http.StatusBadRequest, nil, err)
 			c.JSON(http.StatusBadRequest, res)
 			return
 		}
 		tmp.ResearcherName = first + " " + last
 		resDataContent.Content = append(resDataContent.Content, tmp)
 	}
-	res.Status = http.StatusOK
-	res.Description = "SUCCESS"
 	resDataContent.IsLast = (page + limit) >= count
 	resDataContent.CurrentPage = req.Page
 	resDataContent.TotalObject = count
@@ -142,18 +136,17 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	if count%limit > 0 {
 		resDataContent.TotalPage++
 	}
-	res.Data = resDataContent
+	res := api.ResponseApi(http.StatusOK, resDataContent, nil)
 	c.JSON(http.StatusOK, res)
 }
 
-func CountTotalItem(sqlStatement, sqlCountStatement string, u *ResearcherList) int {
+func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
 	count := 0
-	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlCountStatement, 1)
+	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
 	row := u.db.Raw(sqlStatement).Row()
 	err := row.Scan(&count)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-
-	return count
+	return count, nil
 }

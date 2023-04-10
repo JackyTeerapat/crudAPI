@@ -7,7 +7,6 @@ import (
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
-	"CRUD-API/handlers/minioclient"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
@@ -65,9 +64,9 @@ func main() {
 	r.DELETE("/position/:id", positionHandler.DeletePositionHandler)
 
 	//minio upload
-	minioClient := minioclient.MinioClientConnect()
-	r.POST("/minio", minioClient.UploadFile)
-	r.DELETE("/minio/:directory/:filename", minioClient.DeleteFile)
+	// minioClient := minioclient.MinioClientConnect()
+	// r.POST("/api/v1/researcher/flie/:directory", minioClient.UploadFile)
+	// r.DELETE("/api/v1//researcher/flie/:directory/:filename", minioClient.DeleteFile)
 
 	//Degree Zones
 	degreeHandler := degree.NewDegreeHandler(db)
@@ -157,16 +156,16 @@ func main() {
 	r.PUT("/project/:id", projectHandler.UpdateProjectHandler)
 	r.DELETE("/project/:id", projectHandler.DeleteProjectHandler)
 
-	//researcher
+	//researcher get
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.POST("/api/v1/researcher/profile", researcherHandler.CreateResearcher)
-	r.PUT("/api/v1/researcher/profile/:id", researcherHandler.UpdateResearcher)
-	r.DELETE("/api/v1/researcher/profile/:id", researcherHandler.DeleteResearcher)
+	r.PUT("/api/v1/researcher/UpdateProfile/:id", researcherHandler.UpdateResearcher)
+	r.PUT("/api/v1/researcher/VSDeleteProfile/:id", researcherHandler.VSdeleteResearcher)
 
 	//researcher list
 	researcherListHandler := researcher_list.ResearcherListConnection(db)
-	r.POST("/api/v1/researcherlist/", researcherListHandler.ListResearcher)
+	r.POST("/api/v1/researcher/lists", researcherListHandler.ListResearcher)
 
 	r.Run()
 

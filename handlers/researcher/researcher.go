@@ -259,113 +259,88 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("Profile ID : %v Created", profileID)})
 }
-
-func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
-	id := c.Param("id")
-
-	createdBy := "Champlnwza007"
+func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
+	profileID := c.Param("id")
 	updatedBy := "Champlnwza007"
+	activated := false
 
-	// Parse the JSON payload from the request body into the ResearcherRequest struct
-	var req models.ResearcherRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	tablesToUpdate := []string{"degree", "program", "experience", "exploration", "profile_attach"}
+
+	for _, tableName := range tablesToUpdate {
+		if err := h.db.Exec(fmt.Sprintf("UPDATE %s SET updated_by = ?, activated = ? WHERE profile_id = ?", tableName), updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the activated status in the %s table: %v", tableName, err)})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"Success": fmt.Sprintf("Profile ID : %v deactivated", profileID)})
+
+}
+func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
+	var researcher models.ResearcherRequest
+	profileID := c.Param("id")
+
+	if err := c.ShouldBindJSON(&researcher); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Start updating the profile table
-	result := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ? WHERE id = ?", req.FirstName, req.LastName, req.University, req.AddressHome, req.AddressWork, req.Email, req.PhoneNumber, req.PositionID, id)
+	// Update createdBy and updatedBy variables
+	updatedBy := "Champlnwza007"
+	activated := true
 
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the researcher data in profile: %v", result.Error)})
+	// Update the researcher's profile data
+	if err := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
+		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, researcher.PositionID, updatedBy, profileID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
 		return
 	}
 
-	// Start updating degree data
-	h.db.Exec("DELETE FROM degree WHERE profile_id = ?", id)
-	for _, degree := range req.Degree {
-		h.db.Exec("INSERT INTO degree (profile_id, degree_type, degree_program, degree_university, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, createdBy, updatedBy)
+	// Use the given profile ID for the rest of the update operations
+
+	// Update degree data
+	for _, degree := range researcher.Degree {
+		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
+			return
+		}
 	}
 
-	// Start updating program data
-	h.db.Exec("DELETE FROM program WHERE profile_id = ?", id)
-	for _, program := range req.Program {
-		h.db.Exec("INSERT INTO program (profile_id, program_name, created_by, updated_by) VALUES (?, ?, ?, ?)", id, program.ProgramName, createdBy, updatedBy)
+	// Update program data
+	for _, program := range researcher.Program {
+		if err := h.db.Exec("UPDATE program SET program_name = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+			program.ProgramName, updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating program data: %v", err)})
+			return
+		}
 	}
 
-	// Start updating experience data
-	h.db.Exec("DELETE FROM experience WHERE profile_id = ?", id)
-	for _, experience := range req.Experience {
-		h.db.Exec("INSERT INTO experience (profile_id, experience_type, experience_start, experience_end, experience_university, experience_remark, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, experience.ExperienceType, experience.ExperienceStart, experience.ExperienceEnd, experience.ExperienceUniversity, experience.ExperienceRemark, createdBy, updatedBy)
+	// Update experience data
+	for _, experience := range researcher.Experience {
+		if err := h.db.Exec("UPDATE experience SET experience_type = ?, experience_start = ?, experience_end = ?, experience_university = ?, experience_remark = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+			experience.ExperienceType, experience.ExperienceStart, experience.ExperienceEnd, experience.ExperienceUniversity, experience.ExperienceRemark, updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating experience data: %v", err)})
+			return
+		}
 	}
 
-	// Start updating explore data
-	h.db.Exec("DELETE FROM exploration WHERE profile_id = ?", id)
-	for _, explore := range req.Explore {
-		h.db.Exec("INSERT INTO exploration (profile_id, explore_name, explore_year, explore_detail, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, explore.ExploreName, explore.ExploreYear, explore.ExploreDetail, createdBy, updatedBy)
+	// Update explore data
+	for _, explore := range researcher.Explore {
+		if err := h.db.Exec("UPDATE exploration SET explore_name = ?, explore_year = ?, explore_detail = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+			explore.ExploreName, explore.ExploreYear, explore.ExploreDetail, updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating explore data: %v", err)})
+			return
+		}
 	}
 
-	// Start updating attach data
-	h.db.Exec("DELETE FROM profile_attach WHERE profile_id = ?", id)
-	for _, attach := range req.Attach {
-		h.db.Exec("INSERT INTO profile_attach (profile_id, file_name, file_action, file_storage, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)", id, attach.FileName, attach.FileAction, attach.File_storage, createdBy, updatedBy)
+	// Update attach data
+	for _, attach := range researcher.Attach {
+		if err := h.db.Exec("UPDATE profile_attach SET file_name = ?, file_action = ?, file_storage = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+			attach.FileName, attach.FileAction, attach.File_storage, updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating attach data: %v", err)})
+			return
+		}
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Researcher profile updated successfully."})
-}
-
-func (h *ResearcherHandler) DeleteResearcher(c *gin.Context) {
-	id := c.Param("id")
-
-	// Start deleting degree data
-	result := h.db.Exec("DELETE FROM degree WHERE profile_id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting degree data for researcher with ID %s: %v", id, result.Error)})
-		return
-	}
-
-	// Start deleting program data
-	result = h.db.Exec("DELETE FROM program WHERE profile_id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting program data for researcher with ID %s: %v", id, result.Error)})
-		return
-	}
-
-	// Start deleting experience data
-	result = h.db.Exec("DELETE FROM experience WHERE profile_id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting experience data for researcher with ID %s: %v", id, result.Error)})
-		return
-	}
-
-	// Start deleting exploration data
-	result = h.db.Exec("DELETE FROM exploration WHERE profile_id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting exploration data for researcher with ID %s: %v", id, result.Error)})
-		return
-	}
-
-	// Start deleting attachment data
-	result = h.db.Exec("DELETE FROM profile_attach WHERE profile_id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting attachment data for researcher with ID %s: %v", id, result.Error)})
-		return
-	}
-
-	// Finally, start deleting the profile
-	result = h.db.Exec("DELETE FROM profile WHERE id = ?", id)
-	if result.Error != nil {
-		// Handle the error if the query fails
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while deleting the researcher profile: %v", result.Error)})
-		return
-	}
-
-	// Return success message
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Researcher with ID %s has been deleted successfully.", id)})
+	c.JSON(http.StatusOK, gin.H{"Success": fmt.Sprintf("Profile ID : %v Updated", profileID)})
 }
