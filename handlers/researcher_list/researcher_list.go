@@ -98,7 +98,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 	count := 0
 	if v, err := CountTotalItem(sqlStatement, u); err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		res := api.ResponseApi(http.StatusBadRequest,nil,err)
 		c.JSON(http.StatusBadRequest, res)
 	} else {
 		count = v

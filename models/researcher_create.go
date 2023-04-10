@@ -1,6 +1,7 @@
 package models
 
 type ResearcherRequest struct {
+	ProfileID  	int						`json:"profile_id"`
 	FirstName   string                  `json:"first_name"`
 	LastName    string                  `json:"last_name"`
 	AddressHome string                  `json:"address_home"`
@@ -13,7 +14,7 @@ type ResearcherRequest struct {
 	Program     []TempProgram_create    `json:"program"`
 	Experience  []TempExperience_create `json:"experience"`
 	Explore     []TempExplore_create    `json:"explore"`
-	Attach      []TempAttach_create     `json:"attach"`
+	// Attach      []TempAttach_create     `json:"attach"`
 }
 
 type TempDegree_create struct {
