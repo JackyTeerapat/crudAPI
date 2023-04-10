@@ -26,7 +26,7 @@ type Assessment struct {
 	UpdatedAt               time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
-type AssessmentRequest struct {
+type AssessmentRequests struct {
 	Id                   int    `json:"id"`
 	Assessment_start     string `json:"assessment_start"`
 	Assessment_end       string `json:"assessment_end"`
