@@ -119,10 +119,10 @@ func main() {
 
 	//Article Zones
 	assessmentHandler := assessment.NewAssessmentHandler(db)
-	r.GET("/api/v1/researcher/assessment/", assessmentHandler.ListAssessment)
-	r.GET("/api/v1/researcher/assessment/:id", assessmentHandler.GetAssessmentHandler)
-	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
-	r.PUT("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
+	r.GET("/assessment/", assessmentHandler.ListAssessment)
+	r.GET("/assessment/:id", assessmentHandler.GetAssessmentHandler)
+	r.POST("/assessment", assessmentHandler.CreateAssessmentHandler)
+	r.PATCH("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
 	//Article Zones

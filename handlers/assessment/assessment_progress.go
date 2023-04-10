@@ -19,7 +19,7 @@ func NewProgressHandler(db *gorm.DB) *ProgressHandler {
 	return &ProgressHandler{db: db}
 }
 func (u *ProgressHandler) ListProgress(c *gin.Context) {
-	var assessmentprogresses []models.Progress
+	var assessmentprogresses []models.AssessmentProgress
 
 	r := u.db.Table("assessment_progress").Find(&assessmentprogresses)
 	if err := r.Error; err != nil {
@@ -30,7 +30,7 @@ func (u *ProgressHandler) ListProgress(c *gin.Context) {
 	c.JSON(http.StatusOK, assessmentprogresses)
 }
 func (u *ProgressHandler) GetProgressHandler(c *gin.Context) {
-	var assessmentprogress models.Progress
+	var assessmentprogress models.AssessmentProgress
 	id := c.Param("id")
 	r := u.db.Table("assessment_progress").Where("id = ?", id).First(&assessmentprogress)
 	if r.RowsAffected == 0 {
@@ -47,7 +47,7 @@ func (u *ProgressHandler) GetProgressHandler(c *gin.Context) {
 }
 
 func (u *ProgressHandler) CreateProgressHandler(c *gin.Context) {
-	var assessmentprogress models.Progress
+	var assessmentprogress models.AssessmentProgress
 
 	if err := c.ShouldBindJSON(&assessmentprogress); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid body"))
@@ -88,7 +88,7 @@ func (u *ProgressHandler) DeleteProgressHandler(c *gin.Context) {
 	}
 
 	// ลบข้อมูล assessment_progress ตาม id ที่ระบุ
-	r := u.db.Delete(&models.Progress{}, id)
+	r := u.db.Delete(&models.AssessmentProgress{}, id)
 	if err := r.Error; err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
@@ -100,7 +100,7 @@ func (u *ProgressHandler) DeleteProgressHandler(c *gin.Context) {
 }
 
 func (u *ProgressHandler) UpdateProgressHandler(c *gin.Context) {
-	var assessmentprogress models.Progress
+	var assessmentprogress models.AssessmentProgress
 	id := c.Param("id")
 
 	//ตรวจสอบว่ามี assessment_progress นี้อยู่หรือไม่

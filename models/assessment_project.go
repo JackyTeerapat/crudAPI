@@ -2,8 +2,8 @@ package models
 
 import "time"
 
-type Project struct {
-	Id                int       `json:"id"`
+type AssessmentProject struct {
+	ID                int       `json:"id"`
 	Project_year      string    `json:"project_year"`
 	Project_title     string    `json:"project_title"`
 	Project_point     int       `json:"project_point"`
@@ -14,10 +14,10 @@ type Project struct {
 	Period            bool      `json:"period"`
 	Created_by        string    `json:"created_by"`
 	Updated_by        string    `json:"updated_by"`
-	Created_at        time.Time `json:"created_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
-	Updated_at        time.Time `json:"updated_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	CreatedAt         time.Time `json:"created_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt         time.Time `json:"updated_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
-func (p *Project) TableName() string {
+func (p *AssessmentProject) TableName() string {
 	return "assessment_project"
 }
