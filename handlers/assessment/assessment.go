@@ -137,7 +137,7 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Period:            assessmentRequest.Project_period,
 			Updated_by:        "admin",
 		},
-		Progress: models.Progress{
+		Progress: models.AssessmentProgress{
 			ID:                 assessment.ProgressID,
 			Progress_year:      assessmentRequest.Progress_year,
 			Progress_title:     assessmentRequest.Progress_title,
@@ -147,7 +147,7 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Period:             assessmentRequest.Progress_period,
 			Updated_by:         "admin",
 		},
-		Report: models.Report{
+		Report: models.AssessmentReport{
 			ID:               assessment.ReportID,
 			Report_year:      assessmentRequest.Report_year,
 			Report_title:     assessmentRequest.Report_title,
@@ -157,7 +157,7 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Period:           assessmentRequest.Report_period,
 			Updated_by:       "admin",
 		},
-		Article: models.Article{
+		Article: models.AssessmentArticle{
 			ID:                assessment.ArticleID,
 			Article_year:      assessmentRequest.Article_year,
 			Article_title:     assessmentRequest.Article_title,
@@ -206,7 +206,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		return body, err
 	}
 
-	progress := models.Progress{
+	progress := models.AssessmentProgress{
 		Progress_year:      assessmentRequest.Project_year,
 		Progress_title:     assessmentRequest.Project_title,
 		Progress_estimate:  assessmentRequest.Project_estimate,
@@ -219,7 +219,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		tx.Debug().Rollback()
 		return body, err
 	}
-	report := models.Report{
+	report := models.AssessmentReport{
 		Report_year:      assessmentRequest.Project_year,
 		Report_title:     assessmentRequest.Project_title,
 		Report_estimate:  assessmentRequest.Project_estimate,
@@ -232,7 +232,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		tx.Debug().Rollback()
 		return body, err
 	}
-	article := models.Article{
+	article := models.AssessmentArticle{
 		Article_year:      assessmentRequest.Project_year,
 		Article_title:     assessmentRequest.Project_title,
 		Article_estimate:  assessmentRequest.Project_estimate,

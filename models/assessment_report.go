@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type Report struct {
+type AssessmentReport struct {
 	ID               int       `json:"id"`
 	Report_year      string    `json:"report_year"`
 	Report_title     string    `json:"report_title"`
@@ -17,6 +17,6 @@ type Report struct {
 	UpdatedAt        time.Time `json:"updated_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
-func (p *Report) TableName() string {
+func (p *AssessmentReport) TableName() string {
 	return "assessment_report"
 }

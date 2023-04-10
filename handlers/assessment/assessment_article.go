@@ -18,7 +18,7 @@ func NewArticleHandler(db *gorm.DB) *ArticleHandler {
 	return &ArticleHandler{db: db}
 }
 func (u *ArticleHandler) ListArticle(c *gin.Context) {
-	var articles []models.Article
+	var articles []models.AssessmentArticle
 
 	r := u.db.Table("assessment_article").Find(&articles)
 	if err := r.Error; err != nil {
@@ -28,7 +28,7 @@ func (u *ArticleHandler) ListArticle(c *gin.Context) {
 	c.JSON(http.StatusOK, articles)
 }
 func (u *ArticleHandler) GetArticleHandler(c *gin.Context) {
-	var article models.Article
+	var article models.AssessmentArticle
 	id := c.Param("id")
 	r := u.db.Table("assessment_article").Where("id = ?", id).First(&article)
 	if r.RowsAffected == 0 {
@@ -43,7 +43,7 @@ func (u *ArticleHandler) GetArticleHandler(c *gin.Context) {
 }
 
 func (u *ArticleHandler) CreateArticleHandler(c *gin.Context) {
-	var article models.Article
+	var article models.AssessmentArticle
 
 	if err := c.ShouldBindJSON(&article); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -82,7 +82,7 @@ func (u *ArticleHandler) DeleteArticleHandler(c *gin.Context) {
 	}
 
 	// ลบข้อมูล article ตาม id ที่ระบุ
-	r := u.db.Delete(&models.Article{}, id)
+	r := u.db.Delete(&models.AssessmentArticle{}, id)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -92,7 +92,7 @@ func (u *ArticleHandler) DeleteArticleHandler(c *gin.Context) {
 }
 
 func (u *ArticleHandler) UpdateArticleHandler(c *gin.Context) {
-	var article models.Article
+	var article models.AssessmentArticle
 	id := c.Param("id")
 
 	//ตรวจสอบว่ามี article นี้อยู่หรือไม่

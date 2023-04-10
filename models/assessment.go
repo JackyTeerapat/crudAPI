@@ -13,11 +13,11 @@ type Assessment struct {
 	ProjectID               int
 	Project                 AssessmentProject `gorm:"foreignKey:ProjectID"`
 	ProgressID              int
-	Progress                Progress `gorm:"foreignKey:ProgressID"`
+	Progress                AssessmentProgress `gorm:"foreignKey:ProgressID"`
 	ReportID                int
-	Report                  Report `gorm:"foreignKey:ReportID"`
+	Report                  AssessmentReport `gorm:"foreignKey:ReportID"`
 	ArticleID               int
-	Article                 Article `gorm:"foreignKey:ArticleID"`
+	Article                 AssessmentArticle `gorm:"foreignKey:ArticleID"`
 	ProfileID               int
 	Profile                 Profile `gorm:"foreignKey:ProfileID"`
 	Created_by              string
