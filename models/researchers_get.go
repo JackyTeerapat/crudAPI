@@ -1,14 +1,14 @@
 package models
 
 type Researcher_get struct {
-	ProfileID   int              `json:"profile_id"`
-	FirstName   string           `json:"first_name"`
-	LastName    string           `json:"last_name"`
-	University  string           `json:"university"`
-	AddressHome string           `json:"address_home"`
-	AddressWork string           `json:"address_work"`
-	Email       string           `json:"email"`
-	PhoneNumber string           `json:"phone_number"`
+	ProfileID   int                  `json:"profile_id"`
+	FirstName   string               `json:"first_name"`
+	LastName    string               `json:"last_name"`
+	University  string               `json:"university"`
+	AddressHome string               `json:"address_home"`
+	AddressWork string               `json:"address_work"`
+	Email       string               `json:"email"`
+	PhoneNumber string               `json:"phone_number"`
 	Degree      []TempDegree_get     `gorm:"-" json:"degree"`
 	Position    []TempPosition_get   `gorm:"-" json:"position"`
 	Program     []TempProgram_get    `gorm:"-" json:"program"`
@@ -44,11 +44,10 @@ type TempExperience_get struct {
 }
 
 type TempAttach_get struct {
-	FileID      int    `json:"file_id"`
-	FileName    string `json:"file_name"`
-	FileAction  string `json:"file_action"`
-	FileStorage string `json:"file_storage"`
-	Activated   bool   `json:"activated"`
+	FileID     int    `json:"file_id"`
+	FileName   string `json:"file_name"`
+	FileAction string `json:"file_action"`
+	Activated  bool   `json:"activated"`
 }
 
 type TempExplore_get struct {
