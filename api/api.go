@@ -14,6 +14,8 @@ func ResponseApi(status int, data interface{}, err error) (res *models.ResponseA
 		}
 		return res
 	}
+
+	
 	res = &models.ResponseApi{
 		Status:       status,
 		Description:  "SUCCESS",
@@ -22,3 +24,18 @@ func ResponseApi(status int, data interface{}, err error) (res *models.ResponseA
 	}
 	return res
 }
+
+
+func ResponseApiWithDescription(status int, data interface{}, description string, err error) (res *models.ResponseApi) {
+	
+		res = &models.ResponseApi{
+			Status:       status,
+			Description:  description,
+			ErrorMessage: "",
+			Data:         data,
+		}
+		return res
+	}
+
+
+
