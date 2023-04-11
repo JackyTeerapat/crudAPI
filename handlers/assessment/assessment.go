@@ -265,7 +265,7 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 		Created_by: "admin",
 		Updated_by: "admin",
 	}
-	result := u.db.Debug().Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ?", id).Updates(&body)
+	result := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ?", id).Updates(&body)
 	if err := result.Error; err != nil {
 		return body, err
 	}
