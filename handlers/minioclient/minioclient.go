@@ -334,7 +334,7 @@ func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id
 			project.File_name = filename
 			project.File_storage = data_type + "/" + filename
 		}
-		project.Updated_at = time.Now()
+		project.UpdatedAt = time.Now()
 		r = db.Table("assessment_project").Select("file_name", "file_storage", "updated_at").Updates(&project)
 		if err := r.Error; err != nil {
 			return "", err

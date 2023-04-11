@@ -265,7 +265,7 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 		Created_by: "admin",
 		Updated_by: "admin",
 	}
-	result := u.db.Debug().Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ?", id).Updates(&body)
+	result := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ?", id).Updates(&body)
 	if err := result.Error; err != nil {
 		return body, err
 	}
@@ -277,7 +277,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	tx := u.db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
-			tx.Debug().Rollback()
+			tx.Rollback()
 		}
 	}()
 	var profile models.Profile
@@ -297,7 +297,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 	p := tx.Create(&project)
 	if err := p.Error; err != nil {
-		tx.Debug().Rollback()
+		tx.Rollback()
 		return body, err
 	}
 
@@ -311,7 +311,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := tx.Create(&progress).Error; err != nil {
-		tx.Debug().Rollback()
+		tx.Rollback()
 		return body, err
 	}
 	report := models.AssessmentReport{
@@ -324,7 +324,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := tx.Create(&report).Error; err != nil {
-		tx.Debug().Rollback()
+		tx.Rollback()
 		return body, err
 	}
 	article := models.AssessmentArticle{
@@ -337,7 +337,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := tx.Create(&article).Error; err != nil {
-		tx.Debug().Rollback()
+		tx.Rollback()
 		return body, err
 	}
 	body = models.Assessment{
@@ -355,7 +355,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 
 	r := tx.Debug().Create(&body)
 	if err := r.Error; err != nil {
-		tx.Debug().Rollback()
+		tx.Rollback()
 		return body, err
 	}
 	return body, tx.Commit().Error
