@@ -121,7 +121,7 @@ func main() {
 	r.GET("/api/v1/researcher/assessment_detail/", assessmentHandler.ListAssessment)
 	r.GET("/api/v1/researcher/assessment_detail/:id", assessmentHandler.GetAssessmentHandler)
 	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
-	r.PATCH("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
+	r.PATCH("/api/v1/researcher/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
 	//Article Zones
