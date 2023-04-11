@@ -18,7 +18,7 @@ func NewReportHandler(db *gorm.DB) *ReportHandler {
 	return &ReportHandler{db: db}
 }
 func (u *ReportHandler) ListReport(c *gin.Context) {
-	var assessmentreport []models.Report
+	var assessmentreport []models.AssessmentReport
 
 	r := u.db.Table("assessment_report").Find(&assessmentreport)
 	if err := r.Error; err != nil {
@@ -28,7 +28,7 @@ func (u *ReportHandler) ListReport(c *gin.Context) {
 	c.JSON(http.StatusOK, assessmentreport)
 }
 func (u *ReportHandler) GetReportHandler(c *gin.Context) {
-	var assessmentreport models.Report
+	var assessmentreport models.AssessmentReport
 	id := c.Param("id")
 	r := u.db.Table("assessment_report").Where("id = ?", id).First(&assessmentreport)
 	if r.RowsAffected == 0 {
@@ -43,7 +43,7 @@ func (u *ReportHandler) GetReportHandler(c *gin.Context) {
 }
 
 func (u *ReportHandler) CreateReportHandler(c *gin.Context) {
-	var assessmentreport models.Report
+	var assessmentreport models.AssessmentReport
 
 	if err := c.ShouldBindJSON(&assessmentreport); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -81,7 +81,7 @@ func (u *ReportHandler) DeleteReportHandler(c *gin.Context) {
 	}
 
 	// ลบข้อมูล assessment_report ตาม id ที่ระบุ
-	r := u.db.Delete(&models.Report{}, id)
+	r := u.db.Delete(&models.AssessmentReport{}, id)
 	if err := r.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -91,7 +91,7 @@ func (u *ReportHandler) DeleteReportHandler(c *gin.Context) {
 }
 
 func (u *ReportHandler) UpdateReportHandler(c *gin.Context) {
-	var assessmentreport models.Report
+	var assessmentreport models.AssessmentReport
 	id := c.Param("id")
 
 	//ตรวจสอบว่ามี assessment_report นี้อยู่หรือไม่

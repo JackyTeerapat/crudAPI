@@ -316,7 +316,7 @@ func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, i
 
 func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
 
-	var project models.Project
+	var project models.AssessmentProject
 	res_flie_name := ""
 	// check exist
 	r := db.Table("assessment_project").Where("id = ?", profile_id).First(&project)
@@ -345,7 +345,7 @@ func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id
 
 func UpdateAssessmentProgress(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
 
-	var progress models.Progress
+	var progress models.AssessmentProgress
 	res_flie_name := ""
 
 	// check exist
@@ -375,7 +375,7 @@ func UpdateAssessmentProgress(db *gorm.DB, filename, data_type string, profile_i
 
 func UpdateAssessmentReport(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
 
-	var repport models.Report
+	var repport models.AssessmentReport
 	res_flie_name := ""
 
 	// check exist
@@ -405,7 +405,7 @@ func UpdateAssessmentReport(db *gorm.DB, filename, data_type string, profile_id 
 
 func UpdateAssessmentArticle(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
 
-	var article models.Article
+	var article models.AssessmentArticle
 	res_flie_name := ""
 
 	// check exist

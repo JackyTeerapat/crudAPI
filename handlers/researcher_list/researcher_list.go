@@ -96,6 +96,13 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 			sqlStatement += " WHERE assessment_project.project_title LIKE '%" + req.ProjectTitle + "%'"
 		}
 	}
+
+	total_count, err := CountTotalItem(sqlStatement, u)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
 	sqlStatement += " ORDER BY profile.id DESC OFFSET " + strconv.Itoa(page) + " ROWS FETCH NEXT " + strconv.Itoa(limit) + " ROWS ONLY"
 
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlQueryStatement, 1)
@@ -126,7 +133,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	resDataContent.IsLast = (page + limit) >= count
 	resDataContent.CurrentPage = req.Page
 	resDataContent.TotalObject = count
-	resDataContent.TotalPage = count / limit
+	resDataContent.TotalPage = total_count / limit
 	if count%limit > 0 {
 		resDataContent.TotalPage++
 	}
