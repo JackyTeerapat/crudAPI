@@ -15,8 +15,8 @@ type AssessmentProject struct {
 	Period            bool      `json:"period"`
 	Created_by        string    `json:"-"`
 	Updated_by        string    `json:"-"`
-	Created_at        time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
-	Updated_at        time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	CreatedAt         time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt         time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
 func (p *AssessmentProject) TableName() string {
