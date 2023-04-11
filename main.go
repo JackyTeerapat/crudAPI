@@ -6,7 +6,6 @@ import (
 	"CRUD-API/handlers/degree"
 	"CRUD-API/handlers/experience"
 	"CRUD-API/handlers/exploration"
-	"CRUD-API/handlers/minioclient"
 	"CRUD-API/handlers/position"
 	"CRUD-API/handlers/profile"
 	"CRUD-API/handlers/profile_attach"
@@ -64,9 +63,9 @@ func main() {
 	r.DELETE("/position/:id", positionHandler.DeletePositionHandler)
 
 	//minio upload
-	minioClient := minioclient.MinioClientConnect(db)
-	r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
-	r.DELETE("/api/v1//researcher/delete_file", minioClient.DeleteFile)
+	// minioClient := minioclient.MinioClientConnect(db)
+	// r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
+	// r.DELETE("/api/v1//researcher/delete_file", minioClient.DeleteFile)
 
 	//Degree Zones
 	degreeHandler := degree.NewDegreeHandler(db)
