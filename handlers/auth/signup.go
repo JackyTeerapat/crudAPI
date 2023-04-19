@@ -13,6 +13,8 @@ import (
 
 func (u *AuthHandler) SignUp(c *gin.Context) {
 	var body models.Register
+	body.Password = "0000"
+	body.Role = "User"
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid body"))
