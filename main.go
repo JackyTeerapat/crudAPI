@@ -169,6 +169,9 @@ func main() {
 	//researcher list
 	researcherListHandler := researcher_list.ResearcherListConnection(db)
 	r.POST("/api/v1/researcher/lists", researcherListHandler.ListResearcher)
+	//UserList
+	userListHandler := user.UserListConnection(db)
+	r.POST("/api/v1/researcher/user", userListHandler.ListUser)
 
 	r.Run()
 
