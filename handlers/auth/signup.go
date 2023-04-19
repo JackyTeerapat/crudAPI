@@ -13,7 +13,7 @@ import (
 
 func (u *AuthHandler) SignUp(c *gin.Context) {
 	var body models.Register
-	body.Password = "0000"
+	body.Password = "88888888"
 	body.Role = "User"
 
 	if err := c.ShouldBindJSON(&body); err != nil {
