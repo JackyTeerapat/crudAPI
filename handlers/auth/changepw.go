@@ -10,6 +10,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type CustomResponse struct {
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
 func (u *AuthHandler) ChangePassword(c *gin.Context) {
 
 	var body struct {
@@ -49,7 +56,14 @@ func (u *AuthHandler) ChangePassword(c *gin.Context) {
 	// Update the "password" column in the database
 	u.db.Model(&user).Update("password", string(hash))
 
-	res := api.ResponseApi(http.StatusOK, user, nil)
+	customResponse := CustomResponse{
+		UserID:   user.ID,
+		Username: user.Username,
+		Password: user.Password,
+		Role:     user.Role,
+	}
+
+	res := api.ResponseApi(http.StatusOK, customResponse, nil)
 	c.JSON(http.StatusOK, res)
 
 }
