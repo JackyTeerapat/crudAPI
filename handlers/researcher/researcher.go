@@ -194,6 +194,11 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if !validateDegreeOrder(researcher.Degree) {
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 
 	// Create createdBy and updatedBy variables
 	createdBy := "Champlnwza007"
@@ -222,7 +227,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		}
 		researcher.Degree[i].Activated = true
 	}
-	
 
 	// Save program data
 	for i, program := range researcher.Program {
@@ -269,7 +273,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	researcher.ProfileID = profileID
 	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
-	return
 
 	// Return the researcher data as JSON
 }
@@ -303,7 +306,11 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	if !validateDegreeOrder(researcher.Degree) {
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 	// Update createdBy and updatedBy variables
 	updatedBy := "Champlnwza007"
 	activated := true
@@ -388,15 +395,40 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	}
 	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "UPDATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
-	return
-
 }
 
 // Update degree data
-// for _, degree := range researcher.Degree {
-// 	if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
-// 		degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
-// 		return
-// 	}
-// }
+//
+//	for _, degree := range researcher.Degree {
+//		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+//			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
+//			return
+//		}
+//	}
+func validateDegreeOrder(degrees []models.TempDegree_create) bool {
+	hasBachelor := false
+	hasMaster := false
+	hasDoctor := false
+
+	for _, degree := range degrees {
+		switch degree.DegreeType {
+		case "bachelor":
+			hasBachelor = true
+		case "master":
+			hasMaster = true
+		case "doctor":
+			hasDoctor = true
+		}
+	}
+
+	if hasDoctor && !hasMaster {
+		return false
+	}
+
+	if hasMaster && !hasBachelor {
+		return false
+	}
+
+	return true
+}
