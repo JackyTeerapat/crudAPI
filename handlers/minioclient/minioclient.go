@@ -37,6 +37,11 @@ type UploadedFile struct {
 	FileBase64 string `json:"base64"`
 }
 
+type DeleteInput struct {
+	DirectoryFile string `json:"directory_file"`
+	DirectoryId   int    `json:"directory_id"`
+}
+
 func MinioClientConnect(db *gorm.DB) *MinioClient {
 	endPoint := os.Getenv("MINIO_ENDPOINT")
 	useSSL := true
@@ -192,48 +197,41 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 func (m *MinioClient) DeleteFile(c *gin.Context) {
 	ctx := context.Background()
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+	var req []DeleteInput
+	if err := c.BindJSON(&req); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	directory := form.Value["directory_file"]
-	directory_id := form.Value["directory_id"]
-
 	resData := []FileResponseData{}
-	for i, v := range directory {
-		if i >= len(directory_id) {
-			continue
-		}
-		row_id, r_err := strconv.Atoi(directory_id[i])
-		if r_err != nil {
-			continue
-		}
+	for i := range req {
+
+		row_id := req[i].DirectoryId
 
 		filename := ""
 		var db_err error
-		switch directory[i] {
+		switch req[i].DirectoryFile {
 		case "assessment":
-			filename, db_err = UpdateAssessment(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessment(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "project":
-			filename, db_err = UpdateAssessmentProject(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentProject(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "progress":
-			filename, db_err = UpdateAssessmentProgress(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentProgress(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "report":
-			filename, db_err = UpdateAssessmentReport(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentReport(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "article":
-			filename, db_err = UpdateAssessmentArticle(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentArticle(m.db, "", req[i].DirectoryFile, row_id, true)
 		default:
-			filename, db_err = DeleteProfileAttach(m.db, directory[i], row_id)
+			filename, db_err = DeleteProfileAttach(m.db, req[i].DirectoryFile, row_id)
 		}
 		if db_err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			res := api.ResponseApi(http.StatusInternalServerError, nil, db_err)
 			c.JSON(http.StatusInternalServerError, res)
 			return
 		} else {
 			opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-			err := m.mc.RemoveObject(ctx, m.bucketName, v+"/"+filename, opts)
+			err := m.mc.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -242,7 +240,7 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 		}
 		fileData := FileResponseData{
 			FileName: filename,
-			FileType: directory[i],
+			FileType: req[i].DirectoryFile,
 		}
 
 		resData = append(resData, fileData)
