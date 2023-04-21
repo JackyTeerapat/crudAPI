@@ -74,35 +74,41 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	// Create createdBy and updatedBy variables
 	createdBy := "Sahatsawat"
 	updatedBy := "Sahatsawat"
-	FileName := ""
-	FileAction := ""
+	projectFileName := "20230421-15402923-ทดสอบไฟล์ภาษาไทย.pdf"
+	projectFileAction := "project"
+	progressFileName := "20230421-15405923-ทดสอบไฟล์ภาษาไทย.pdf"
+	progressFileAction := "progress"
+	reportFileName := "20230421-15412123-ทดสอบไฟล์ภาษาไทย.pdf"
+	reportFileAction := "report"
+	articleFileName := "20230421-15374623-ทดสอบไฟล์ภาษาไทย.pdf"
+	articleFileAction := "article"
 
 	// The rest of the code remains the same until the INSERT statements for the other tables
 
 	// Save Project data
 	if err := h.db.Exec("INSERT INTO assessment_project (project_year, project_title, project_point, project_estimate, project_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Project.ProjectYear, assessment.Project.ProjectTitle, assessment.Project.ProjectPoint, assessment.Project.ProjectEstimate, assessment.Project.ProjectRecommend, assessment.Project.ProjectPeriod, createdBy, updatedBy, FileName, FileAction).Error; err != nil {
+		assessment.Project.ProjectYear, assessment.Project.ProjectTitle, assessment.Project.ProjectPoint, assessment.Project.ProjectEstimate, assessment.Project.ProjectRecommend, assessment.Project.ProjectPeriod, createdBy, updatedBy, projectFileName, projectFileAction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting project data: %v", err.Error())})
 		return
 	}
 
 	// Save Progress data
 	if err := h.db.Exec("INSERT INTO assessment_progress (progress_year, progress_title, progress_estimate, progress_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Progress.ProgressYear, assessment.Progress.ProgressTitle, assessment.Progress.ProgressEstimate, assessment.Progress.ProgressRecommend, assessment.Progress.ProgressPeriod, createdBy, updatedBy, FileName, FileAction).Error; err != nil {
+		assessment.Progress.ProgressYear, assessment.Progress.ProgressTitle, assessment.Progress.ProgressEstimate, assessment.Progress.ProgressRecommend, assessment.Progress.ProgressPeriod, createdBy, updatedBy, progressFileName, progressFileAction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting progress data: %v", err.Error())})
 		return
 	}
 
 	// Save Report data
 	if err := h.db.Exec("INSERT INTO assessment_report (report_year, report_title, report_estimate, report_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Report.ReportYear, assessment.Report.ReportTitle, assessment.Report.ReportEstimate, assessment.Report.ReportRecommend, assessment.Report.ReportPeriod, createdBy, updatedBy, FileName, FileAction).Error; err != nil {
+		assessment.Report.ReportYear, assessment.Report.ReportTitle, assessment.Report.ReportEstimate, assessment.Report.ReportRecommend, assessment.Report.ReportPeriod, createdBy, updatedBy, reportFileName, reportFileAction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting report data: %v", err.Error())})
 		return
 	}
 
 	// Save Article data
 	if err := h.db.Exec("INSERT INTO assessment_article (article_year, article_title, article_estimate, article_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Article.ArticleYear, assessment.Article.ArticleTitle, assessment.Article.ArticleEstimate, assessment.Article.ArticleRecommend, assessment.Article.ArticlePeriod, createdBy, updatedBy, FileName, FileAction).Error; err != nil {
+		assessment.Article.ArticleYear, assessment.Article.ArticleTitle, assessment.Article.ArticleEstimate, assessment.Article.ArticleRecommend, assessment.Article.ArticlePeriod, createdBy, updatedBy, articleFileName, articleFileAction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting article data: %v", err.Error())})
 		return
 	}
@@ -124,8 +130,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	articleID := article.Id
 
 	//Assessment
-	assessmentFileName := ""
-	assessmentFileAction := ""
+	assessmentFileName := "20230421-15385223-API-SPEC-Researcher - API-RS-MNG-08.pdf"
+	assessmentFileAction := "assessment"
 	// Update the INSERT statement for the assessment table
 	result := h.db.Exec("INSERT INTO assessment (profile_id, assessment_start, assessment_end, project_id, progress_id, report_id, article_id, created_by, updated_by, assessment_file_name, assessment_file_action) VALUES (?, ?, ?, ?, ?, ?, ? , ? , ?, ?, ?)",
 		assessment.ProfileID, assessment.AssessmentStart, assessment.AssessmentEnd, projectID, progressID, reportID, articleID, createdBy, updatedBy, assessmentFileName, assessmentFileAction)
