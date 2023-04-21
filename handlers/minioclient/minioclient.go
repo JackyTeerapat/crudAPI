@@ -300,13 +300,13 @@ func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, i
 		if is_delete {
 			res_flie_name = assessment.Assessment_file_name
 			assessment.Assessment_file_name = ""
-			assessment.Assessment_file_storage = ""
+			assessment.Assessment_file_action = ""
 		} else {
 			assessment.Assessment_file_name = filename
-			assessment.Assessment_file_storage = data_type + "/" + filename
+			assessment.Assessment_file_action = data_type
 		}
 		assessment.UpdatedAt = time.Now()
-		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_storage", "updated_at").Updates(&assessment)
+		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_action", "updated_at").Updates(&assessment)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -329,13 +329,13 @@ func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id
 		if is_delete {
 			res_flie_name = project.File_name
 			project.File_name = ""
-			project.File_storage = ""
+			project.File_action = ""
 		} else {
 			project.File_name = filename
-			project.File_storage = data_type + "/" + filename
+			project.File_action = data_type
 		}
 		project.UpdatedAt = time.Now()
-		r = db.Table("assessment_project").Select("file_name", "file_storage", "updated_at").Updates(&project)
+		r = db.Table("assessment_project").Select("file_name", "file_action", "updated_at").Updates(&project)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -359,13 +359,13 @@ func UpdateAssessmentProgress(db *gorm.DB, filename, data_type string, profile_i
 		if is_delete {
 			res_flie_name = progress.File_name
 			progress.File_name = ""
-			progress.File_storage = ""
+			progress.File_action = ""
 		} else {
 			progress.File_name = filename
-			progress.File_storage = data_type + "/" + filename
+			progress.File_action = data_type
 		}
 		progress.UpdatedAt = time.Now()
-		r = db.Table("assessment_progress").Select("file_name", "file_storage", "updated_at").Updates(&progress)
+		r = db.Table("assessment_progress").Select("file_name", "file_action", "updated_at").Updates(&progress)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -389,13 +389,13 @@ func UpdateAssessmentReport(db *gorm.DB, filename, data_type string, profile_id 
 		if is_delete {
 			res_flie_name = repport.File_name
 			repport.File_name = ""
-			repport.File_storage = ""
+			repport.File_action = ""
 		} else {
 			repport.File_name = filename
-			repport.File_storage = data_type + "/" + filename
+			repport.File_action = data_type
 		}
 		repport.UpdatedAt = time.Now()
-		r = db.Table("assessment_report").Select("file_name", "file_storage", "updated_at").Updates(&repport)
+		r = db.Table("assessment_report").Select("file_name", "file_action", "updated_at").Updates(&repport)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -419,13 +419,13 @@ func UpdateAssessmentArticle(db *gorm.DB, filename, data_type string, profile_id
 		if is_delete {
 			res_flie_name = article.File_name
 			article.File_name = ""
-			article.File_storage = ""
+			article.File_action = ""
 		} else {
 			article.File_name = filename
-			article.File_storage = data_type + "/" + filename
+			article.File_action = data_type
 		}
 		article.UpdatedAt = time.Now()
-		r = db.Table("assessment_article").Select("file_name", "file_storage", "updated_at").Updates(&article)
+		r = db.Table("assessment_article").Select("file_name", "file_action", "updated_at").Updates(&article)
 		if err := r.Error; err != nil {
 			return "", err
 		}
