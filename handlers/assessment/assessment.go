@@ -72,10 +72,10 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	}
 
 	// Create createdBy and updatedBy variables
-	createdBy := "Champlnwza007"
-	updatedBy := "Champlnwza007"
-	FileName := "mockFile.ggez"
-	FileAction := "mockAction"
+	createdBy := "Sahatsawat"
+	updatedBy := "Sahatsawat"
+	FileName := ""
+	FileAction := ""
 
 	// The rest of the code remains the same until the INSERT statements for the other tables
 
@@ -124,8 +124,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	articleID := article.Id
 
 	//Assessment
-	assessmentFileName := "mockFile.ggez"
-	assessmentFileAction := "mockAction"
+	assessmentFileName := ""
+	assessmentFileAction := ""
 	// Update the INSERT statement for the assessment table
 	result := h.db.Exec("INSERT INTO assessment (profile_id, assessment_start, assessment_end, project_id, progress_id, report_id, article_id, created_by, updated_by, assessment_file_name, assessment_file_action) VALUES (?, ?, ?, ?, ?, ?, ? , ? , ?, ?, ?)",
 		assessment.ProfileID, assessment.AssessmentStart, assessment.AssessmentEnd, projectID, progressID, reportID, articleID, createdBy, updatedBy, assessmentFileName, assessmentFileAction)
