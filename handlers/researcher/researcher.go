@@ -97,7 +97,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 		positions = append(positions, position)
 	}
-	researcher.Position = positions
+	researcher.Position = positions[0]
 
 	// Fetch and add TempProgram data
 	var programs []models.TempProgram_get
@@ -220,7 +220,8 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting researcher data into the profile table: %v", result.Error)})
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("position name is not exist in database"))
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	var profile models.Profile
