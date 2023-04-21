@@ -74,13 +74,13 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	// Create createdBy and updatedBy variables
 	createdBy := "Sahatsawat"
 	updatedBy := "Sahatsawat"
-	projectFileName := "20230421-15402923-ทดสอบไฟล์ภาษาไทย.pdf"
+	projectFileName := "20230421-16343323-สูตรคูณ.pdf"
 	projectFileAction := "project"
-	progressFileName := "20230421-15405923-ทดสอบไฟล์ภาษาไทย.pdf"
+	progressFileName := "20230421-16345023-สูตรคูณ.pdf"
 	progressFileAction := "progress"
-	reportFileName := "20230421-15412123-ทดสอบไฟล์ภาษาไทย.pdf"
+	reportFileName := "20230421-16350323-สูตรคูณ.pdf"
 	reportFileAction := "report"
-	articleFileName := "20230421-15374623-ทดสอบไฟล์ภาษาไทย.pdf"
+	articleFileName := "20230421-16351623-สูตรคูณ.pdf"
 	articleFileAction := "article"
 
 	// The rest of the code remains the same until the INSERT statements for the other tables
