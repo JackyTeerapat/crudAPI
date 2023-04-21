@@ -211,10 +211,19 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	err := h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
 
 	if err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, err)
-		c.JSON(http.StatusBadRequest, res)
-		return
+		var position models.Position
+		position.Created_by = createdBy
+		position.Updated_by = updatedBy
+		position.Position_name = researcher.PositionName
+
+		r := h.db.Create(&position)
+		if err := r.Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
+			return
+		}
+
 	}
+
 	// Update the INSERT statement for the profile table
 	result := h.db.Exec("INSERT INTO profile (first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
 		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy)
