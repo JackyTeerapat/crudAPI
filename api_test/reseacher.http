@@ -1,5 +1,5 @@
 
-GET http://localhost:9000/api/v1/researcher/profile_detail/65
+GET http://localhost:9000/api/v1/researcher/profile_detail/16
 ###
 POST http://localhost:9000/api/v1/researcher/profile
 Content-Type: application/json
@@ -79,18 +79,18 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:9000/api/v1/researcher/UpdateProfile/65
+PATCH  http://localhost:9000/api/v1/researcher/profile/16
 Content-Type: application/json
 
 
 {
     "first_name": "Jacky2",
-    "last_name": "KAK",
+    "last_name": "champ",
     "address_home": "178-180",
     "position_id": 1,
     "email": "jackKAK@email.com",
     "phone_number": "1234567890",
-    "university": "MIT",
+    "university": "ST",
     "address_work": "178-180",
     "degree": [
         {
@@ -145,4 +145,4 @@ Content-Type: application/json
 }
 
 ###
-PUT  http://localhost:9000/api/v1/researcher/VSDeleteProfile/65
+DELETE   http://localhost:9000/api/v1/researcher/profile/15
