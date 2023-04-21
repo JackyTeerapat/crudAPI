@@ -48,7 +48,7 @@ func main() {
 	auth := auth.NewAuthHandler(db)
 	r.POST("/api/v1/signup", auth.SignUp)
 	r.POST("/api/v1/login", auth.Login)
-	r.PUT("/api/v1/changePassword", auth.ChangePassword)
+	r.PATCH("/api/v1/changePassword", auth.ChangePassword)
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
