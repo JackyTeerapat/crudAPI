@@ -302,8 +302,17 @@ func GetProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, er
 	res_flie_name = profile_attach.File_name
 	return res_flie_name, nil
 }
+
 func DeleteProfile(db *gorm.DB, profile_id int) error {
 	r := db.Delete(&models.Profile{}, profile_id)
+	if err := r.Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteAssessment(db *gorm.DB, assessment_id int) error {
+	r := db.Delete(&models.Assessment{}, assessment_id)
 	if err := r.Error; err != nil {
 		return err
 	}

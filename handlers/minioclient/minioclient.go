@@ -70,6 +70,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 	files := form.File["uploadfile"]
 
 	profile_id := -1
+	assessment_id := -1
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
 
@@ -111,6 +112,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		var u_err error
 		switch directory[i] {
 		case "assessment":
+			assessment_id = row_id
 			_, u_err = UpdateAssessment(m.db, fileName, directory[i], row_id, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, directory[i], row_id, false)
@@ -130,6 +132,9 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
+			if assessment_id != -1 {
+				DeleteAssessment(m.db, assessment_id)
+			}
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
@@ -138,6 +143,9 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
+				}
+				if assessment_id != -1 {
+					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
 				return
@@ -157,6 +165,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 
 	var req []MinioInput
 	profile_id := -1
+	assessment_id := -1
 
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -195,6 +204,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		var u_err error
 		switch v.DirectoryFile {
 		case "assessment":
+			assessment_id = v.DirectoryId
 			_, u_err = UpdateAssessment(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
@@ -215,6 +225,9 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
+			if assessment_id != -1 {
+				DeleteAssessment(m.db, assessment_id)
+			}
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
@@ -223,6 +236,9 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
+				}
+				if assessment_id != -1 {
+					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
 				return
