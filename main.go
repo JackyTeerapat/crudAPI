@@ -70,6 +70,7 @@ func main() {
 	minioClient := minioclient.MinioClientConnect(db)
 	r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
 	r.POST("/api/v1//researcher/download", minioClient.GetFile)
+	r.POST("/api/v1//researcher/upload64", minioClient.UploadFileBase64)
 	r.DELETE("/api/v1//researcher/delete_file", minioClient.DeleteFile)
 
 	//Degree Zones

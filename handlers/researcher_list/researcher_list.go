@@ -11,34 +11,36 @@ import (
 	"gorm.io/gorm"
 )
 
-type ResearcherList struct {
-	db *gorm.DB
-}
+type (
+	ResearcherList struct {
+		db *gorm.DB
+	}
 
-type RequestInput struct {
-	ResearcherName string `json:"researcher_name"`
-	University     string `json:"university"`
-	ExploreYear    string `json:"explore_year"`
-	ProjectTitle   string `json:"project_title"`
-	Page           int    `json:"page"`
-	Limit          int    `json:"limit"`
-}
+	RequestInput struct {
+		ResearcherName string `json:"researcher_name"`
+		University     string `json:"university"`
+		ExploreYear    string `json:"explore_year"`
+		ProjectTitle   string `json:"project_title"`
+		Page           int    `json:"page"`
+		Limit          int    `json:"limit"`
+	}
 
-type ResearcherOutput struct {
-	ResearcherName string `json:"researcher_name"`
-	University     string `json:"university"`
-	ExploreYear    string `json:"explore_year"`
-	ProjectTitle   string `json:"project_title"`
-	ResearcherId   int    `json:"researcher_id"`
-}
+	ResearcherOutput struct {
+		ResearcherName string `json:"researcher_name"`
+		University     string `json:"university"`
+		ExploreYear    string `json:"explore_year"`
+		ProjectTitle   string `json:"project_title"`
+		ResearcherId   int    `json:"researcher_id"`
+	}
 
-type ResponseDataContent struct {
-	Content     []ResearcherOutput `json:"content"`
-	TotalPage   int                `json:"total_page"`
-	TotalObject int                `json:"total_object"`
-	CurrentPage int                `json:"current_page"`
-	IsLast      bool               `json:"is_last"`
-}
+	ResponseDataContent struct {
+		Content     []ResearcherOutput `json:"content"`
+		TotalPage   int                `json:"total_page"`
+		TotalObject int                `json:"total_object"`
+		CurrentPage int                `json:"current_page"`
+		IsLast      bool               `json:"is_last"`
+	}
+)
 
 func ResearcherListConnection(db *gorm.DB) *ResearcherList {
 	return &ResearcherList{db: db}

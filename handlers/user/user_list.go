@@ -11,29 +11,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserList struct {
-	db *gorm.DB
-}
+type (
+	UserList struct {
+		db *gorm.DB
+	}
 
-type RequestInput struct {
-	UserName string `json:"username"`
-	Page     int    `json:"page"`
-	Limit    int    `json:"limit"`
-}
+	RequestInput struct {
+		UserName string `json:"username"`
+		Page     int    `json:"page"`
+		Limit    int    `json:"limit"`
+	}
 
-type UserOutput struct {
-	UserId   int    `json:"user_id"`
-	UserName string `json:"username"`
-	Role     string `json:"role"`
-}
+	UserOutput struct {
+		UserId   int    `json:"user_id"`
+		UserName string `json:"username"`
+		Role     string `json:"role"`
+	}
 
-type ResponseDataContent struct {
-	Content     []UserOutput `json:"content"`
-	TotalPage   int          `json:"total_page"`
-	TotalObject int          `json:"total_object"`
-	CurrentPage int          `json:"current_page"`
-	IsLast      bool         `json:"is_last"`
-}
+	ResponseDataContent struct {
+		Content     []UserOutput `json:"content"`
+		TotalPage   int          `json:"total_page"`
+		TotalObject int          `json:"total_object"`
+		CurrentPage int          `json:"current_page"`
+		IsLast      bool         `json:"is_last"`
+	}
+)
 
 func UserListConnection(db *gorm.DB) *UserList {
 	return &UserList{db: db}

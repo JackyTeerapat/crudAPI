@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -20,27 +22,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type MinioClient struct {
-	mc         *minio.Client
-	bucketName string
-	db         *gorm.DB
-}
+type (
+	MinioClient struct {
+		mc         *minio.Client
+		bucketName string
+		db         *gorm.DB
+	}
 
-type FileResponseData struct {
-	FileName        string `json:"file_name"`
-	FileType        string `json:"file_type"`
-	FileUploadError string `json:"file_upload_error"`
-}
+	FileResponseData struct {
+		FileName        string `json:"file_name"`
+		FileType        string `json:"file_type"`
+		FileUrl         string `json:"file_url"`
+		FileUploadError string `json:"file_upload_error"`
+	}
 
-type UploadedFile struct {
-	FileName   string `json:"file_name"`
-	FileBase64 string `json:"base64"`
-}
-
-type DeleteInput struct {
-	DirectoryFile string `json:"directory_file"`
-	DirectoryId   int    `json:"directory_id"`
-}
+	MinioInput struct {
+		FileName      string `json:"file_name"`
+		FileBase64    string `json:"base64"`
+		DirectoryFile string `json:"directory_file"`
+		DirectoryId   int    `json:"directory_id"`
+	}
+)
 
 func MinioClientConnect(db *gorm.DB) *MinioClient {
 	endPoint := os.Getenv("MINIO_ENDPOINT")
@@ -138,20 +140,14 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 }
 
 func (m *MinioClient) UploadFileBase64(c *gin.Context) {
-	// single file
 	ctx := context.Background()
 
-	var req []UploadedFile
+	var req []MinioInput
 
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		return
-	}
-
-	directory := c.Param("directory")
-	if directory == "" {
-		directory = "upload"
 	}
 
 	resData := []FileResponseData{}
@@ -160,7 +156,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		newName := directory + "/" + timestamp + "-" + v.FileName
+		newName := v.DirectoryFile + "/" + timestamp + "-" + v.FileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -177,27 +173,116 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		fileBuffer := bytes.NewReader(fileByte)
 		size := int64(len(fileByte))
 
-		if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		} else {
-			fileData := FileResponseData{
-				FileName: fileName,
-				FileType: directory,
-			}
-			resData = append(resData, fileData)
+		fileData := FileResponseData{
+			FileName: fileName,
+			FileType: v.DirectoryFile,
 		}
+
+		var u_err error
+		switch v.DirectoryFile {
+		case "assessment":
+			_, u_err = UpdateAssessment(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "project":
+			_, u_err = UpdateAssessmentProject(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "progress":
+			_, u_err = UpdateAssessmentProgress(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "report":
+			_, u_err = UpdateAssessmentReport(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "article":
+			_, u_err = UpdateAssessmentArticle(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+		default:
+			u_err = UpSertProfileAttach(m.db, fileName, v.DirectoryFile, v.DirectoryId)
+		}
+
+		if u_err != nil {
+			fileData.FileUploadError = u_err.Error()
+		} else {
+			if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+				fileData.FileUploadError = err.Error()
+			}
+		}
+
+		resData = append(resData, fileData)
 	}
 	res := api.ResponseApi(http.StatusOK, resData, nil)
 	c.JSON(http.StatusCreated, res)
 	return
 }
 
+func (m *MinioClient) GetFile(c *gin.Context) {
+	ctx := context.Background()
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+		return
+	}
+
+	directory := form.Value["directory_file"]
+	directory_id := form.Value["directory_id"]
+
+	resData := []FileResponseData{}
+	for i := range directory {
+		if i >= len(directory_id) {
+			continue
+		}
+		row_id, r_err := strconv.Atoi(directory_id[i])
+		if r_err != nil {
+			continue
+		}
+
+		filename := ""
+		var db_err error
+		switch directory[i] {
+		case "assessment":
+			filename, db_err = GetAssessment(m.db, directory[i], row_id)
+		case "project":
+			filename, db_err = GetAssessmentProject(m.db, directory[i], row_id)
+		case "progress":
+			filename, db_err = GetAssessmentProgress(m.db, directory[i], row_id)
+		case "report":
+			filename, db_err = GetAssessmentReport(m.db, directory[i], row_id)
+		case "article":
+			filename, db_err = GetAssessmentArticle(m.db, directory[i], row_id)
+		default:
+			filename, db_err = GetProfileAttach(m.db, directory[i], row_id)
+		}
+
+		resurl := ""
+		if db_err != nil {
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
+			return
+		} else {
+			reqParams := make(url.Values)
+			presignedURL, err := m.mc.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
+			if err != nil {
+				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+				c.JSON(http.StatusInternalServerError, res)
+				return
+			}
+			resurl = fmt.Sprintf("%s", presignedURL)
+		}
+		fileData := FileResponseData{
+			FileName: filename,
+			FileType: directory[i],
+			FileUrl:  resurl,
+		}
+
+		resData = append(resData, fileData)
+
+	}
+
+	//res := api.ResponseApi(http.StatusOK, "Success", nil)
+	res := api.ResponseApi(http.StatusOK, resData, nil)
+	c.JSON(http.StatusOK, res)
+	return
+}
+
 func (m *MinioClient) DeleteFile(c *gin.Context) {
 	ctx := context.Background()
 
-	var req []DeleteInput
+	var req []MinioInput
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
@@ -453,5 +538,98 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 			return "", err
 		}
 	}
+	return res_flie_name, nil
+}
+
+func GetAssessment(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var assessment models.Assessment
+	res_flie_name := ""
+	// check exist
+	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = assessment.Assessment_file_name
+	return res_flie_name, nil
+}
+
+func GetAssessmentProject(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var project models.AssessmentProject
+	res_flie_name := ""
+	// check exist
+	r := db.Table("assessment_project").Where("id = ?", profile_id).First(&project)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = project.File_name
+	return res_flie_name, nil
+}
+
+func GetAssessmentProgress(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var progress models.AssessmentProgress
+	res_flie_name := ""
+
+	// check exist
+	r := db.Table("assessment_progress").Where("id = ?", profile_id).First(&progress)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = progress.File_name
+	return res_flie_name, nil
+}
+
+func GetAssessmentReport(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var repport models.AssessmentReport
+	res_flie_name := ""
+
+	// check exist
+	r := db.Table("assessment_report").Where("id = ?", profile_id).First(&repport)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = repport.File_name
+	return res_flie_name, nil
+}
+
+func GetAssessmentArticle(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var article models.AssessmentArticle
+	res_flie_name := ""
+
+	// check exist
+	r := db.Table("assessment_article").Where("id = ?", profile_id).First(&article)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = article.File_name
+	return res_flie_name, nil
+}
+
+func GetProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, error) {
+
+	var profile_attach models.Profile_attach
+	res_flie_name := ""
+	// check exist
+	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
+	if r.RowsAffected == 0 {
+		if err := r.Error; err != nil {
+			return "", err
+		}
+	}
+	res_flie_name = profile_attach.File_name
 	return res_flie_name, nil
 }
