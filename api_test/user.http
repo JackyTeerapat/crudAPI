@@ -1,13 +1,13 @@
 
-GET http://localhost:8080/user
+GET http://localhost:9000/user
 
 ###
 
-GET http://localhost:8080/user/2
+GET http://localhost:9000/user/2
 
 ###
 
-POST http://localhost:8080/user
+POST http://localhost:9000/user
 Content-Type: application/json
 
 {
@@ -17,7 +17,7 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8080/user/2
+PUT http://localhost:9000/user/2
 Content-Type: application/json
 
 {
@@ -25,8 +25,8 @@ Content-Type: application/json
   "role": "User"
 }
 ###
-DELETE http://localhost:8080/user/2
+DELETE http://localhost:9000/user/2
 ###
-DELETE http://localhost:8080/user/all
+DELETE http://localhost:9000/user/all
 
 

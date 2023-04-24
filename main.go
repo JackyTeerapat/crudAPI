@@ -1,6 +1,7 @@
 package main
 
 import (
+	"CRUD-API/api/middlewares"
 	"CRUD-API/handlers/assessment"
 	"CRUD-API/handlers/auth"
 	"CRUD-API/handlers/degree"
@@ -40,12 +41,14 @@ func init() {
 // @BasePath /api/v1
 func main() {
 	r := gin.New()
-	// r.Use(middlewares.CORSMiddleware())
+	r.Use(middlewares.CORSMiddleware())
+
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	auth := auth.NewAuthHandler(db)
 	r.POST("/api/v1/signup", auth.SignUp)
 	r.POST("/api/v1/login", auth.Login)
+	r.PATCH("/api/v1/changePassword", auth.ChangePassword)
 
 	//User Zones
 	userHandler := user.NewUserHandler(db)
@@ -66,6 +69,8 @@ func main() {
 	//minio upload
 	minioClient := minioclient.MinioClientConnect(db)
 	r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
+	r.POST("/api/v1//researcher/download", minioClient.GetFile)
+	r.POST("/api/v1//researcher/upload64", minioClient.UploadFileBase64)
 	r.DELETE("/api/v1//researcher/delete_file", minioClient.DeleteFile)
 
 	//Degree Zones
@@ -160,12 +165,15 @@ func main() {
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.POST("/api/v1/researcher/profile", researcherHandler.CreateResearcher)
-	r.PUT("/api/v1/researcher/UpdateProfile/:id", researcherHandler.UpdateResearcher)
-	r.PUT("/api/v1/researcher/VSDeleteProfile/:id", researcherHandler.VSdeleteResearcher)
+	r.PATCH("/api/v1/researcher/profile/:id", researcherHandler.UpdateResearcher)
+	r.DELETE("/api/v1/researcher/profile/:id", researcherHandler.VSdeleteResearcher)
 
 	//researcher list
 	researcherListHandler := researcher_list.ResearcherListConnection(db)
 	r.POST("/api/v1/researcher/lists", researcherListHandler.ListResearcher)
+	//UserList
+	userListHandler := user.UserListConnection(db)
+	r.POST("/api/v1/researcher/user", userListHandler.ListUser)
 
 	r.Run()
 

@@ -10,13 +10,14 @@ type AssessmentProject struct {
 	Project_estimate  bool      `json:"project_estimate"`
 	Project_recommend bool      `json:"project_recommend"`
 	File_name         string    `json:"file_name"`
-	File_Id           int       `json:"file_id"`
+	File_action       string    `json:"file_action"`
+	File_Id           int       `json:"-"`
 	File_storage      string    `json:"-"`
 	Period            bool      `json:"period"`
 	Created_by        string    `json:"-"`
 	Updated_by        string    `json:"-"`
-	Created_at        time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
-	Updated_at        time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	CreatedAt         time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt         time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
 func (p *AssessmentProject) TableName() string {
