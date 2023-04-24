@@ -6,10 +6,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -31,13 +29,17 @@ type MinioClient struct {
 type FileResponseData struct {
 	FileName        string `json:"file_name"`
 	FileType        string `json:"file_type"`
-	FileUrl         string `json:"file_url"`
 	FileUploadError string `json:"file_upload_error"`
 }
 
 type UploadedFile struct {
 	FileName   string `json:"file_name"`
 	FileBase64 string `json:"base64"`
+}
+
+type DeleteInput struct {
+	DirectoryFile string `json:"directory_file"`
+	DirectoryId   int    `json:"directory_id"`
 }
 
 func MinioClientConnect(db *gorm.DB) *MinioClient {
@@ -192,121 +194,44 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) GetFile(c *gin.Context) {
-	ctx := context.Background()
-
-	form, err := c.MultipartForm()
-	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
-		return
-	}
-
-	directory := form.Value["directory_file"]
-	directory_id := form.Value["directory_id"]
-
-	resData := []FileResponseData{}
-	for i := range directory {
-		if i >= len(directory_id) {
-			continue
-		}
-		row_id, r_err := strconv.Atoi(directory_id[i])
-		if r_err != nil {
-			continue
-		}
-
-		filename := ""
-		var db_err error
-		switch directory[i] {
-		case "assessment":
-			filename, db_err = GetAssessment(m.db, directory[i], row_id)
-		case "project":
-			filename, db_err = GetAssessmentProject(m.db, directory[i], row_id)
-		case "progress":
-			filename, db_err = GetAssessmentProgress(m.db, directory[i], row_id)
-		case "report":
-			filename, db_err = GetAssessmentReport(m.db, directory[i], row_id)
-		case "article":
-			filename, db_err = GetAssessmentArticle(m.db, directory[i], row_id)
-		default:
-			filename, db_err = GetProfileAttach(m.db, directory[i], row_id)
-		}
-
-		resurl := ""
-		if db_err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		} else {
-			reqParams := make(url.Values)
-			presignedURL, err := m.mc.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
-			if err != nil {
-				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-				c.JSON(http.StatusInternalServerError, res)
-				return
-			}
-			resurl = fmt.Sprintf("%s", presignedURL)
-		}
-		fileData := FileResponseData{
-			FileName: filename,
-			FileType: directory[i],
-			FileUrl:  resurl,
-		}
-
-		resData = append(resData, fileData)
-
-	}
-
-	//res := api.ResponseApi(http.StatusOK, "Success", nil)
-	res := api.ResponseApi(http.StatusOK, resData, nil)
-	c.JSON(http.StatusOK, res)
-	return
-}
-
 func (m *MinioClient) DeleteFile(c *gin.Context) {
 	ctx := context.Background()
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+	var req []DeleteInput
+	if err := c.BindJSON(&req); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	directory := form.Value["directory_file"]
-	directory_id := form.Value["directory_id"]
-
 	resData := []FileResponseData{}
-	for i := range directory {
-		if i >= len(directory_id) {
-			continue
-		}
-		row_id, r_err := strconv.Atoi(directory_id[i])
-		if r_err != nil {
-			continue
-		}
+	for i := range req {
+
+		row_id := req[i].DirectoryId
 
 		filename := ""
 		var db_err error
-		switch directory[i] {
+		switch req[i].DirectoryFile {
 		case "assessment":
-			filename, db_err = UpdateAssessment(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessment(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "project":
-			filename, db_err = UpdateAssessmentProject(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentProject(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "progress":
-			filename, db_err = UpdateAssessmentProgress(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentProgress(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "report":
-			filename, db_err = UpdateAssessmentReport(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentReport(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "article":
-			filename, db_err = UpdateAssessmentArticle(m.db, "", directory[i], row_id, true)
+			filename, db_err = UpdateAssessmentArticle(m.db, "", req[i].DirectoryFile, row_id, true)
 		default:
-			filename, db_err = DeleteProfileAttach(m.db, directory[i], row_id)
+			filename, db_err = DeleteProfileAttach(m.db, req[i].DirectoryFile, row_id)
 		}
 		if db_err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			res := api.ResponseApi(http.StatusInternalServerError, nil, db_err)
 			c.JSON(http.StatusInternalServerError, res)
 			return
 		} else {
 			opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-			err := m.mc.RemoveObject(ctx, m.bucketName, directory[i]+"/"+filename, opts)
+			err := m.mc.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -315,7 +240,7 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 		}
 		fileData := FileResponseData{
 			FileName: filename,
-			FileType: directory[i],
+			FileType: req[i].DirectoryFile,
 		}
 
 		resData = append(resData, fileData)
@@ -373,13 +298,13 @@ func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, i
 		if is_delete {
 			res_flie_name = assessment.Assessment_file_name
 			assessment.Assessment_file_name = ""
-			assessment.Assessment_file_storage = ""
+			assessment.Assessment_file_action = ""
 		} else {
 			assessment.Assessment_file_name = filename
-			assessment.Assessment_file_storage = data_type + "/" + filename
+			assessment.Assessment_file_action = data_type
 		}
 		assessment.UpdatedAt = time.Now()
-		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_storage", "updated_at").Updates(&assessment)
+		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_action", "updated_at").Updates(&assessment)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -402,13 +327,13 @@ func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id
 		if is_delete {
 			res_flie_name = project.File_name
 			project.File_name = ""
-			project.File_storage = ""
+			project.File_action = ""
 		} else {
 			project.File_name = filename
-			project.File_storage = data_type + "/" + filename
+			project.File_action = data_type
 		}
 		project.UpdatedAt = time.Now()
-		r = db.Table("assessment_project").Select("file_name", "file_storage", "updated_at").Updates(&project)
+		r = db.Table("assessment_project").Select("file_name", "file_action", "updated_at").Updates(&project)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -432,13 +357,13 @@ func UpdateAssessmentProgress(db *gorm.DB, filename, data_type string, profile_i
 		if is_delete {
 			res_flie_name = progress.File_name
 			progress.File_name = ""
-			progress.File_storage = ""
+			progress.File_action = ""
 		} else {
 			progress.File_name = filename
-			progress.File_storage = data_type + "/" + filename
+			progress.File_action = data_type
 		}
 		progress.UpdatedAt = time.Now()
-		r = db.Table("assessment_progress").Select("file_name", "file_storage", "updated_at").Updates(&progress)
+		r = db.Table("assessment_progress").Select("file_name", "file_action", "updated_at").Updates(&progress)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -462,13 +387,13 @@ func UpdateAssessmentReport(db *gorm.DB, filename, data_type string, profile_id 
 		if is_delete {
 			res_flie_name = repport.File_name
 			repport.File_name = ""
-			repport.File_storage = ""
+			repport.File_action = ""
 		} else {
 			repport.File_name = filename
-			repport.File_storage = data_type + "/" + filename
+			repport.File_action = data_type
 		}
 		repport.UpdatedAt = time.Now()
-		r = db.Table("assessment_report").Select("file_name", "file_storage", "updated_at").Updates(&repport)
+		r = db.Table("assessment_report").Select("file_name", "file_action", "updated_at").Updates(&repport)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -492,13 +417,13 @@ func UpdateAssessmentArticle(db *gorm.DB, filename, data_type string, profile_id
 		if is_delete {
 			res_flie_name = article.File_name
 			article.File_name = ""
-			article.File_storage = ""
+			article.File_action = ""
 		} else {
 			article.File_name = filename
-			article.File_storage = data_type + "/" + filename
+			article.File_action = data_type
 		}
 		article.UpdatedAt = time.Now()
-		r = db.Table("assessment_article").Select("file_name", "file_storage", "updated_at").Updates(&article)
+		r = db.Table("assessment_article").Select("file_name", "file_action", "updated_at").Updates(&article)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -528,98 +453,5 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 			return "", err
 		}
 	}
-	return res_flie_name, nil
-}
-
-func GetAssessment(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var assessment models.Assessment
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = assessment.Assessment_file_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentProject(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var project models.AssessmentProject
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment_project").Where("id = ?", profile_id).First(&project)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = project.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentProgress(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var progress models.AssessmentProgress
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_progress").Where("id = ?", profile_id).First(&progress)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = progress.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentReport(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var repport models.AssessmentReport
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_report").Where("id = ?", profile_id).First(&repport)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = repport.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentArticle(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var article models.AssessmentArticle
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_article").Where("id = ?", profile_id).First(&article)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = article.File_name
-	return res_flie_name, nil
-}
-
-func GetProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var profile_attach models.Profile_attach
-	res_flie_name := ""
-	// check exist
-	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = profile_attach.File_name
 	return res_flie_name, nil
 }

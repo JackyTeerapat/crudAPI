@@ -10,7 +10,7 @@ type Researcher_get struct {
 	Email       string               `json:"email"`
 	PhoneNumber string               `json:"phone_number"`
 	Degree      []TempDegree_get     `gorm:"-" json:"degree"`
-	Position    []TempPosition_get   `gorm:"-" json:"position"`
+	Position    TempPosition_get     `gorm:"-" json:"position"`
 	Program     []TempProgram_get    `gorm:"-" json:"program"`
 	Experience  []TempExperience_get `gorm:"-" json:"experience"`
 	Attach      []TempAttach_get     `gorm:"-" json:"attach"`

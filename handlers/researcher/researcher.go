@@ -5,6 +5,7 @@ import (
 	"CRUD-API/models"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -96,7 +97,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 		positions = append(positions, position)
 	}
-	researcher.Position = positions
+	researcher.Position = positions[0]
 
 	// Fetch and add TempProgram data
 	var programs []models.TempProgram_get
@@ -194,17 +195,42 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if !validateDegreeOrder(researcher.Degree) {
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 
 	// Create createdBy and updatedBy variables
 	createdBy := "Champlnwza007"
 	updatedBy := "Champlnwza007"
 	activated := true
+
+	//find position name
+	var positionID int
+	err := h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
+
+	if err != nil {
+		var position models.Position
+		position.Created_by = createdBy
+		position.Updated_by = updatedBy
+		position.Position_name = researcher.PositionName
+
+		r := h.db.Create(&position)
+		if err := r.Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
+			return
+		}
+
+	}
+
 	// Update the INSERT statement for the profile table
 	result := h.db.Exec("INSERT INTO profile (first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
-		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, researcher.PositionID, createdBy, updatedBy)
+		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting researcher data into the profile table: %v", result.Error)})
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("position name is not exist in database"))
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	var profile models.Profile
@@ -222,7 +248,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		}
 		researcher.Degree[i].Activated = true
 	}
-	
 
 	// Save program data
 	for i, program := range researcher.Program {
@@ -269,7 +294,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	researcher.ProfileID = profileID
 	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
-	return
 
 	// Return the researcher data as JSON
 }
@@ -298,9 +322,30 @@ func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	var researcher models.ResearcherRequest
 	profileID := c.Param("id")
-
 	if err := c.ShouldBindJSON(&researcher); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if !validateDegreeOrder(researcher.Degree) {
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	intProfileID, err := strconv.Atoi(profileID)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("error to convert profile ID"))
+		return
+	}
+	researcher.ProfileID = intProfileID
+	//find position name
+	var positionID int
+	err = h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
+
+	if err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, err)
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
@@ -310,7 +355,7 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 
 	// Update the researcher's profile data
 	if err := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
-		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, researcher.PositionID, updatedBy, profileID).Error; err != nil {
+		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, profileID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
 		return
 	}
@@ -388,15 +433,40 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	}
 	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "UPDATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
-	return
-
 }
 
 // Update degree data
-// for _, degree := range researcher.Degree {
-// 	if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
-// 		degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
-// 		return
-// 	}
-// }
+//
+//	for _, degree := range researcher.Degree {
+//		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
+//			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
+//			return
+//		}
+//	}
+func validateDegreeOrder(degrees []models.TempDegree_create) bool {
+	hasBachelor := false
+	hasMaster := false
+	hasDoctor := false
+
+	for _, degree := range degrees {
+		switch degree.DegreeType {
+		case "bachelor":
+			hasBachelor = true
+		case "master":
+			hasMaster = true
+		case "doctor":
+			hasDoctor = true
+		}
+	}
+
+	if hasDoctor && !hasMaster {
+		return false
+	}
+
+	if hasMaster && !hasBachelor {
+		return false
+	}
+
+	return true
+}

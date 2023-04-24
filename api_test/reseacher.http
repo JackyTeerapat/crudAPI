@@ -1,148 +1,164 @@
 
-GET http://localhost:9000/api/v1/researcher/profile_detail/65
-###
+GET http://localhost:9000/api/v1/researcher/profile_detail/4
+
+
 POST http://localhost:9000/api/v1/researcher/profile
 Content-Type: application/json
 
 {
-    "first_name": "Jacky2",
-    "last_name": "KAK",
-    "address_home": "178-180",
-    "position_id": 1,
-    "email": "jackKAK@email.com",
+"first_name": "David",
+"last_name": "Kim",
+"address_home": "321 Pine St",
+"position_name": "นาย",
+"email": "david.kim@example.com",
+"phone_number": "555-3456",
+"university": "University of California, Berkeley",
+"address_work": "444 Market St",
+"degree": [
+{
+"degree_type": "bachelor",
+"degree_program": "Business Administration",
+"degree_university": "University of California, Berkeley"
+},
+{
+"degree_type": "master",
+"degree_program": "Entrepreneurship",
+"degree_university": "Stanford Graduate School of Business"
+}
+],
+"program": [
+{
+"program_name": "Excel"
+},
+{
+"program_name": "Tableau"
+}
+],
+"experience": [
+{
+"experience_type": "Internship",
+"experience_start": "2018",
+"experience_end": "2019",
+"experience_university": "Goldman Sachs",
+"experience_remark": "Analyzed financial data for investment banking division"
+},
+{
+"experience_type": "Full-time",
+"experience_start": "2019",
+"experience_end": "2022",
+"experience_university": "Uber",
+"experience_remark": "Developed pricing strategies for ride-sharing services"
+}
+],
+"explore": [
+{
+"explore_name": "Study",
+"explore_year": "2017",
+"explore_detail": "Studied abroad in South Korea"
+},
+{
+"explore_name": "Volunteering",
+"explore_year": "2021",
+"explore_detail": "Mentored local youth on financial literacy"
+}
+],
+"attach": [
+{
+"file_name": "resume.pdf",
+"file_action": "Download",
+"file_storage":"https://example.com/david_kim_resume.pdf"
+},
+{
+"file_name": "business_plan.pdf",
+"file_action": "Download",
+"file_storage":"https://example.com/david_kim_business_plan.pdf"
+}
+]
+}
+
+
+
+###
+PATCH  http://localhost:9000/api/v1/researcher/profile/2
+Content-Type: application/json
+
+
+{
+    "first_name": "John",
+    "last_name": "Doe",
+    "address_home": "456 Main St",
+    "position_name": "นาย",
+    "email": "johndoe@example.com",
     "phone_number": "1234567890",
-    "university": "MIT",
-    "address_work": "178-180",
+    "university": "Harvard University",
+    "address_work": "123 College Ave",
     "degree": [
         {
-        "degree_type": "โท",
+        "degree_type": "bachelor",
         "degree_program": "Computer Science",
-        "degree_university": "KMUTNB"
+        "degree_university": "MIT"
         },
         {
-        "degree_type": "ตรี",
-        "degree_program": "Computer Science",
-        "degree_university": "KMUTNB"
+        "degree_type": "master",
+        "degree_program": "Finance",
+        "degree_university": "Harvard Business School"
+        },
+        {
+        "degree_type": "doctor",
+        "degree_program": "Engineering",
+        "degree_university": "Stanford University"
         }
     ],
     "program": [
         {
-        "program_name": "Coding Bootcamp"
+        "program_name": "Python"
         },
         {
-        "program_name": "Leadership Development"
-
+        "program_name": "R"
         }
     ],
     "experience": [
         {
         "experience_type": "Internship",
         "experience_start": "2018",
-        "experience_end": "2018",
+        "experience_end": "2022",
         "experience_university": "Google",
-        "experience_remark": "Developed"
+        "experience_remark": "Developed machine learning algorithms"
         },
         {
         "experience_type": "Full-time",
         "experience_start": "2019",
-        "experience_end": "2019",
+        "experience_end": "2022",
         "experience_university": "Microsoft",
-        "experience_remark": "Led a team"
+        "experience_remark": "Led a team of software developers"
         }
     ],
     "explore": [
         {
-        "explore_name": "Study Abroad",
+        "explore_name": "Research",
         "explore_year": "2017",
-        "explore_detail": "Studied"
+        "explore_detail": "Conducted research on machine learning"
         },
         {
         "explore_name": "Volunteering",
-        "explore_year": "2019",
-        "explore_detail": "Organized"
+        "explore_year": "2022",
+        "explore_detail": "Tutored underprivileged students in programming"
         }
     ],
     "attach": [
         {
         "file_name": "resume.pdf",
         "file_action": "Download",
-        "file_storage":"file_path"
+        "file_storage":"https://example.com/resume.pdf"
         },
         {
-        "file_name": "cover_letter.docx",
+        "file_name": "publications.pdf",
         "file_action": "Download",
-        "file_storage":"file_path"
+        "file_storage":"https://example.com/publications.pdf"
         }
     ]
 }
 
 
-
 ###
-PUT http://localhost:9000/api/v1/researcher/UpdateProfile/65
-Content-Type: application/json
-
-
-{
-    "first_name": "Jacky2",
-    "last_name": "KAK",
-    "address_home": "178-180",
-    "position_id": 1,
-    "email": "jackKAK@email.com",
-    "phone_number": "1234567890",
-    "university": "MIT",
-    "address_work": "178-180",
-    "degree": [
-        {
-        "degree_type": "โท",
-        "degree_program": "Computer Science",
-        "degree_university": "KMUTNB"
-        },
-        {
-        "degree_type": "ตรี",
-        "degree_program": "Computer Science",
-        "degree_university": "KMUTNB"
-        }
-    ],
-    "program": [
-        {
-        "program_name": "Test1 Bootcamp"
-        },
-        {
-        "program_name": "Test2 Development"
-
-        }
-    ],
-    "experience": [
-        {
-        "experience_type": "Test111",
-        "experience_start": "2018",
-        "experience_end": "2018",
-        "experience_university": "Google",
-        "experience_remark": "Developed"
-        },
-        {
-        "experience_type": "Test222",
-        "experience_start": "2019",
-        "experience_end": "2019",
-        "experience_university": "Microsoft",
-        "experience_remark": "Led a team"
-        }
-    ],
-    "explore": [
-        {
-        "explore_name": "Study1111",
-        "explore_year": "2017",
-        "explore_detail": "Studied"
-        },
-        {
-        "explore_name": "Testt2222",
-        "explore_year": "2019",
-        "explore_detail": "Organized"
-        }
-    ]
-  
-}
-
-###
-PUT  http://localhost:9000/api/v1/researcher/VSDeleteProfile/65
+DELETE   http://localhost:9000/api/v1/researcher/profile/2
