@@ -62,114 +62,53 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	return
 }
 
-func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
-	var assessment models.AssessmentRequest
+func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
+	var assessment models.AssessmentRequests
 
 	if err := c.ShouldBindJSON(&assessment); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
+	var checkAs models.Assessment
 
-	// Create createdBy and updatedBy variables
-	createdBy := "Sahatsawat"
-	updatedBy := "Sahatsawat"
-	projectFileName := "20230421-16343323-สูตรคูณ.pdf"
-	projectFileAction := "project"
-	progressFileName := "20230421-16345023-สูตรคูณ.pdf"
-	progressFileAction := "progress"
-	reportFileName := "20230421-16350323-สูตรคูณ.pdf"
-	reportFileAction := "report"
-	articleFileName := "20230421-16351623-สูตรคูณ.pdf"
-	articleFileAction := "article"
-
-	// The rest of the code remains the same until the INSERT statements for the other tables
-
-	// Save Project data
-	if err := h.db.Exec("INSERT INTO assessment_project (project_year, project_title, project_point, project_estimate, project_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Project.ProjectYear, assessment.Project.ProjectTitle, assessment.Project.ProjectPoint, assessment.Project.ProjectEstimate, assessment.Project.ProjectRecommend, assessment.Project.ProjectPeriod, createdBy, updatedBy, projectFileName, projectFileAction).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting project data: %v", err.Error())})
+	ckeck := u.db.Table("assessment").Where("profile_id = ?", assessment.ProfileID).First(&checkAs)
+	if ckeck.RowsAffected != 0 {
+		// e := u.RollbackDeleteProFile(assessment.ProfileID)
+		// if e != nil {
+		// 	res := api.ResponseApi(http.StatusInternalServerError, nil, e)
+		// 	c.JSON(http.StatusInternalServerError, res)
+		// 	return
+		// }
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("This profile has already create assessment"))
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-
-	// Save Progress data
-	if err := h.db.Exec("INSERT INTO assessment_progress (progress_year, progress_title, progress_estimate, progress_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Progress.ProgressYear, assessment.Progress.ProgressTitle, assessment.Progress.ProgressEstimate, assessment.Progress.ProgressRecommend, assessment.Progress.ProgressPeriod, createdBy, updatedBy, progressFileName, progressFileAction).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting progress data: %v", err.Error())})
+	body, err := u.create(assessment)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-
-	// Save Report data
-	if err := h.db.Exec("INSERT INTO assessment_report (report_year, report_title, report_estimate, report_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Report.ReportYear, assessment.Report.ReportTitle, assessment.Report.ReportEstimate, assessment.Report.ReportRecommend, assessment.Report.ReportPeriod, createdBy, updatedBy, reportFileName, reportFileAction).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting report data: %v", err.Error())})
-		return
-	}
-
-	// Save Article data
-	if err := h.db.Exec("INSERT INTO assessment_article (article_year, article_title, article_estimate, article_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		assessment.Article.ArticleYear, assessment.Article.ArticleTitle, assessment.Article.ArticleEstimate, assessment.Article.ArticleRecommend, assessment.Article.ArticlePeriod, createdBy, updatedBy, articleFileName, articleFileAction).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting article data: %v", err.Error())})
-		return
-	}
-
-	var project models.AssessmentProject
-	h.db.Last(&project)
-	projectID := project.Id
-
-	var progress models.AssessmentProgress
-	h.db.Last(&progress)
-	progressID := progress.Id
-
-	var report models.AssessmentReport
-	h.db.Last(&report)
-	reportID := report.Id
-
-	var article models.AssessmentArticle
-	h.db.Last(&article)
-	articleID := article.Id
-
-	//Assessment
-	assessmentFileName := "20230421-15385223-API-SPEC-Researcher - API-RS-MNG-08.pdf"
-	assessmentFileAction := "assessment"
-	// Update the INSERT statement for the assessment table
-	result := h.db.Exec("INSERT INTO assessment (profile_id, assessment_start, assessment_end, project_id, progress_id, report_id, article_id, created_by, updated_by, assessment_file_name, assessment_file_action) VALUES (?, ?, ?, ?, ?, ?, ? , ? , ?, ?, ?)",
-		assessment.ProfileID, assessment.AssessmentStart, assessment.AssessmentEnd, projectID, progressID, reportID, articleID, createdBy, updatedBy, assessmentFileName, assessmentFileAction)
-
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting assessment data into the assessment table: %v", result.Error)})
-		return
-	}
-
-	var assessmentid models.Assessment
-	h.db.Last(&assessmentid)
-	assessmentID := assessmentid.Id
-
-	//------------response------------
-
-	c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("assessment ID : %v Created", assessmentID)})
-
-	var assessmentresponse models.AssessmentResponse
-	r := h.db.Table("assessment").
-		Where("id = ?", assessmentID).
+	var resAssessment models.AssessmentResponse
+	r := u.db.Table("assessment").
+		Where("id = ?", body.Id).
 		Preload("Project").
 		Preload("Progress").
 		Preload("Report").
 		Preload("Article").
-		First(&assessmentresponse)
+		First(&resAssessment)
 	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "assessmentresponse not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
 		return
 	}
 	if err := r.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-
-	res := api.ResponseApiWithDescription(http.StatusCreated, assessmentresponse, "CREATED SUCCESS", nil)
+	res := api.ResponseApi(http.StatusCreated, resAssessment, nil)
 	c.JSON(http.StatusCreated, res)
-	return
-
 }
 
 func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
@@ -228,17 +167,15 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 
 func (u *AssessmentHandler) update(id string, assessmentRequest models.AssessmentRequests, assessment models.Assessment) (body models.Assessment, err error) {
 	body = models.Assessment{
-		Id:                   assessment.Id,
-		Assessment_start:     assessmentRequest.Assessment_start,
-		Assessment_end:       assessmentRequest.Assessment_end,
-		Assessment_file_name: assessmentRequest.Assessment_file_name,
+		Id:               assessment.Id,
+		Assessment_start: assessmentRequest.AssessmentStart,
+		Assessment_end:   assessmentRequest.AssessmentEnd,
 		Project: models.AssessmentProject{
 			Id:                assessment.ProjectID,
 			Project_year:      assessmentRequest.Project_year,
 			Project_title:     assessmentRequest.Project_title,
 			Project_estimate:  assessmentRequest.Project_estimate,
 			Project_recommend: assessmentRequest.Project_recommend,
-			File_name:         assessmentRequest.Project_file,
 			Period:            assessmentRequest.Project_period,
 			Updated_by:        "admin",
 		},
@@ -248,7 +185,6 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Progress_title:     assessmentRequest.Progress_title,
 			Progress_estimate:  assessmentRequest.Progress_estimate,
 			Progress_recommend: assessmentRequest.Progress_recommend,
-			File_name:          assessmentRequest.Progress_file,
 			Period:             assessmentRequest.Progress_period,
 			Updated_by:         "admin",
 		},
@@ -258,7 +194,6 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Report_title:     assessmentRequest.Report_title,
 			Report_estimate:  assessmentRequest.Report_estimate,
 			Report_recommend: assessmentRequest.Report_recommend,
-			File_name:        assessmentRequest.Report_file,
 			Period:           assessmentRequest.Report_period,
 			Updated_by:       "admin",
 		},
@@ -268,7 +203,6 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 			Article_title:     assessmentRequest.Article_title,
 			Article_estimate:  assessmentRequest.Article_estimate,
 			Article_recommend: assessmentRequest.Article_recommend,
-			File_name:         assessmentRequest.Article_file,
 			Period:            assessmentRequest.Article_period,
 			Updated_by:        "admin",
 		},
@@ -282,4 +216,134 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 
 	return body, err
 
+}
+func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) (body models.Assessment, err error) {
+	tx := u.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	// var profile models.Profile
+
+	// if err := tx.Find(&profile, assessmentRequest.ProfileID).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return body, err
+	// }
+	project := models.AssessmentProject{
+		Project_year:      assessmentRequest.Project_year,
+		Project_title:     assessmentRequest.Project_title,
+		Project_point:     assessmentRequest.Project_point,
+		Project_estimate:  assessmentRequest.Project_estimate,
+		Project_recommend: assessmentRequest.Project_recommend,
+		Period:            assessmentRequest.Project_period,
+	}
+	p := tx.Create(&project)
+	if err := p.Error; err != nil {
+		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
+		}
+		tx.Rollback()
+		return body, err
+	}
+
+	progress := models.AssessmentProgress{
+		Progress_year:      assessmentRequest.Project_year,
+		Progress_title:     assessmentRequest.Project_title,
+		Progress_estimate:  assessmentRequest.Project_estimate,
+		Progress_recommend: assessmentRequest.Project_recommend,
+		Period:             assessmentRequest.Project_period,
+	}
+
+	if err := tx.Create(&progress).Error; err != nil {
+		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
+		}
+		tx.Rollback()
+		return body, err
+	}
+	report := models.AssessmentReport{
+		Report_year:      assessmentRequest.Project_year,
+		Report_title:     assessmentRequest.Project_title,
+		Report_estimate:  assessmentRequest.Project_estimate,
+		Report_recommend: assessmentRequest.Project_recommend,
+		Period:           assessmentRequest.Project_period,
+	}
+
+	if err := tx.Create(&report).Error; err != nil {
+		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
+		}
+		tx.Rollback()
+		return body, err
+	}
+	article := models.AssessmentArticle{
+		Article_year:      assessmentRequest.Project_year,
+		Article_title:     assessmentRequest.Project_title,
+		Article_estimate:  assessmentRequest.Project_estimate,
+		Article_recommend: assessmentRequest.Project_recommend,
+		Period:            assessmentRequest.Project_period,
+	}
+
+	if err := tx.Create(&article).Error; err != nil {
+		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
+		}
+		tx.Rollback()
+		return body, err
+	}
+	body = models.Assessment{
+		Assessment_start: assessmentRequest.AssessmentStart,
+		Assessment_end:   assessmentRequest.AssessmentEnd,
+		ProjectID:        project.Id,
+		ProgressID:       progress.Id,
+		ProfileID:        assessmentRequest.ProfileID,
+		ReportID:         report.Id,
+		ArticleID:        article.Id,
+		Created_by:       "admin",
+		Updated_by:       "admin",
+	}
+
+	r := tx.Create(&body)
+	if err := r.Error; err != nil {
+		tx.Rollback()
+		return body, err
+	}
+	return body, tx.Commit().Error
+}
+
+func RollbackDeleteProFile(i int) {
+	panic("unimplemented")
+}
+
+func (u *AssessmentHandler) RollbackDeleteProFile(profileId int) (err error) {
+	dprofile := u.db.Delete(&models.Profile{}, profileId)
+	if err = dprofile.Error; err != nil {
+		return err
+	}
+	dprogram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
+	if err = dprogram.Error; err != nil {
+		return err
+	}
+	dProfileAttach := u.db.Where("profile_id = ?", profileId).Delete(&models.Profile_attach{})
+	if err = dProfileAttach.Error; err != nil {
+		return err
+	}
+	dexploration := u.db.Where("profile_id = ?", profileId).Delete(&models.Exploration{})
+	if err = dexploration.Error; err != nil {
+		return err
+	}
+	dexperience := u.db.Where("profile_id = ?", profileId).Delete(&models.Experience{})
+	if err = dexperience.Error; err != nil {
+		return err
+	}
+	ddegree := u.db.Where("profile_id = ?", profileId).Delete(&models.Degree{})
+	if err = ddegree.Error; err != nil {
+		return err
+	}
+	return nil
 }
