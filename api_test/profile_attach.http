@@ -1,13 +1,13 @@
 
-GET http://localhost:8080/profile_attach
+GET http://localhost:9000/profile_attach
 
 ###
 
-GET http://localhost:8080/profile_attach/3
+GET http://localhost:9000/profile_attach/3
 
 ###
 
-POST http://localhost:8080/profile_attach
+POST http://localhost:9000/profile_attach
 Content-Type: application/json
 
 
@@ -15,7 +15,8 @@ Content-Type: application/json
     "file_name":"TEST2",
     "file_action":"TEST",
     "file_storage":"TEST",
-    "profile_id": 2,
+    "profile_id": 1,
+    "activated": true,
     "created_by": "Champlnwza008",
     "updated_by": "Champlnwza008"
 }
@@ -23,7 +24,7 @@ Content-Type: application/json
 
 
 ###
-PUT http://localhost:8080/profile_attach/1
+PUT http://localhost:9000/profile_attach/1
 Content-Type: application/json
 
 { 
@@ -36,9 +37,9 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:8080/profile_attach/1
+DELETE http://localhost:9000/profile_attach/1
 ###
-DELETE http://localhost:8080/profile_attach/all
+DELETE http://localhost:9000/profile_attach/all
 
 
 

@@ -46,7 +46,7 @@ Content-Type: application/json
 ###
 DELETE http://localhost:8080/profile/4
 ###
-DELETE http://localhost:8080/profile/all
+DELETE http://localhost:9000/profile/all
 
 
 

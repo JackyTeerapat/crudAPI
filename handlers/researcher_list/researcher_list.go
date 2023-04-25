@@ -5,45 +5,42 @@ import (
 	"strconv"
 	"strings"
 
+	"CRUD-API/api"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-type ResearcherList struct {
-	db *gorm.DB
-}
+type (
+	ResearcherList struct {
+		db *gorm.DB
+	}
 
-type RequestInput struct {
-	ResearcherName string `json:"researcher_name"`
-	University     string `json:"university"`
-	ExploreYear    string `json:"explore_year"`
-	ProjectTitle   string `json:"project_title"`
-	Page           int    `json:"page"`
-	Limit          int    `json:"limit"`
-}
+	RequestInput struct {
+		ResearcherName string `json:"researcher_name"`
+		University     string `json:"university"`
+		ExploreYear    string `json:"explore_year"`
+		ProjectTitle   string `json:"project_title"`
+		Page           int    `json:"page"`
+		Limit          int    `json:"limit"`
+	}
 
-type ResearcherOutput struct {
-	ResearcherName string `json:"researcher_name"`
-	University     string `json:"university"`
-	ExploreYear    string `json:"explore_year"`
-	ProjectTitle   string `json:"project_title"`
-	ResearcherId   int    `json:"researcher_id"`
-}
+	ResearcherOutput struct {
+		ResearcherName string `json:"researcher_name"`
+		University     string `json:"university"`
+		ExploreYear    string `json:"explore_year"`
+		ProjectTitle   string `json:"project_title"`
+		ResearcherId   int    `json:"researcher_id"`
+	}
 
-type Response struct {
-	Status       int                 `json:"status"`
-	Description  string              `json:"description"`
-	ErrorMessage string              `json:"errorMessage"`
-	Data         ResponseDataContent `json:"data"`
-}
-
-type ResponseDataContent struct {
-	Content     []ResearcherOutput `json:"content"`
-	TotalPage   int                `json:"total_page"`
-	TotalObject int                `json:"total_object"`
-	CurrentPage int                `json:"current_page"`
-	IsLast      bool               `json:"is_last"`
-}
+	ResponseDataContent struct {
+		Content     []ResearcherOutput `json:"content"`
+		TotalPage   int                `json:"total_page"`
+		TotalObject int                `json:"total_object"`
+		CurrentPage int                `json:"current_page"`
+		IsLast      bool               `json:"is_last"`
+	}
+)
 
 func ResearcherListConnection(db *gorm.DB) *ResearcherList {
 	return &ResearcherList{db: db}
@@ -51,10 +48,8 @@ func ResearcherListConnection(db *gorm.DB) *ResearcherList {
 func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	var req RequestInput
 
-	var res Response
 	if err := c.BindJSON(&req); err != nil {
-		res.Status = http.StatusBadRequest
-		res.ErrorMessage = err.Error()
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -66,7 +61,6 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 	page = page * limit
 	isAddWhere := false
-	sqlCountStatement := "COUNT(*)"
 	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, exploration.explore_year, assessment_project.project_title"
 	sqlStatement := "SELECT #STATEMENT# FROM profile " +
 		"JOIN exploration ON profile.id = exploration.profile_id " +
@@ -105,7 +99,12 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		}
 	}
 
-	count := CountTotalItem(sqlStatement, sqlCountStatement, u)
+	total_count, err := CountTotalItem(sqlStatement, u)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
 	sqlStatement += " ORDER BY profile.id DESC OFFSET " + strconv.Itoa(page) + " ROWS FETCH NEXT " + strconv.Itoa(limit) + " ROWS ONLY"
 
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlQueryStatement, 1)
@@ -113,47 +112,44 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	defer list.Close()
 
 	if err != nil {
-		res.Status = http.StatusBadRequest
-		res.ErrorMessage = err.Error()
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		//c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("An error occurred while fetching data %v", err.Error())})
 		return
 	}
 
 	var resDataContent ResponseDataContent
+	count := 0
 	for list.Next() {
 		tmp := ResearcherOutput{"", "", "", "", 0}
 		first, last := "", ""
 		if err := list.Scan(&tmp.ResearcherId, &first, &last, &tmp.University, &tmp.ExploreYear, &tmp.ProjectTitle); err != nil {
-			res.Status = http.StatusBadRequest
-			res.ErrorMessage = err.Error()
+			res := api.ResponseApi(http.StatusBadRequest, nil, err)
 			c.JSON(http.StatusBadRequest, res)
 			return
 		}
 		tmp.ResearcherName = first + " " + last
 		resDataContent.Content = append(resDataContent.Content, tmp)
+		count++
 	}
-	res.Status = http.StatusOK
-	res.Description = "SUCCESS"
 	resDataContent.IsLast = (page + limit) >= count
 	resDataContent.CurrentPage = req.Page
 	resDataContent.TotalObject = count
-	resDataContent.TotalPage = count / limit
+	resDataContent.TotalPage = total_count / limit
 	if count%limit > 0 {
 		resDataContent.TotalPage++
 	}
-	res.Data = resDataContent
+	res := api.ResponseApi(http.StatusOK, resDataContent, nil)
 	c.JSON(http.StatusOK, res)
 }
 
-func CountTotalItem(sqlStatement, sqlCountStatement string, u *ResearcherList) int {
+func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
 	count := 0
-	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlCountStatement, 1)
+	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
 	row := u.db.Raw(sqlStatement).Row()
 	err := row.Scan(&count)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-
-	return count
+	return count, nil
 }

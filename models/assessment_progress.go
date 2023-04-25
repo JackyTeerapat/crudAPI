@@ -2,23 +2,25 @@ package models
 
 import "time"
 
-type Progress struct {
-	Id                 int       `json:"id"`
+type AssessmentProgress struct {
+	Id                 int       `json:"progress_id"`
 	Progress_year      string    `json:"progress_year"`
 	Progress_title     string    `json:"progress_title"`
 	Progress_estimate  bool      `json:"progress_estimate"`
-	Estimate_remark    string    `json:"estimate_remark"`
+	Estimate_remark    string    `json:"-"`
 	Progress_recommend bool      `json:"progress_recommend"`
-	Recommend_remark   string    `json:"recommend_remark"`
+	Recommend_remark   string    `json:"-"`
 	File_name          string    `json:"file_name"`
-	File_storage       string    `json:"file_storage"`
+	File_action        string    `json:"file_action"`
+	File_Id            int       `json:"-"`
+	File_storage       string    `json:"-"`
 	Period             bool      `json:"period"`
-	Created_by         string    `json:"created_by"`
-	Updated_by         string    `json:"updated_by"`
-	CreatedAt          time.Time `json:"created_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
-	UpdatedAt          time.Time `json:"updated_at" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	Created_by         string    `json:"-"`
+	Updated_by         string    `json:"-"`
+	CreatedAt          time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+	UpdatedAt          time.Time `json:"-" gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
 }
 
-func (p *Progress) TableName() string {
+func (p *AssessmentProgress) TableName() string {
 	return "assessment_progress"
 }
