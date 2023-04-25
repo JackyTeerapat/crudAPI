@@ -1,7 +1,6 @@
 package researcher_list
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -145,7 +144,6 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
 	count := 0
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
-	fmt.Println(sqlStatement)
 	row := u.db.Raw(sqlStatement).Row()
 	err := row.Scan(&count)
 	if err != nil {
