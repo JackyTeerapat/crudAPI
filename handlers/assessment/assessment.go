@@ -62,47 +62,29 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	return
 }
 
-func (h *AssessmentHandler) RollbackDeleteResearcher(c *gin.Context, profileId int) error {
+func (h *AssessmentHandler) RollbackDeleteResearcher(c *gin.Context, profileId int, updatedBY string) error {
 
-	id := profileId
-	profile_id := profileId
-	r := h.db.Table("profile").
-		// Preload("Degree").
-		// Preload("Program").
-		// Preload("Experience").
-		// Preload("Exploration").
-		// Preload("Profile_attach").
-		Delete(&models.Profile{}, id).
-		Delete(&models.Degree{}, profile_id).
-		Delete(&models.Program{}, profile_id).
-		Delete(&models.Experience{}, profile_id).
-		Delete(&models.Exploration{}, profile_id).
-		Delete(&models.Profile_attach{}, profile_id)
-	if err := r.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return nil
+	profileID := profileId
+	updatedBy := updatedBY
+	activated := false
+
+	tablesToUpdate := []string{"degree", "program", "experience", "exploration", "profile_attach"}
+
+	for _, tableName := range tablesToUpdate {
+		if err := h.db.Exec(fmt.Sprintf("UPDATE %s SET updated_by = ?, activated = ? WHERE profile_id = ?", tableName), updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the activated status in the %s table: %v", tableName, err)})
+			return nil
+		}
 	}
 
 	return nil
 }
 
 func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
+
 	var assessment models.AssessmentRequest
 
-	if err := c.ShouldBindJSON(&assessment); err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, nil, err)
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
-
-	// tx := h.db.Begin()
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		tx.Rollback()
-	// 	}
-	// }()
-
-	// Create createdBy and updatedBy variables
+	// Create mock variables
 	createdBy := "Sahatsawat"
 	updatedBy := "Sahatsawat"
 	projectFileName := "20230421-16343323-สูตรคูณ.pdf"
@@ -113,6 +95,20 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	reportFileAction := "report"
 	articleFileName := "20230421-16351623-สูตรคูณ.pdf"
 	articleFileAction := "article"
+
+	if err := c.ShouldBindJSON(&assessment); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	tx := h.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
+		}
+	}()
 
 	// The rest of the code remains the same until the INSERT statements for the other tables
 	var assessmentcheck models.Assessment
@@ -131,7 +127,7 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	}
 
 	if r.RowsAffected > 0 {
-		// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+		//h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 		c.JSON(http.StatusNotFound, gin.H{"error": "assessment already exists"})
 		return
 	}
@@ -141,8 +137,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		// Save Project data
 		if err := h.db.Exec("INSERT INTO assessment_project (project_year, project_title, project_point, project_estimate, project_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			assessment.Project.ProjectYear, assessment.Project.ProjectTitle, assessment.Project.ProjectPoint, assessment.Project.ProjectEstimate, assessment.Project.ProjectRecommend, assessment.Project.ProjectPeriod, createdBy, updatedBy, projectFileName, projectFileAction).Error; err != nil {
-			// tx.Rollback()
-			// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+			h.db.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting project data: %v", err.Error())})
 			return
 		}
@@ -150,8 +146,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		// Save Progress data
 		if err := h.db.Exec("INSERT INTO assessment_progress (progress_year, progress_title, progress_estimate, progress_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			assessment.Progress.ProgressYear, assessment.Progress.ProgressTitle, assessment.Progress.ProgressEstimate, assessment.Progress.ProgressRecommend, assessment.Progress.ProgressPeriod, createdBy, updatedBy, progressFileName, progressFileAction).Error; err != nil {
-			// tx.Rollback()
-			// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+			h.db.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting progress data: %v", err.Error())})
 			return
 		}
@@ -159,8 +155,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		// Save Report data
 		if err := h.db.Exec("INSERT INTO assessment_report (report_year, report_title, report_estimate, report_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			assessment.Report.ReportYear, assessment.Report.ReportTitle, assessment.Report.ReportEstimate, assessment.Report.ReportRecommend, assessment.Report.ReportPeriod, createdBy, updatedBy, reportFileName, reportFileAction).Error; err != nil {
-			// tx.Rollback()
-			// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+			h.db.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting report data: %v", err.Error())})
 			return
 		}
@@ -168,8 +164,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		// Save Article data
 		if err := h.db.Exec("INSERT INTO assessment_article (article_year, article_title, article_estimate, article_recommend, period, created_by, updated_by, file_name, file_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			assessment.Article.ArticleYear, assessment.Article.ArticleTitle, assessment.Article.ArticleEstimate, assessment.Article.ArticleRecommend, assessment.Article.ArticlePeriod, createdBy, updatedBy, articleFileName, articleFileAction).Error; err != nil {
-			// tx.Rollback()
-			// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+			h.db.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting article data: %v", err.Error())})
 			return
 		}
@@ -198,8 +194,8 @@ func (h *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 			assessment.ProfileID, assessment.AssessmentStart, assessment.AssessmentEnd, projectID, progressID, reportID, articleID, createdBy, updatedBy, assessmentFileName, assessmentFileAction)
 
 		if result.Error != nil {
-			// tx.Rollback()
-			// h.RollbackDeleteResearcher(c, assessment.ProfileID)
+			h.db.Rollback()
+			h.RollbackDeleteResearcher(c, assessment.ProfileID, updatedBy)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting assessment data into the assessment table: %v", result.Error)})
 			return
 		}
