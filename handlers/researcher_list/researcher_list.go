@@ -1,6 +1,7 @@
 package researcher_list
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,11 +62,11 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 	page = page * limit
 	isAddWhere := false
-	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, exploration.explore_year, assessment_project.project_title"
-	sqlStatement := "SELECT #STATEMENT# FROM profile " +
-		"JOIN exploration ON profile.id = exploration.profile_id " +
-		"JOIN assessment ON profile.id = assessment.profile_id " +
-		"JOIN assessment_project ON assessment.project_id = assessment_project.id "
+	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, exp.explore_year, assessment_project.project_title"
+	sqlStatement := "SELECT #STATEMENT# FROM (SELECT profile_id, MAX(explore_year) as explore_year FROM exploration #EXPWHERESTATEMENT# GROUP BY profile_id) exp " +
+		"JOIN assessment ON assessment.profile_id = exp.profile_id " +
+		"JOIN assessment_project ON assessment.project_id = assessment_project.id " +
+		"JOIN profile ON profile.id = exp.profile_id "
 
 	if req.ResearcherName != "" {
 		isAddWhere = true
@@ -82,12 +83,10 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 
 	if req.ExploreYear != "" {
-		if isAddWhere {
-			sqlStatement += " AND exploration.explore_year LIKE '%" + req.ExploreYear + "%'"
-		} else {
-			isAddWhere = true
-			sqlStatement += " WHERE exploration.explore_year LIKE '%" + req.ExploreYear + "%'"
-		}
+		exp_where := " WHERE explore_year LIKE '%" + req.ExploreYear + "%'"
+		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", exp_where, 1)
+	} else {
+		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", "", 1)
 	}
 
 	if req.ProjectTitle != "" {
@@ -146,6 +145,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
 	count := 0
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
+	fmt.Println(sqlStatement)
 	row := u.db.Raw(sqlStatement).Row()
 	err := row.Scan(&count)
 	if err != nil {
