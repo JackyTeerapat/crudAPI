@@ -11,7 +11,9 @@ import (
 func ConnectDb() *gorm.DB {
 	var err error
 	dsn := os.Getenv("DNS")
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 
 	if err != nil {
 		panic("failed to connect database")

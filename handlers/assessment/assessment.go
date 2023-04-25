@@ -64,21 +64,12 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 
 func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	var assessment models.AssessmentRequests
-
-	profileID := profileId
-	updatedBy := updatedBY
-	activated := false
-
-	tablesToUpdate := []string{"degree", "program", "experience", "exploration", "profile_attach"}
-
-	for _, tableName := range tablesToUpdate {
-		if err := h.db.Exec(fmt.Sprintf("UPDATE %s SET updated_by = ?, activated = ? WHERE profile_id = ?", tableName), updatedBy, activated, profileID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the activated status in the %s table: %v", tableName, err)})
-			return nil
-		}
+	if err := c.ShouldBindJSON(&assessment); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
 	}
 	var checkAs models.Assessment
-
 	ckeck := u.db.Table("assessment").Where("profile_id = ?", assessment.ProfileID).First(&checkAs)
 	if ckeck.RowsAffected != 0 {
 		// e := u.RollbackDeleteProFile(assessment.ProfileID)
@@ -97,24 +88,24 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	var resAssessment models.AssessmentResponse
-	r := u.db.Table("assessment").
-		Where("id = ?", body.Id).
-		Preload("Project").
-		Preload("Progress").
-		Preload("Report").
-		Preload("Article").
-		First(&resAssessment)
-	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
-		return
-	}
-	if err := r.Error; err != nil {
-		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-		c.JSON(http.StatusInternalServerError, res)
-		return
-	}
-	res := api.ResponseApi(http.StatusCreated, resAssessment, nil)
+	// var resAssessment models.Assessment
+	// r := u.db.Table("assessment").
+	// 	Where("id = ?", body.Id).
+	// 	Preload("Project").
+	// 	Preload("Progress").
+	// 	Preload("Report").
+	// 	Preload("Article").
+	// 	First(&resAssessment)
+	// if r.RowsAffected == 0 {
+	// 	c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
+	// 	return
+	// }
+	// if err := r.Error; err != nil {
+	// 	res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+	// 	c.JSON(http.StatusInternalServerError, res)
+	// 	return
+	// }
+	res := api.ResponseApi(http.StatusCreated, body, nil)
 	c.JSON(http.StatusCreated, res)
 }
 
@@ -233,7 +224,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}()
 	// var profile models.Profile
 
-	// if err := tx.Find(&profile, assessmentRequest.ProfileID).Error; err != nil {
+	// if err := tx.Find(&profile, 1).Error; err != nil {
 	// 	tx.Rollback()
 	// 	return body, err
 	// }
@@ -247,59 +238,59 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 	p := tx.Create(&project)
 	if err := p.Error; err != nil {
-		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
-		}
+		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		// if e != nil {
+		// 	return body, e
+		// }
 		tx.Rollback()
 		return body, err
 	}
 
 	progress := models.AssessmentProgress{
-		Progress_year:      assessmentRequest.Project_year,
-		Progress_title:     assessmentRequest.Project_title,
-		Progress_estimate:  assessmentRequest.Project_estimate,
+		Progress_year:      assessmentRequest.Progress_year,
+		Progress_title:     assessmentRequest.Progress_title,
+		Progress_estimate:  assessmentRequest.Progress_estimate,
 		Progress_recommend: assessmentRequest.Project_recommend,
-		Period:             assessmentRequest.Project_period,
+		Period:             assessmentRequest.Progress_period,
 	}
 
 	if err := tx.Create(&progress).Error; err != nil {
-		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
-		}
+		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		// if e != nil {
+		// 	return body, e
+		// }
 		tx.Rollback()
 		return body, err
 	}
 	report := models.AssessmentReport{
-		Report_year:      assessmentRequest.Project_year,
-		Report_title:     assessmentRequest.Project_title,
-		Report_estimate:  assessmentRequest.Project_estimate,
-		Report_recommend: assessmentRequest.Project_recommend,
-		Period:           assessmentRequest.Project_period,
+		Report_year:      assessmentRequest.Report_year,
+		Report_title:     assessmentRequest.Report_title,
+		Report_estimate:  assessmentRequest.Report_estimate,
+		Report_recommend: assessmentRequest.Report_recommend,
+		Period:           assessmentRequest.Report_period,
 	}
 
 	if err := tx.Create(&report).Error; err != nil {
-		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
-		}
+		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		// if e != nil {
+		// 	return body, e
+		// }
 		tx.Rollback()
 		return body, err
 	}
 	article := models.AssessmentArticle{
-		Article_year:      assessmentRequest.Project_year,
-		Article_title:     assessmentRequest.Project_title,
-		Article_estimate:  assessmentRequest.Project_estimate,
-		Article_recommend: assessmentRequest.Project_recommend,
-		Period:            assessmentRequest.Project_period,
+		Article_year:      assessmentRequest.Article_year,
+		Article_title:     assessmentRequest.Article_title,
+		Article_estimate:  assessmentRequest.Article_estimate,
+		Article_recommend: assessmentRequest.Article_recommend,
+		Period:            assessmentRequest.Article_period,
 	}
 
 	if err := tx.Create(&article).Error; err != nil {
-		e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
-		}
+		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
+		// if e != nil {
+		// 	return body, e
+		// }
 		tx.Rollback()
 		return body, err
 	}
@@ -320,7 +311,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		tx.Rollback()
 		return body, err
 	}
-	return body, tx.Commit().Error
+	return body, err
 }
 
 func RollbackDeleteProFile(i int) {
