@@ -69,6 +69,10 @@ func main() {
 	//minio upload
 	minioClient := minioclient.MinioClientConnect(db)
 	r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
+	r.POST("/api/v1//researcher/download", minioClient.GetFile)
+	r.POST("/api/v1//researcher/upload64", minioClient.UploadFileBase64)
+	r.POST("/api/v1//researcher/update_file", minioClient.UploadUpdateFile)
+	r.POST("/api/v1//researcher/update_file64", minioClient.UploadUpdateFileBase64)
 	r.DELETE("/api/v1//researcher/delete_file", minioClient.DeleteFile)
 
 	//Degree Zones
@@ -124,7 +128,7 @@ func main() {
 	r.GET("/api/v1/researcher/assessment_detail/", assessmentHandler.ListAssessment)
 	r.GET("/api/v1/researcher/assessment_detail/:id", assessmentHandler.GetAssessmentHandler)
 	r.POST("/api/v1/researcher/assessment", assessmentHandler.CreateAssessmentHandler)
-	r.PATCH("/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
+	r.PATCH("/api/v1/researcher/assessment/:id", assessmentHandler.UpdateAssessmentHandler)
 	r.DELETE("/assessment/:id", assessmentHandler.DeleteAssessmentHandler)
 
 	//Article Zones
