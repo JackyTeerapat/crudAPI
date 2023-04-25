@@ -88,23 +88,23 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	// var resAssessment models.Assessment
-	// r := u.db.Table("assessment").
-	// 	Where("id = ?", body.Id).
-	// 	Preload("Project").
-	// 	Preload("Progress").
-	// 	Preload("Report").
-	// 	Preload("Article").
-	// 	First(&resAssessment)
-	// if r.RowsAffected == 0 {
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
-	// 	return
-	// }
-	// if err := r.Error; err != nil {
-	// 	res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-	// 	c.JSON(http.StatusInternalServerError, res)
-	// 	return
-	// }
+	var resAssessment models.Assessment
+	r := u.db.Table("assessment").
+		Where("id = ?", body.Id).
+		Preload("Project").
+		Preload("Progress").
+		Preload("Report").
+		Preload("Article").
+		First(&resAssessment)
+	if r.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
+		return
+	}
+	if err := r.Error; err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
 	res := api.ResponseApi(http.StatusCreated, body, nil)
 	c.JSON(http.StatusCreated, res)
 }
