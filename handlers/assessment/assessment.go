@@ -42,7 +42,7 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	var assessment models.Assessment
 	id := c.Param("id")
 	r := u.db.Table("assessment").
-		Where("id = ?", id).
+		Where("profile_id = ?", id).
 		Preload("Project").
 		Preload("Progress").
 		Preload("Report").
@@ -65,10 +65,17 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	var assessment models.AssessmentRequests
 
-	if err := c.ShouldBindJSON(&assessment); err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, nil, err)
-		c.JSON(http.StatusBadRequest, res)
-		return
+	profileID := profileId
+	updatedBy := updatedBY
+	activated := false
+
+	tablesToUpdate := []string{"degree", "program", "experience", "exploration", "profile_attach"}
+
+	for _, tableName := range tablesToUpdate {
+		if err := h.db.Exec(fmt.Sprintf("UPDATE %s SET updated_by = ?, activated = ? WHERE profile_id = ?", tableName), updatedBy, activated, profileID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating the activated status in the %s table: %v", tableName, err)})
+			return nil
+		}
 	}
 	var checkAs models.Assessment
 
