@@ -66,6 +66,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		"JOIN exploration ON profile.id = exploration.profile_id " +
 		"JOIN assessment ON profile.id = assessment.profile_id " +
 		"JOIN assessment_project ON assessment.project_id = assessment_project.id "
+		// "GROUP BY exploration.profile_id, assessment.profile_id"
 
 	if req.ResearcherName != "" {
 		isAddWhere = true
