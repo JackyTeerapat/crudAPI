@@ -2,7 +2,6 @@ package minioclient
 
 import (
 	"CRUD-API/api"
-	"CRUD-API/models"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -30,10 +29,9 @@ type (
 	}
 
 	FileResponseData struct {
-		FileName        string `json:"file_name"`
-		FileType        string `json:"file_type"`
-		FileUrl         string `json:"file_url"`
-		FileUploadError string `json:"file_upload_error"`
+		FileName string `json:"file_name"`
+		FileType string `json:"file_type"`
+		FileUrl  string `json:"file_url"`
 	}
 
 	MinioInput struct {
@@ -63,7 +61,7 @@ func MinioClientConnect(db *gorm.DB) *MinioClient {
 
 func (m *MinioClient) UploadFile(c *gin.Context) {
 	//multi file
-	ctx := context.Background()
+	ctx := c
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
@@ -71,6 +69,8 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 	}
 	files := form.File["uploadfile"]
 
+	profile_id := -1
+	assessment_id := -1
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
 
@@ -90,7 +90,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
-		newName := directory[i] + "/" + timestamp + "-" + file.Filename
+		target := directory[i] + "/" + fileName
 
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
@@ -112,6 +112,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		var u_err error
 		switch directory[i] {
 		case "assessment":
+			assessment_id = row_id
 			_, u_err = UpdateAssessment(m.db, fileName, directory[i], row_id, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, directory[i], row_id, false)
@@ -122,27 +123,49 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 		case "article":
 			_, u_err = UpdateAssessmentArticle(m.db, fileName, directory[i], row_id, false)
 		default:
+			profile_id = row_id
 			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
 		}
 		if u_err != nil {
-			fileData.FileUploadError = u_err.Error()
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
+			if profile_id != -1 {
+				DeleteProfile(m.db, profile_id)
+			}
+			if assessment_id != -1 {
+				DeleteAssessment(m.db, assessment_id)
+			}
+			RollbackDeleteFile(c, m, resData)
+			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-				fileData.FileUploadError = err.Error()
+			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
+				if profile_id != -1 {
+					DeleteProfile(m.db, profile_id)
+				}
+				if assessment_id != -1 {
+					DeleteAssessment(m.db, assessment_id)
+				}
+				RollbackDeleteFile(c, m, resData)
+				return
 			}
 		}
 
 		resData = append(resData, fileData)
 	}
 	res := api.ResponseApi(http.StatusOK, resData, nil)
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
 	return
 }
 
 func (m *MinioClient) UploadFileBase64(c *gin.Context) {
-	ctx := context.Background()
+
+	ctx := c
 
 	var req []MinioInput
+	profile_id := -1
+	assessment_id := -1
 
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -156,7 +179,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		newName := v.DirectoryFile + "/" + timestamp + "-" + v.FileName
+		target := v.DirectoryFile + "/" + fileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -181,6 +204,7 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		var u_err error
 		switch v.DirectoryFile {
 		case "assessment":
+			assessment_id = v.DirectoryId
 			_, u_err = UpdateAssessment(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
@@ -191,26 +215,215 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 		case "article":
 			_, u_err = UpdateAssessmentArticle(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
 		default:
+			profile_id = v.DirectoryId
 			u_err = UpSertProfileAttach(m.db, fileName, v.DirectoryFile, v.DirectoryId)
 		}
 
 		if u_err != nil {
-			fileData.FileUploadError = u_err.Error()
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
+			if profile_id != -1 {
+				DeleteProfile(m.db, profile_id)
+			}
+			if assessment_id != -1 {
+				DeleteAssessment(m.db, assessment_id)
+			}
+			RollbackDeleteFile(c, m, resData)
+			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, newName, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-				fileData.FileUploadError = err.Error()
+			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
+				if profile_id != -1 {
+					DeleteProfile(m.db, profile_id)
+				}
+				if assessment_id != -1 {
+					DeleteAssessment(m.db, assessment_id)
+				}
+				RollbackDeleteFile(c, m, resData)
+				return
 			}
 		}
 
 		resData = append(resData, fileData)
 	}
 	res := api.ResponseApi(http.StatusOK, resData, nil)
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
+	return
+}
+
+func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
+	//multi file
+	ctx := c
+	tx := m.db.Begin()
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	files := form.File["uploadfile"]
+
+	directory := form.Value["directory_file"]
+	directory_id := form.Value["directory_id"]
+
+	resData := []FileResponseData{}
+	for i, file := range files {
+
+		if i >= len(directory_id) {
+			continue
+		}
+		if i >= len(directory) {
+			continue
+		}
+		row_id, r_err := strconv.Atoi(directory_id[i])
+		if r_err != nil {
+			continue
+		}
+		timenow := time.Now()
+		timestamp := timenow.Format("20060102-15040506")
+		fileName := timestamp + "-" + file.Filename
+		target := directory[i] + "/" + fileName
+
+		contentType := file.Header.Values("Content-Type")
+		mimeType := "application/octet-stream"
+		if len(contentType) > 0 {
+			mimeType = contentType[0]
+		}
+		fileBuffer, err := file.Open()
+		if err != nil {
+			log.Panic(err)
+		}
+
+		fileBuffer.Close()
+
+		fileData := FileResponseData{
+			FileName: fileName,
+			FileType: directory[i],
+		}
+
+		var u_err error
+		switch directory[i] {
+		case "assessment":
+			_, u_err = UpdateAssessment(tx, fileName, directory[i], row_id, false)
+		case "project":
+			_, u_err = UpdateAssessmentProject(tx, fileName, directory[i], row_id, false)
+		case "progress":
+			_, u_err = UpdateAssessmentProgress(tx, fileName, directory[i], row_id, false)
+		case "report":
+			_, u_err = UpdateAssessmentReport(tx, fileName, directory[i], row_id, false)
+		case "article":
+			_, u_err = UpdateAssessmentArticle(tx, fileName, directory[i], row_id, false)
+		default:
+			u_err = UpSertProfileAttach(tx, fileName, directory[i], row_id)
+		}
+		if u_err != nil {
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
+			tx.Rollback()
+			RollbackDeleteFile(c, m, resData)
+			return
+		} else {
+			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
+				tx.Rollback()
+				RollbackDeleteFile(c, m, resData)
+				return
+			}
+		}
+
+		resData = append(resData, fileData)
+	}
+	tx.Commit()
+	res := api.ResponseApi(http.StatusOK, resData, nil)
+	c.JSON(http.StatusOK, res)
+	return
+}
+
+func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
+	ctx := c
+
+	tx := m.db.Begin()
+	var req []MinioInput
+
+	if err := c.BindJSON(&req); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	resData := []FileResponseData{}
+	for _, v := range req {
+
+		timenow := time.Now()
+		timestamp := timenow.Format("20060102-15040506")
+		fileName := timestamp + "-" + v.FileName
+		target := v.DirectoryFile + "/" + fileName
+
+		arr := strings.Split(v.FileBase64, ",")
+		mimeType := "application/octet-stream"
+
+		if matched, _ := regexp.MatchString(":(.*?);", arr[0]); matched {
+			r, _ := regexp.Compile(":(.*?);")
+			mimeType = r.FindStringSubmatch(arr[0])[1]
+		}
+
+		fileByte, err := base64.StdEncoding.DecodeString(arr[1])
+		if err != nil {
+			log.Panic(err)
+		}
+		fileBuffer := bytes.NewReader(fileByte)
+		size := int64(len(fileByte))
+
+		fileData := FileResponseData{
+			FileName: fileName,
+			FileType: v.DirectoryFile,
+		}
+
+		var u_err error
+		switch v.DirectoryFile {
+		case "assessment":
+			_, u_err = UpdateAssessment(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "project":
+			_, u_err = UpdateAssessmentProject(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "progress":
+			_, u_err = UpdateAssessmentProgress(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "report":
+			_, u_err = UpdateAssessmentReport(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+		case "article":
+			_, u_err = UpdateAssessmentArticle(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+		default:
+			u_err = UpSertProfileAttach(tx, fileName, v.DirectoryFile, v.DirectoryId)
+		}
+
+		if u_err != nil {
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
+			tx.Rollback()
+			RollbackDeleteFile(c, m, resData)
+			return
+		} else {
+			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
+				tx.Rollback()
+				RollbackDeleteFile(c, m, resData)
+				return
+			}
+		}
+
+		resData = append(resData, fileData)
+	}
+	tx.Commit()
+	res := api.ResponseApi(http.StatusOK, resData, nil)
+	c.JSON(http.StatusOK, res)
 	return
 }
 
 func (m *MinioClient) GetFile(c *gin.Context) {
-	ctx := context.Background()
+	ctx := c
 
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -280,8 +493,7 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 }
 
 func (m *MinioClient) DeleteFile(c *gin.Context) {
-	ctx := context.Background()
-
+	ctx := c
 	var req []MinioInput
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -332,304 +544,19 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 
 	}
 
-	//res := api.ResponseApi(http.StatusOK, "Success", nil)
 	res := api.ResponseApi(http.StatusOK, resData, nil)
 	c.JSON(http.StatusOK, res)
 	return
 }
 
-func UpSertProfileAttach(db *gorm.DB, filename, data_type string, profile_id int) error {
+func RollbackDeleteFile(ctx context.Context, m *MinioClient, resData []FileResponseData) {
 
-	var profile_attach models.Profile_attach
+	for _, v := range resData {
 
-	// check exist
-	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
-	if r.RowsAffected == 0 {
-		profile_attach.File_name = filename
-		profile_attach.File_storage = data_type + "/" + filename
-		profile_attach.File_action = data_type
-		profile_attach.Activated = true
-		profile_attach.Profile_id = profile_id
-		r = db.Create(&profile_attach)
-		if err := r.Error; err != nil {
-			return err
+		opts := minio.RemoveObjectOptions{GovernanceBypass: true}
+		err := m.mc.RemoveObject(ctx, m.bucketName, v.FileType+"/"+v.FileName, opts)
+		if err != nil {
 		}
-	} else {
-		//update
-		profile_attach.File_name = filename
-		profile_attach.File_storage = data_type + "/" + filename
-		profile_attach.Activated = true
-		profile_attach.UpdatedAt = time.Now()
-		r = db.Table("profile_attach").Updates(&profile_attach)
-		if err := r.Error; err != nil {
-			return err
-		}
+
 	}
-	return nil
-}
-
-func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var assessment models.Assessment
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = assessment.Assessment_file_name
-			assessment.Assessment_file_name = ""
-			assessment.Assessment_file_action = ""
-		} else {
-			assessment.Assessment_file_name = filename
-			assessment.Assessment_file_action = data_type
-		}
-		assessment.UpdatedAt = time.Now()
-		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_action", "updated_at").Updates(&assessment)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var project models.AssessmentProject
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment_project").Where("id = ?", profile_id).First(&project)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = project.File_name
-			project.File_name = ""
-			project.File_action = ""
-		} else {
-			project.File_name = filename
-			project.File_action = data_type
-		}
-		project.UpdatedAt = time.Now()
-		r = db.Table("assessment_project").Select("file_name", "file_action", "updated_at").Updates(&project)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func UpdateAssessmentProgress(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var progress models.AssessmentProgress
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_progress").Where("id = ?", profile_id).First(&progress)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = progress.File_name
-			progress.File_name = ""
-			progress.File_action = ""
-		} else {
-			progress.File_name = filename
-			progress.File_action = data_type
-		}
-		progress.UpdatedAt = time.Now()
-		r = db.Table("assessment_progress").Select("file_name", "file_action", "updated_at").Updates(&progress)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func UpdateAssessmentReport(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var repport models.AssessmentReport
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_report").Where("id = ?", profile_id).First(&repport)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = repport.File_name
-			repport.File_name = ""
-			repport.File_action = ""
-		} else {
-			repport.File_name = filename
-			repport.File_action = data_type
-		}
-		repport.UpdatedAt = time.Now()
-		r = db.Table("assessment_report").Select("file_name", "file_action", "updated_at").Updates(&repport)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func UpdateAssessmentArticle(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var article models.AssessmentArticle
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_article").Where("id = ?", profile_id).First(&article)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = article.File_name
-			article.File_name = ""
-			article.File_action = ""
-		} else {
-			article.File_name = filename
-			article.File_action = data_type
-		}
-		article.UpdatedAt = time.Now()
-		r = db.Table("assessment_article").Select("file_name", "file_action", "updated_at").Updates(&article)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var profile_attach models.Profile_attach
-	res_flie_name := ""
-	// check exist
-	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		res_flie_name = profile_attach.File_name
-		profile_attach.File_name = ""
-		profile_attach.File_storage = ""
-		profile_attach.Activated = false
-		profile_attach.UpdatedAt = time.Now()
-		r = db.Table("profile_attach").Select("file_name", "file_storage", "activated", "updated_at").Updates(&profile_attach)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
-func GetAssessment(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var assessment models.Assessment
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = assessment.Assessment_file_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentProject(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var project models.AssessmentProject
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment_project").Where("id = ?", profile_id).First(&project)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = project.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentProgress(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var progress models.AssessmentProgress
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_progress").Where("id = ?", profile_id).First(&progress)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = progress.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentReport(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var repport models.AssessmentReport
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_report").Where("id = ?", profile_id).First(&repport)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = repport.File_name
-	return res_flie_name, nil
-}
-
-func GetAssessmentArticle(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var article models.AssessmentArticle
-	res_flie_name := ""
-
-	// check exist
-	r := db.Table("assessment_article").Where("id = ?", profile_id).First(&article)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = article.File_name
-	return res_flie_name, nil
-}
-
-func GetProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var profile_attach models.Profile_attach
-	res_flie_name := ""
-	// check exist
-	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = profile_attach.File_name
-	return res_flie_name, nil
 }
