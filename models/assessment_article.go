@@ -7,12 +7,9 @@ type AssessmentArticle struct {
 	Article_year      string    `json:"article_year"`
 	Article_title     string    `json:"article_title"`
 	Article_estimate  bool      `json:"article_estimate"`
-	Estimate_remark   string    `json:"-"`
 	Article_recommend bool      `json:"article_recommend"`
-	Recommend_remark  string    `json:"-"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
-	File_Id           int       `json:"-"`
 	File_storage      string    `json:"-"`
 	Period            bool      `json:"period"`
 	Created_by        string    `json:"-"`

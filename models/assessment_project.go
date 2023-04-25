@@ -11,7 +11,6 @@ type AssessmentProject struct {
 	Project_recommend bool      `json:"project_recommend"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
-	File_Id           int       `json:"-"`
 	File_storage      string    `json:"-"`
 	Period            bool      `json:"period"`
 	Created_by        string    `json:"-"`
