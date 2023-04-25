@@ -10,7 +10,8 @@ type Assessment struct {
 	Assessment_start        string             `json:"assessment_start"`
 	Assessment_end          string             `json:"assessment_end"`
 	Assessment_file_name    string             `json:"assessment_file_name"`
-	Assessment_FileId       int                `json:"assessment_file_id"`
+	Assessment_FileId       int                `json:"-"`
+	Assessment_file_action  string             `json:"assessment_file_action"`
 	Assessment_file_storage string             `json:"-"`
 	ProjectID               int                `json:"-"`
 	Project                 AssessmentProject  `gorm:"foreignkey:ProjectID"`
@@ -31,7 +32,8 @@ type AssessmentResponse struct {
 	Id                          int                `json:"assessment_id"`
 	Assessment_start            string             `json:"assessment_start"`
 	Assessment_end              string             `json:"assessment_end"`
-	Assessment_file_name        string             `json:"-"`
+	Assessment_file_name        string             `json:"assessment_file_name"`
+	Assessment_file_action      string             `json:"assessment_file_action"`
 	Assessment_FileId           int                `json:"-"`
 	Assessment_file_storage     string             `json:"-"`
 	ProjectID                   int                `json:"-"`

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"CRUD-API/api"
 	"CRUD-API/models"
 
 	"github.com/gin-gonic/gin"
@@ -25,8 +26,31 @@ func (u *PositionHandler) ListPosition(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, positions)
+
+	var data []map[string]interface{}
+	for _, position := range positions {
+		m := make(map[string]interface{})
+		m["position_id"] = position.ID
+		m["position_name"] = position.Position_name
+		data = append(data, m)
+	}
+
+	// res := gin.H{
+	// 	"description":  "SUCCESS",
+	// 	"errorMessage": nil,
+	// 	"status":       http.StatusOK,
+	// 	"data":         data,
+	// }
+
+	res := api.ResponseApiWithDescription(http.StatusOK,data, "SUCCESS", nil)
+	c.JSON(http.StatusOK, res)
 }
+
+
+	// res := api.ResponseApiWithDescription(http.StatusOK, positions, "SUCCESS", nil)
+	// c.JSON(http.StatusOK, res)
+// }
+
 func (u *PositionHandler) GetPositionHandler(c *gin.Context) {
 	var position models.Position
 	id := c.Param("id")
