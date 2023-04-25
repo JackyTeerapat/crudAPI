@@ -72,12 +72,12 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	var checkAs models.Assessment
 	ckeck := u.db.Table("assessment").Where("profile_id = ?", assessment.ProfileID).First(&checkAs)
 	if ckeck.RowsAffected != 0 {
-		// e := u.RollbackDeleteProFile(assessment.ProfileID)
-		// if e != nil {
-		// 	res := api.ResponseApi(http.StatusInternalServerError, nil, e)
-		// 	c.JSON(http.StatusInternalServerError, res)
-		// 	return
-		// }
+		e := u.RollbackDeleteProFile(assessment.ProfileID)
+		if e != nil {
+			res := api.ResponseApi(http.StatusBadRequest, nil, e)
+			c.JSON(http.StatusBadRequest, res)
+			return
+		}
 		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("This profile has already create assessment"))
 		c.JSON(http.StatusBadRequest, res)
 		return
@@ -105,7 +105,7 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	res := api.ResponseApi(http.StatusCreated, body, nil)
+	res := api.ResponseApi(http.StatusCreated, resAssessment, nil)
 	c.JSON(http.StatusCreated, res)
 }
 
@@ -222,12 +222,6 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			tx.Rollback()
 		}
 	}()
-	// var profile models.Profile
-
-	// if err := tx.Find(&profile, 1).Error; err != nil {
-	// 	tx.Rollback()
-	// 	return body, err
-	// }
 	project := models.AssessmentProject{
 		Project_year:      assessmentRequest.Project_year,
 		Project_title:     assessmentRequest.Project_title,
@@ -236,7 +230,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Project_recommend: assessmentRequest.Project_recommend,
 		Period:            assessmentRequest.Project_period,
 	}
-	p := tx.Create(&project)
+	p := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project)
 	if err := p.Error; err != nil {
 		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
 		// if e != nil {
@@ -254,7 +248,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Period:             assessmentRequest.Progress_period,
 	}
 
-	if err := tx.Create(&progress).Error; err != nil {
+	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
 		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
 		// if e != nil {
 		// 	return body, e
@@ -270,7 +264,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Period:           assessmentRequest.Report_period,
 	}
 
-	if err := tx.Create(&report).Error; err != nil {
+	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
 		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
 		// if e != nil {
 		// 	return body, e
@@ -286,7 +280,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Period:            assessmentRequest.Article_period,
 	}
 
-	if err := tx.Create(&article).Error; err != nil {
+	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
 		// e := u.RollbackDeleteProFile(assessmentRequest.ProfileID)
 		// if e != nil {
 		// 	return body, e
@@ -295,18 +289,20 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		return body, err
 	}
 	body = models.Assessment{
-		Assessment_start: assessmentRequest.AssessmentStart,
-		Assessment_end:   assessmentRequest.AssessmentEnd,
-		ProjectID:        project.Id,
-		ProgressID:       progress.Id,
-		ProfileID:        assessmentRequest.ProfileID,
-		ReportID:         report.Id,
-		ArticleID:        article.Id,
-		Created_by:       "admin",
-		Updated_by:       "admin",
+		Assessment_start:       assessmentRequest.AssessmentStart,
+		Assessment_end:         assessmentRequest.AssessmentEnd,
+		Assessment_file_action: "assessment",
+		Assessment_file_name:   "test",
+		ProjectID:              project.Id,
+		ProgressID:             progress.Id,
+		ProfileID:              assessmentRequest.ProfileID,
+		ReportID:               report.Id,
+		ArticleID:              article.Id,
+		Created_by:             "admin",
+		Updated_by:             "admin",
 	}
 
-	r := tx.Create(&body)
+	r := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&body)
 	if err := r.Error; err != nil {
 		tx.Rollback()
 		return body, err
@@ -314,13 +310,9 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	return body, err
 }
 
-func RollbackDeleteProFile(i int) {
-	panic("unimplemented")
-}
-
 func (u *AssessmentHandler) RollbackDeleteProFile(profileId int) (err error) {
-	dprofile := u.db.Delete(&models.Profile{}, profileId)
-	if err = dprofile.Error; err != nil {
+	dassessment := u.db.Where("profile_id = ?", profileId).Delete(&models.Assessment{})
+	if err := dassessment.Error; err != nil {
 		return err
 	}
 	dprogram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
@@ -343,5 +335,10 @@ func (u *AssessmentHandler) RollbackDeleteProFile(profileId int) (err error) {
 	if err = ddegree.Error; err != nil {
 		return err
 	}
+	dprofile := u.db.Delete(&models.Profile{}, profileId)
+	if err = dprofile.Error; err != nil {
+		return err
+	}
+
 	return nil
 }
