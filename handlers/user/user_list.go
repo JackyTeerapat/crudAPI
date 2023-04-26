@@ -49,7 +49,10 @@ func (u *UserList) ListUser(c *gin.Context) {
 		return
 	}
 
-	page := req.Page
+	page := req.Page - 1
+	if page < 0 {
+		page = 0
+	}
 	limit := 5
 	if req.Limit != 0 {
 		limit = req.Limit
@@ -95,9 +98,12 @@ func (u *UserList) ListUser(c *gin.Context) {
 	}
 	resDataContent.IsLast = (page + limit) >= count
 	resDataContent.CurrentPage = req.Page
+	if req.Page < 1 {
+		resDataContent.CurrentPage = req.Page + 1
+	}
 	resDataContent.TotalObject = count
 	resDataContent.TotalPage = total_count / limit
-	if count%limit > 0 {
+	if total_count%limit > 0 {
 		resDataContent.TotalPage++
 	}
 	res := api.ResponseApi(http.StatusOK, resDataContent, nil)
