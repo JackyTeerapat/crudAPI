@@ -7,6 +7,7 @@ type ResearcherRequest struct {
 	LastName       string                  `json:"last_name"`
 	AddressHome    string                  `json:"address_home"`
 	PositionName   string                  `json:"position_name"`
+	PositionID     int                     `json:"position_id"`
 	University     string                  `json:"university"`
 	AddressWork    string                  `json:"address_work"`
 	Email          string                  `json:"email"`

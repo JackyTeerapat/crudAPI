@@ -4,6 +4,7 @@ import (
 	"CRUD-API/api"
 	"CRUD-API/models"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -185,9 +186,155 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 	res := api.ResponseApiWithDescription(http.StatusOK, researcher, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
-	return
 }
 
+func (h *ResearcherHandler) ListResearcherbyID(id int) models.Researcher_get {
+
+	// Start getDate from Profile
+	var researcher models.Researcher_get
+
+	// Execute the query and scan the results into the researcher struct
+	result := h.db.Raw("SELECT id as profile_id, profile_status, first_name, last_name, university, address_home, address_work, email,phone_number FROM profile WHERE id = ?", id).Scan(&researcher)
+
+	if result.Error != nil {
+		// Handle the error if the query fails
+		log.Printf("An error occurred while fetching the researcher data from profile: %v", result.Error)
+	}
+
+	// Start getData from Degree
+	var degrees []models.TempDegree_get
+
+	degreeRows, err := h.db.Raw("SELECT id, degree_type, degree_program, degree_university FROM degree WHERE profile_id = ?", id).Rows()
+	if err != nil {
+		log.Printf("An error occurred while fetching degree dataL %v", err.Error())
+	}
+
+	defer degreeRows.Close()
+
+	for degreeRows.Next() {
+		var degree models.TempDegree_get
+		if err := degreeRows.Scan(&degree.DegreeID, &degree.DegreeType, &degree.DegreeProgram, &degree.DegreeUniversity); err != nil {
+			log.Printf("error: An error occurred while scanning degree data")
+		}
+
+		degrees = append(degrees, degree)
+	}
+	// END Data from Degree
+
+	// Add the degrees data to the researcher struct
+	researcher.Degree = degrees
+
+	//start
+	// Fetch and add TempPosition data
+	var positionID int
+	errPositionID := h.db.Raw("SELECT position_id FROM profile WHERE id = ? ", id).Scan(&positionID)
+
+	if errPositionID.Error != nil {
+		// Handle the error if the query fails
+		log.Printf("An error occurred while fetching the researcher data from profile: %v", result.Error)
+
+	}
+	var positions []models.TempPosition_get
+	positionRows, err := h.db.Raw("SELECT id, position_name FROM position WHERE id = ?", positionID).Rows()
+	if err != nil {
+		log.Printf("An error occurred while fetching position data: %v", err.Error())
+	}
+
+	defer positionRows.Close()
+
+	for positionRows.Next() {
+		var position models.TempPosition_get
+		if err := positionRows.Scan(&position.PositionID, &position.PositionName); err != nil {
+			log.Printf("error: An error occurred while scanning position data")
+		}
+
+		positions = append(positions, position)
+	}
+	researcher.Position = positions[0]
+
+	// Fetch and add TempProgram data
+	var programs []models.TempProgram_get
+	programRows, err := h.db.Raw("SELECT id, program_name FROM program WHERE profile_id = ?", id).Rows()
+	if err != nil {
+		log.Printf("An error occurred while fetching program data: %v", err.Error())
+	}
+
+	defer programRows.Close()
+
+	for programRows.Next() {
+		var program models.TempProgram_get
+		if err := programRows.Scan(&program.ProgramID, &program.ProgramName); err != nil {
+			log.Printf("error: An error occurred while scanning program data")
+		}
+
+		programs = append(programs, program)
+	}
+	researcher.Program = programs
+
+	// Fetch and add TempExperience data
+	var experiences []models.TempExperience_get
+	experienceRows, err := h.db.Raw("SELECT id, experience_type, experience_start, experience_end, experience_university, experience_remark FROM experience WHERE profile_id = ?", id).Rows()
+	if err != nil {
+
+		log.Printf("An error occurred while fetching experience data: %v", err.Error())
+	}
+
+	defer experienceRows.Close()
+
+	for experienceRows.Next() {
+		var experience models.TempExperience_get
+		if err := experienceRows.Scan(&experience.ExperienceID, &experience.ExperienceType, &experience.ExperienceStart, &experience.ExperienceEnd, &experience.ExperienceUniversity, &experience.ExperienceRemark); err != nil {
+			log.Printf("An error occurred while scanning experience data: %v", err.Error())
+		}
+
+		experiences = append(experiences, experience)
+	}
+	researcher.Experience = experiences
+
+	// Fetch and add TempAttach data
+	var attaches []models.TempAttach_get
+	attachRows, err := h.db.Raw("SELECT id, file_name, file_action FROM profile_attach WHERE profile_id = ?", id).Rows()
+	if err != nil {
+		log.Printf("An error occurred while fetching attach data: %v", err.Error())
+	}
+
+	defer attachRows.Close()
+
+	for attachRows.Next() {
+		var attach models.TempAttach_get
+		if err := attachRows.Scan(&attach.FileID, &attach.FileName, &attach.FileAction); err != nil {
+			log.Printf("An error occurred while scanning attach data: %v", err.Error())
+		}
+
+		attaches = append(attaches, attach)
+	}
+	researcher.Attach = attaches
+
+	// Fetch and add TempExplore data
+	var explores []models.TempExplore_get
+	exploreRows, err := h.db.Raw("SELECT id, explore_name, explore_year, explore_detail FROM exploration WHERE profile_id = ?", id).Rows()
+	if err != nil {
+		log.Printf("An error occurred while fetching explore data: %v", err.Error())
+	}
+
+	defer exploreRows.Close()
+
+	for exploreRows.Next() {
+		var explore models.TempExplore_get
+		if err := exploreRows.Scan(&explore.ExploreID, &explore.ExploreName, &explore.ExploreYear, &explore.ExploreDetail); err != nil {
+			log.Printf("An error occurred while scanning explore data: %v", err.Error())
+		}
+
+		explores = append(explores, explore)
+	}
+	researcher.Explore = explores
+
+	if result.Error != nil || err != nil || errPositionID.Error != nil {
+		return models.Researcher_get{}
+	}
+
+	return researcher
+}
 func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	var researcher models.ResearcherRequest
 
@@ -236,7 +383,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	var profile models.Profile
 	h.db.Last(&profile)
 	profileID := profile.ID
-	statusProfile := profile.Profile_status
 
 	// The rest of the code remains the same until the INSERT statements for the other tables
 
@@ -247,6 +393,8 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting degree data: %v", err.Error())})
 			return
 		}
+		var degree models.Degree
+		h.db.Last(&degree)
 
 	}
 
@@ -290,12 +438,9 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	// }
 	// c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("Profile ID : %v Created", profileID)})
 
-	researcher.ProfileID = profileID
-	researcher.Profile_status = statusProfile
-	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "CREATED SUCCESS", nil)
+	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(profileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
 
-	// Return the researcher data as JSON
 }
 func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 	profileID := c.Param("id")
@@ -431,8 +576,15 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 			return
 		}
 	}
-	res := api.ResponseApiWithDescription(http.StatusCreated, researcher, "UPDATED SUCCESS", nil)
+	intProfileID, errProfileID := strconv.Atoi(profileID)
+
+	if errProfileID != nil {
+		fmt.Println("Error converting string to integer:", err)
+		return
+	}
+	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
+
 }
 
 // Update degree data
