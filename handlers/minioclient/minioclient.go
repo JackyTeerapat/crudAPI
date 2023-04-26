@@ -61,7 +61,8 @@ func MinioClientConnect(db *gorm.DB) *MinioClient {
 
 func (m *MinioClient) UploadFile(c *gin.Context) {
 	//multi file
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
@@ -127,8 +128,6 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
 		}
 		if u_err != nil {
-			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
-			c.JSON(http.StatusBadRequest, res)
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
@@ -136,11 +135,11 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 				DeleteAssessment(m.db, assessment_id)
 			}
 			RollbackDeleteFile(c, m, resData)
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
 			return
 		} else {
 			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-				res := api.ResponseApi(http.StatusBadRequest, nil, err)
-				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
 				}
@@ -148,6 +147,8 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
 				return
 			}
 		}
@@ -161,7 +162,8 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 
 func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 
 	var req []MinioInput
 	profile_id := -1
@@ -254,7 +256,8 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 
 func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 	//multi file
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 
 	form, err := c.MultipartForm()
@@ -343,8 +346,8 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 }
 
 func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
-	ctx := c
-
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 	var req []MinioInput
 
