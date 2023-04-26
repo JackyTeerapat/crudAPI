@@ -151,7 +151,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 
 	//อัปเดตข้อมูล assessment ด้วย ID ที่กำหนด
 	var assessment models.Assessment
-	u.db.Table("assessment").Where("id = ?", id).First(&assessment)
+	u.db.Table("assessment").Where("profile_id = ?", id).First(&assessment)
 	result, err := u.update(id, assessmentRequest, assessment)
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("database error: %v", err))
@@ -166,6 +166,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 func (u *AssessmentHandler) update(id string, assessmentRequest models.AssessmentRequests, assessment models.Assessment) (body models.Assessment, err error) {
 	body = models.Assessment{
 		Id:               assessment.Id,
+		ProfileID:        assessmentRequest.ProfileID,
 		Assessment_start: assessmentRequest.AssessmentStart,
 		Assessment_end:   assessmentRequest.AssessmentEnd,
 		Project: models.AssessmentProject{
@@ -299,14 +300,14 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Assessment_start:       assessmentRequest.AssessmentStart,
 		Assessment_end:         assessmentRequest.AssessmentEnd,
 		Assessment_file_action: "assessment",
-		Assessment_file_name:   "test",
+		Assessment_file_name:   "",
 		ProjectID:              project.Id,
 		ProgressID:             progress.Id,
 		ProfileID:              assessmentRequest.ProfileID,
 		ReportID:               report.Id,
 		ArticleID:              article.Id,
-		Created_by:             "admin",
-		Updated_by:             "admin",
+		Created_by:             "",
+		Updated_by:             "",
 	}
 
 	r := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&body)
