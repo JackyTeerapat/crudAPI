@@ -40,7 +40,7 @@ func (u *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	if body.Old_password == body.New_password {
-		res := api.ResponseApi(http.StatusOK, nil, fmt.Errorf("can't use the same password"))
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("can't use the same password"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
