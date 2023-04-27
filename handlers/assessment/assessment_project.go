@@ -60,6 +60,7 @@ func (u *ProjectHandler) GetProjectHandler(c *gin.Context) {
 // @Success 200 {object} models.Project{}
 // @Router /project [post]
 func (u *ProjectHandler) CreateProjectHandler(c *gin.Context) {
+	tx := u.db.Begin()
 	var project models.AssessmentProject
 	if err := c.ShouldBindJSON(&project); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -68,8 +69,9 @@ func (u *ProjectHandler) CreateProjectHandler(c *gin.Context) {
 		return
 	}
 	//รับมาแล้วสร้างเป็น ข้อมูล ลง Table
-	r := u.db.Create(&project)
+	r := tx.Create(&project)
 	if err := r.Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
