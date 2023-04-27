@@ -43,49 +43,63 @@ type (
 
 func UploadfileHandler(db *gorm.DB) *Uploadfile {
 	bucketName := os.Getenv("MINIO_BUCKET_NAME")
-
 	return &Uploadfile{bucketName, db}
 }
 
 func (m *Uploadfile) UploadFile(c *gin.Context) {
-	//multi file
+
+	//ประการ context ว่ามี timeout เท่าไร
+	// ctx := c
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
 	defer cancel()
+
+	//รับข้อมูลจาก form data
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
 		return
 	}
+
+	//ดึงข้อมูล form data จาก field uploadfile
 	files := form.File["uploadfile"]
 
+	// profile_id กับ assessment_id ที่จะลบออก กรณีที่ api error ถ้าเป็น -1 คือไม่ต้องลบ
 	profile_id := -1
 	assessment_id := -1
+
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
 
 	resData := []FileResponseData{}
+
 	for i, file := range files {
 
+		//เช็คเงื่อนไข ป้องกัน error index out of range
 		if i >= len(directory_id) {
 			continue
 		}
 		if i >= len(directory) {
 			continue
 		}
+		//แปลง string เป็น int ถ้า error ให้ข้ามไฟล์นี้
 		row_id, r_err := strconv.Atoi(directory_id[i])
 		if r_err != nil {
 			continue
 		}
+
+		//ชื่อไฟล์และ path ที่จะเก็บไฟล์
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
 		target := directory[i] + "/" + fileName
 
+		//ประเภทของไฟล์
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
 		if len(contentType) > 0 {
 			mimeType = contentType[0]
 		}
+		//fileBuffer ที่จะ upload
 		fileBuffer, err := file.Open()
 		if err != nil {
 			log.Panic(err)
@@ -93,11 +107,13 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 
 		fileBuffer.Close()
 
+		//response
 		fileData := FileResponseData{
 			FileName: fileName,
 			FileType: directory[i],
 		}
 
+		//อัพเดท db
 		var u_err error
 		switch directory[i] {
 		case "assessment":
@@ -116,6 +132,7 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
 		}
 		if u_err != nil {
+			//ถ้า error ให้ลบข้อมูลใน db และลบไฟล์บน minio
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
@@ -127,6 +144,7 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, res)
 			return
 		} else {
+			//อัพโหลดไฟล์ไปที่ minio
 			minioInit := initializers.MinioClientConnect()
 			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				if profile_id != -1 {
@@ -417,6 +435,7 @@ func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
 	return
 }
 
+// สำหรับเทส download ฝั่ง frontendไม่ได้ใช้
 func (m *Uploadfile) GetFile(c *gin.Context) {
 	ctx := c
 
@@ -490,6 +509,7 @@ func (m *Uploadfile) GetFile(c *gin.Context) {
 
 func (m *Uploadfile) DeleteFile(c *gin.Context) {
 	ctx := c
+	//แปลง json เป็น model
 	var req []MinioInput
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
