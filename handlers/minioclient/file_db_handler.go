@@ -11,7 +11,7 @@ func UpSertProfileAttach(db *gorm.DB, filename, data_type string, profile_id int
 
 	var profile_attach models.Profile_attach
 
-	// check exist
+	// เช็คข้อมูลถ้าไม่มีให้ insert ถ้ามีให้ update
 	r := db.Table("profile_attach").Where("profile_id = ?", profile_id).Where("File_action = ?", data_type).First(&profile_attach)
 	if r.RowsAffected == 0 {
 		profile_attach.File_name = filename
@@ -41,7 +41,8 @@ func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, i
 
 	var assessment models.Assessment
 	res_flie_name := ""
-	// check exist
+	// เช็คข้อมูลถ้าไม่มีให้ return err ถ้ามีให้ update
+	// ตาราง assessment ทำแบบเดียวกันทั้งหมด
 	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
 	if r.RowsAffected == 0 {
 		if err := r.Error; err != nil {
@@ -210,6 +211,7 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 	return res_flie_name, nil
 }
 
+// สำหรับเทส download ฝั่ง frontendไม่ได้ใช้
 func GetAssessment(db *gorm.DB, data_type string, profile_id int) (string, error) {
 
 	var assessment models.Assessment
@@ -303,8 +305,8 @@ func GetProfileAttach(db *gorm.DB, data_type string, profile_id int) (string, er
 	return res_flie_name, nil
 }
 
-func DeleteProfile(db *gorm.DB, profile_id int) error {
-	r := db.Delete(&models.Profile{}, profile_id)
+func DeleteProfile(db *gorm.DB, id int) error {
+	r := db.Delete(&models.Profile{}, id)
 	if err := r.Error; err != nil {
 		return err
 	}

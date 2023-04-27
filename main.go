@@ -60,14 +60,14 @@ func main() {
 
 	//Position Zones
 	positionHandler := position.NewPositionHandler(db)
-	r.GET("/position", positionHandler.ListPosition)
+	r.GET("researcher/positions", positionHandler.ListPosition)
 	r.GET("/position/:id", positionHandler.GetPositionHandler)
 	r.POST("/position", positionHandler.CreatePositionHandler)
 	r.PUT("/position/:id", positionHandler.UpdatePositionHandler)
 	r.DELETE("/position/:id", positionHandler.DeletePositionHandler)
 
 	//minio upload
-	minioClient := minioclient.MinioClientConnect(db)
+	minioClient := minioclient.UploadfileHandler(db)
 	r.POST("/api/v1//researcher/upload", minioClient.UploadFile)
 	r.POST("/api/v1//researcher/download", minioClient.GetFile)
 	r.POST("/api/v1//researcher/upload64", minioClient.UploadFileBase64)

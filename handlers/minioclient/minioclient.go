@@ -2,6 +2,7 @@ package minioclient
 
 import (
 	"CRUD-API/api"
+	"CRUD-API/initializers"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -17,13 +18,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/gorm"
 )
 
 type (
-	MinioClient struct {
-		mc         *minio.Client
+	Uploadfile struct {
 		bucketName string
 		db         *gorm.DB
 	}
@@ -42,61 +41,65 @@ type (
 	}
 )
 
-func MinioClientConnect(db *gorm.DB) *MinioClient {
-	endPoint := os.Getenv("MINIO_ENDPOINT")
-	useSSL := true
-	accessKey := os.Getenv("MINIO_ACCESS_KEY")
-	secretKey := os.Getenv("MINIO_SECRET_KEY")
+func UploadfileHandler(db *gorm.DB) *Uploadfile {
 	bucketName := os.Getenv("MINIO_BUCKET_NAME")
-
-	minioClient, err := minio.New(endPoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: useSSL,
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return &MinioClient{minioClient, bucketName, db}
+	return &Uploadfile{bucketName, db}
 }
 
-func (m *MinioClient) UploadFile(c *gin.Context) {
-	//multi file
-	ctx := c
+func (m *Uploadfile) UploadFile(c *gin.Context) {
+
+	//ประการ context ว่ามี timeout เท่าไร
+	// ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
+
+	//รับข้อมูลจาก form data
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
 		return
 	}
+
+	//ดึงข้อมูล form data จาก field uploadfile
 	files := form.File["uploadfile"]
 
+	// profile_id กับ assessment_id ที่จะลบออก กรณีที่ api error ถ้าเป็น -1 คือไม่ต้องลบ
 	profile_id := -1
 	assessment_id := -1
+
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
 
 	resData := []FileResponseData{}
+
 	for i, file := range files {
 
+		//เช็คเงื่อนไข ป้องกัน error index out of range
 		if i >= len(directory_id) {
 			continue
 		}
 		if i >= len(directory) {
 			continue
 		}
+		//แปลง string เป็น int ถ้า error ให้ข้ามไฟล์นี้
 		row_id, r_err := strconv.Atoi(directory_id[i])
 		if r_err != nil {
 			continue
 		}
+
+		//ชื่อไฟล์และ path ที่จะเก็บไฟล์
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
 		target := directory[i] + "/" + fileName
 
+		//ประเภทของไฟล์
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
 		if len(contentType) > 0 {
 			mimeType = contentType[0]
 		}
+		//fileBuffer ที่จะ upload
 		fileBuffer, err := file.Open()
 		if err != nil {
 			log.Panic(err)
@@ -104,11 +107,13 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 
 		fileBuffer.Close()
 
+		//response
 		fileData := FileResponseData{
 			FileName: fileName,
 			FileType: directory[i],
 		}
 
+		//อัพเดท db
 		var u_err error
 		switch directory[i] {
 		case "assessment":
@@ -127,8 +132,7 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
 		}
 		if u_err != nil {
-			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
-			c.JSON(http.StatusBadRequest, res)
+			//ถ้า error ให้ลบข้อมูลใน db และลบไฟล์บน minio
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
@@ -136,11 +140,13 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 				DeleteAssessment(m.db, assessment_id)
 			}
 			RollbackDeleteFile(c, m, resData)
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-				res := api.ResponseApi(http.StatusBadRequest, nil, err)
-				c.JSON(http.StatusBadRequest, res)
+			//อัพโหลดไฟล์ไปที่ minio
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
 				}
@@ -148,6 +154,8 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
 				return
 			}
 		}
@@ -159,9 +167,10 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadFileBase64(c *gin.Context) {
+func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 
 	var req []MinioInput
 	profile_id := -1
@@ -231,7 +240,8 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
@@ -252,9 +262,10 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
+func (m *Uploadfile) UploadUpdateFile(c *gin.Context) {
 	//multi file
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 
 	form, err := c.MultipartForm()
@@ -325,7 +336,8 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				tx.Rollback()
@@ -342,9 +354,9 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
-	ctx := c
-
+func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 	var req []MinioInput
 
@@ -405,7 +417,8 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				tx.Rollback()
@@ -422,7 +435,8 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) GetFile(c *gin.Context) {
+// สำหรับเทส download ฝั่ง frontendไม่ได้ใช้
+func (m *Uploadfile) GetFile(c *gin.Context) {
 	ctx := c
 
 	form, err := c.MultipartForm()
@@ -468,7 +482,8 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 			return
 		} else {
 			reqParams := make(url.Values)
-			presignedURL, err := m.mc.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
+			minioInit := initializers.MinioClientConnect()
+			presignedURL, err := minioInit.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -492,8 +507,9 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) DeleteFile(c *gin.Context) {
+func (m *Uploadfile) DeleteFile(c *gin.Context) {
 	ctx := c
+	//แปลง json เป็น model
 	var req []MinioInput
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -528,7 +544,8 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 			return
 		} else {
 			opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-			err := m.mc.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
+			minioInit := initializers.MinioClientConnect()
+			err := minioInit.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -549,12 +566,13 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 	return
 }
 
-func RollbackDeleteFile(ctx context.Context, m *MinioClient, resData []FileResponseData) {
+func RollbackDeleteFile(ctx context.Context, m *Uploadfile, resData []FileResponseData) {
 
 	for _, v := range resData {
 
 		opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-		err := m.mc.RemoveObject(ctx, m.bucketName, v.FileType+"/"+v.FileName, opts)
+		minioInit := initializers.MinioClientConnect()
+		err := minioInit.RemoveObject(ctx, m.bucketName, v.FileType+"/"+v.FileName, opts)
 		if err != nil {
 		}
 

@@ -1,7 +1,6 @@
 package researcher_list
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,6 +30,7 @@ type (
 		University     string `json:"university"`
 		ExploreYear    string `json:"explore_year"`
 		ProjectTitle   string `json:"project_title"`
+		ProfileStatus  bool   `json:"profile_status"`
 		ResearcherId   int    `json:"researcher_id"`
 	}
 
@@ -55,14 +55,17 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		return
 	}
 
-	page := req.Page
+	page := req.Page - 1
+	if page < 0 {
+		page = 0
+	}
 	limit := 5
 	if req.Limit != 0 {
 		limit = req.Limit
 	}
 	page = page * limit
 	isAddWhere := false
-	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, exp.explore_year, assessment_project.project_title"
+	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, profile.profile_status, exp.explore_year, assessment_project.project_title"
 	sqlStatement := "SELECT #STATEMENT# FROM (SELECT profile_id, MAX(explore_year) as explore_year FROM exploration #EXPWHERESTATEMENT# GROUP BY profile_id) exp " +
 		"JOIN assessment ON assessment.profile_id = exp.profile_id " +
 		"JOIN assessment_project ON assessment.project_id = assessment_project.id " +
@@ -120,9 +123,9 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	var resDataContent ResponseDataContent
 	count := 0
 	for list.Next() {
-		tmp := ResearcherOutput{"", "", "", "", 0}
+		tmp := ResearcherOutput{"", "", "", "", false, 0}
 		first, last := "", ""
-		if err := list.Scan(&tmp.ResearcherId, &first, &last, &tmp.University, &tmp.ExploreYear, &tmp.ProjectTitle); err != nil {
+		if err := list.Scan(&tmp.ResearcherId, &first, &last, &tmp.University, &tmp.ProfileStatus, &tmp.ExploreYear, &tmp.ProjectTitle); err != nil {
 			res := api.ResponseApi(http.StatusBadRequest, nil, err)
 			c.JSON(http.StatusBadRequest, res)
 			return
@@ -133,9 +136,12 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 	resDataContent.IsLast = (page + limit) >= count
 	resDataContent.CurrentPage = req.Page
+	if req.Page < 1 {
+		resDataContent.CurrentPage = req.Page + 1
+	}
 	resDataContent.TotalObject = count
 	resDataContent.TotalPage = total_count / limit
-	if count%limit > 0 {
+	if total_count%limit > 0 {
 		resDataContent.TotalPage++
 	}
 	res := api.ResponseApi(http.StatusOK, resDataContent, nil)
@@ -145,7 +151,6 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
 	count := 0
 	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
-	fmt.Println(sqlStatement)
 	row := u.db.Raw(sqlStatement).Row()
 	err := row.Scan(&count)
 	if err != nil {
