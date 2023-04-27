@@ -30,6 +30,12 @@ func (u *AuthHandler) ChangePassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
+
+	if body.Old_password == body.New_password {
+		res := api.ResponseApi(http.StatusOK, nil, fmt.Errorf("can't use the same password"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 	var user models.User
 	result := u.db.First(&user, "ID = ?", body.User_id)
 	if result.Error != nil {
