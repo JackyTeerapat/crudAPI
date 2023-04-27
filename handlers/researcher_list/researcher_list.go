@@ -64,25 +64,21 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		limit = req.Limit
 	}
 	page = page * limit
-	isAddWhere := false
 	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, profile.profile_status, exp.explore_year, assessment_project.project_title"
 	sqlStatement := "SELECT #STATEMENT# FROM (SELECT profile_id, MAX(explore_year) as explore_year FROM exploration #EXPWHERESTATEMENT# GROUP BY profile_id) exp " +
 		"JOIN assessment ON assessment.profile_id = exp.profile_id " +
 		"JOIN assessment_project ON assessment.project_id = assessment_project.id " +
-		"JOIN profile ON profile.id = exp.profile_id "
+		"JOIN profile ON profile.id = exp.profile_id " +
+		"WHERE profile.profile_status "
 
 	if req.ResearcherName != "" {
-		isAddWhere = true
-		sqlStatement += " WHERE (profile.first_name LIKE '%" + req.ResearcherName + "%' OR profile.last_name LIKE '%" + req.ResearcherName + "%')"
+		lower := strings.ToLower(req.ResearcherName)
+		sqlStatement += " AND (LOWER(profile.first_name) LIKE '%" + lower + "%' OR LOWER(profile.last_name) LIKE '%" + lower + "%')"
 	}
 
 	if req.University != "" {
-		if isAddWhere {
-			sqlStatement += " AND profile.university LIKE '%" + req.University + "%'"
-		} else {
-			isAddWhere = true
-			sqlStatement += " WHERE profile.university LIKE '%" + req.University + "%'"
-		}
+		lower := strings.ToLower(req.University)
+		sqlStatement += " AND LOWER(profile.university) LIKE '%" + lower + "%'"
 	}
 
 	if req.ExploreYear != "" {
@@ -93,12 +89,8 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	}
 
 	if req.ProjectTitle != "" {
-		if isAddWhere {
-			sqlStatement += " AND assessment_project.project_title LIKE '%" + req.ProjectTitle + "%'"
-		} else {
-			isAddWhere = true
-			sqlStatement += " WHERE assessment_project.project_title LIKE '%" + req.ProjectTitle + "%'"
-		}
+		lower := strings.ToLower(req.ProjectTitle)
+		sqlStatement += " AND LOWER(assessment_project.project_title) LIKE '%" + lower + "%'"
 	}
 
 	total_count, err := CountTotalItem(sqlStatement, u)

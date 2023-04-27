@@ -62,7 +62,8 @@ func (u *UserList) ListUser(c *gin.Context) {
 	sqlStatement := "SELECT #STATEMENT# FROM users "
 
 	if req.UserName != "" {
-		sqlStatement += " WHERE username LIKE '%" + req.UserName + "%'"
+		lower := strings.ToLower(req.UserName)
+		sqlStatement += " WHERE LOWER(username) LIKE '%" + lower + "%'"
 	}
 
 	total_count, err := CountTotalItem(sqlStatement, u)
