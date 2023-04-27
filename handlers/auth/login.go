@@ -7,10 +7,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (u *AuthHandler) Login(c *gin.Context) {
+
 	var body struct {
 		Username string
 		Password string
@@ -18,6 +20,13 @@ func (u *AuthHandler) Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid body"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	v := validator.New()
+	regexErr := v.Var(body.Password, "required,min=4,max=8,hexadecimal")
+	if regexErr != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("password must be 4-8 character and a-z, A-Z, 0-9"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
