@@ -87,11 +87,13 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 			continue
 		}
 
+		trim_directory := strings.TrimSpace(directory[i])
+
 		//ชื่อไฟล์และ path ที่จะเก็บไฟล์
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
-		target := directory[i] + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		//ประเภทของไฟล์
 		contentType := file.Header.Values("Content-Type")
@@ -110,26 +112,26 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 		//response
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: directory[i],
+			FileType: trim_directory,
 		}
 
 		//อัพเดท db
 		var u_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
 			assessment_id = row_id
-			_, u_err = UpdateAssessment(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, row_id, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, row_id, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProgress(m.db, fileName, trim_directory, row_id, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentReport(m.db, fileName, trim_directory, row_id, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentArticle(m.db, fileName, trim_directory, row_id, false)
 		default:
 			profile_id = row_id
-			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
+			u_err = UpSertProfileAttach(m.db, fileName, trim_directory, row_id)
 		}
 		if u_err != nil {
 			//ถ้า error ให้ลบข้อมูลใน db และลบไฟล์บน minio
@@ -185,10 +187,12 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 	resData := []FileResponseData{}
 	for _, v := range req {
 
+		trim_directory := strings.TrimSpace(v.DirectoryFile)
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		target := v.DirectoryFile + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -207,25 +211,25 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: v.DirectoryFile,
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch v.DirectoryFile {
+		switch trim_directory {
 		case "assessment":
 			assessment_id = v.DirectoryId
-			_, u_err = UpdateAssessment(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProgress(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentReport(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentArticle(m.db, fileName, trim_directory, v.DirectoryId, false)
 		default:
 			profile_id = v.DirectoryId
-			u_err = UpSertProfileAttach(m.db, fileName, v.DirectoryFile, v.DirectoryId)
+			u_err = UpSertProfileAttach(m.db, fileName, trim_directory, v.DirectoryId)
 		}
 
 		if u_err != nil {
@@ -292,10 +296,12 @@ func (m *Uploadfile) UploadUpdateFile(c *gin.Context) {
 		if r_err != nil {
 			continue
 		}
+		trim_directory := strings.TrimSpace(directory[i])
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
-		target := directory[i] + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
@@ -311,23 +317,23 @@ func (m *Uploadfile) UploadUpdateFile(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: directory[i],
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessment(tx, fileName, trim_directory, row_id, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, row_id, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProgress(tx, fileName, trim_directory, row_id, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentReport(tx, fileName, trim_directory, row_id, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentArticle(tx, fileName, trim_directory, row_id, false)
 		default:
-			u_err = UpSertProfileAttach(tx, fileName, directory[i], row_id)
+			u_err = UpSertProfileAttach(tx, fileName, trim_directory, row_id)
 		}
 		if u_err != nil {
 			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
@@ -369,10 +375,12 @@ func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
 	resData := []FileResponseData{}
 	for _, v := range req {
 
+		trim_directory := strings.TrimSpace(v.DirectoryFile)
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		target := v.DirectoryFile + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -391,23 +399,23 @@ func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: v.DirectoryFile,
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch v.DirectoryFile {
+		switch trim_directory {
 		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessment(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProgress(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentReport(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentArticle(tx, fileName, trim_directory, v.DirectoryId, false)
 		default:
-			u_err = UpSertProfileAttach(tx, fileName, v.DirectoryFile, v.DirectoryId)
+			u_err = UpSertProfileAttach(tx, fileName, trim_directory, v.DirectoryId)
 		}
 
 		if u_err != nil {
@@ -458,21 +466,22 @@ func (m *Uploadfile) GetFile(c *gin.Context) {
 			continue
 		}
 
+		trim_directory := strings.TrimSpace(directory[i])
 		filename := ""
 		var db_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
-			filename, db_err = GetAssessment(m.db, directory[i], row_id)
+			filename, db_err = GetAssessment(m.db, trim_directory, row_id)
 		case "project":
-			filename, db_err = GetAssessmentProject(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentProject(m.db, trim_directory, row_id)
 		case "progress":
-			filename, db_err = GetAssessmentProgress(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentProgress(m.db, trim_directory, row_id)
 		case "report":
-			filename, db_err = GetAssessmentReport(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentReport(m.db, trim_directory, row_id)
 		case "article":
-			filename, db_err = GetAssessmentArticle(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentArticle(m.db, trim_directory, row_id)
 		default:
-			filename, db_err = GetProfileAttach(m.db, directory[i], row_id)
+			filename, db_err = GetProfileAttach(m.db, trim_directory, row_id)
 		}
 
 		resurl := ""
@@ -483,7 +492,7 @@ func (m *Uploadfile) GetFile(c *gin.Context) {
 		} else {
 			reqParams := make(url.Values)
 			minioInit := initializers.MinioClientConnect()
-			presignedURL, err := minioInit.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
+			presignedURL, err := minioInit.PresignedGetObject(ctx, m.bucketName, trim_directory+"/"+filename, time.Second*24*60*60, reqParams)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -493,7 +502,7 @@ func (m *Uploadfile) GetFile(c *gin.Context) {
 		}
 		fileData := FileResponseData{
 			FileName: filename,
-			FileType: directory[i],
+			FileType: trim_directory,
 			FileUrl:  resurl,
 		}
 
