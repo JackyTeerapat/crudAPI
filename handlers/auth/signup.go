@@ -52,7 +52,7 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 	response := models.Register{
 		ID:       user.ID,
 		Username: user.Username,
-		Password: user.Password,
+		Password: body.Password,
 		Role:     user.Role,
 	}
 	res := api.ResponseApi(http.StatusCreated, response, nil)
