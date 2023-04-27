@@ -231,13 +231,12 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Project_recommend: assessmentRequest.Project_recommend,
 		Period:            assessmentRequest.Project_period,
 	}
-	p := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project)
-	if err := p.Error; err != nil {
+	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
+		tx.Rollback()
 		e := u.DeleteProFile(assessmentRequest.ProfileID)
 		if e != nil {
 			return body, e
 		}
-		tx.Rollback()
 		return body, err
 	}
 
@@ -250,14 +249,12 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
-		if err := p.Error; err != nil {
-			e := u.DeleteProFile(assessmentRequest.ProfileID)
-			if e != nil {
-				return body, e
-			}
-			tx.Rollback()
-			return body, err
+		tx.Rollback()
+		e := u.DeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
 		}
+		return body, err
 	}
 	report := models.AssessmentReport{
 		Report_year:      assessmentRequest.Report_year,
@@ -268,14 +265,12 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
-		if err := p.Error; err != nil {
-			e := u.DeleteProFile(assessmentRequest.ProfileID)
-			if e != nil {
-				return body, e
-			}
-			tx.Rollback()
-			return body, err
+		tx.Rollback()
+		e := u.DeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
 		}
+		return body, err
 	}
 	article := models.AssessmentArticle{
 		Article_year:      assessmentRequest.Article_year,
@@ -286,14 +281,12 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 
 	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
-		if err := p.Error; err != nil {
-			e := u.DeleteProFile(assessmentRequest.ProfileID)
-			if e != nil {
-				return body, e
-			}
-			tx.Rollback()
-			return body, err
+		tx.Rollback()
+		e := u.DeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
 		}
+		return body, err
 	}
 
 	body = models.Assessment{
@@ -310,41 +303,43 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Updated_by:             "",
 	}
 
-	r := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&body)
-	if err := r.Error; err != nil {
+	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&body).Error; err != nil {
 		tx.Rollback()
-		return body, err
+		e := u.DeleteProFile(assessmentRequest.ProfileID)
+		if e != nil {
+			return body, e
+		}
 	}
 	return body, err
 }
 
 func (u *AssessmentHandler) RollbackDeleteProFile(profileId int) (err error) {
-	dassessment := u.db.Where("profile_id = ?", profileId).Delete(&models.Assessment{})
-	if err := dassessment.Error; err != nil {
+	dAssessment := u.db.Where("profile_id = ?", profileId).Delete(&models.Assessment{})
+	if err := dAssessment.Error; err != nil {
 		return err
 	}
-	dprogram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
-	if err = dprogram.Error; err != nil {
+	dProgram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
+	if err = dProgram.Error; err != nil {
 		return err
 	}
 	dProfileAttach := u.db.Where("profile_id = ?", profileId).Delete(&models.Profile_attach{})
 	if err = dProfileAttach.Error; err != nil {
 		return err
 	}
-	dexploration := u.db.Where("profile_id = ?", profileId).Delete(&models.Exploration{})
-	if err = dexploration.Error; err != nil {
+	dExploration := u.db.Where("profile_id = ?", profileId).Delete(&models.Exploration{})
+	if err = dExploration.Error; err != nil {
 		return err
 	}
-	dexperience := u.db.Where("profile_id = ?", profileId).Delete(&models.Experience{})
-	if err = dexperience.Error; err != nil {
+	dExperience := u.db.Where("profile_id = ?", profileId).Delete(&models.Experience{})
+	if err = dExperience.Error; err != nil {
 		return err
 	}
-	ddegree := u.db.Where("profile_id = ?", profileId).Delete(&models.Degree{})
-	if err = ddegree.Error; err != nil {
+	dDegree := u.db.Where("profile_id = ?", profileId).Delete(&models.Degree{})
+	if err = dDegree.Error; err != nil {
 		return err
 	}
-	dprofile := u.db.Delete(&models.Profile{}, profileId)
-	if err = dprofile.Error; err != nil {
+	dProfile := u.db.Delete(&models.Profile{}, profileId)
+	if err = dProfile.Error; err != nil {
 		return err
 	}
 
