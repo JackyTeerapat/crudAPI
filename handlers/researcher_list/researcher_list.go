@@ -73,16 +73,16 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 
 	if req.ResearcherName != "" {
 		lower := strings.ToLower(req.ResearcherName)
-		sqlStatement += " AND (LOWER(profile.first_name) LIKE '%" + lower + "%' OR LOWER(profile.last_name) LIKE '%" + lower + "%')"
+		sqlStatement += " AND (LOWER(profile.first_name) = '" + lower + "' OR LOWER(profile.last_name) = '" + lower + "')"
 	}
 
 	if req.University != "" {
 		lower := strings.ToLower(req.University)
-		sqlStatement += " AND LOWER(profile.university) LIKE '%" + lower + "%'"
+		sqlStatement += " AND LOWER(profile.university) = '" + lower + "'"
 	}
 
 	if req.ExploreYear != "" {
-		exp_where := " WHERE explore_year LIKE '%" + req.ExploreYear + "%'"
+		exp_where := " WHERE explore_year = '" + req.ExploreYear + "'"
 		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", exp_where, 1)
 	} else {
 		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", "", 1)
@@ -90,7 +90,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 
 	if req.ProjectTitle != "" {
 		lower := strings.ToLower(req.ProjectTitle)
-		sqlStatement += " AND LOWER(assessment_project.project_title) LIKE '%" + lower + "%'"
+		sqlStatement += " AND LOWER(assessment_project.project_title) = '" + lower + "'"
 	}
 
 	total_count, err := CountTotalItem(sqlStatement, u)
