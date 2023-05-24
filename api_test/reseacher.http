@@ -1,5 +1,5 @@
 
-GET http://localhost:9000/api/v1/researcher/profile_detail/8
+GET http://localhost:9000/api/v1/researcher/profile_detail/167
 ###
 
 POST http://localhost:9000/api/v1/researcher/profile
@@ -139,4 +139,4 @@ Content-Type: application/json
 
 
 ###
-DELETE   http://localhost:9000/api/v1/researcher/profile/2
+DELETE   http://localhost:9000/api/v1/researcher/profile/167

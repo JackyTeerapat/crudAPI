@@ -457,12 +457,14 @@ func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":         200,
-		"description":    "SUCCESS",
-		"errorMessage":   nil,
-		"data":           gin.H{},
-		"profile_status": profile_status,
+		"status":      200,
+		"description": "SUCCESS",
+		"errorMessage": nil,
+		"data": gin.H{
+			"profile_status": profile_status,
+		},
 	})
+	
 
 }
 func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
