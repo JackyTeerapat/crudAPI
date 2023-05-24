@@ -252,9 +252,7 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
 			return
 		}
-		positionID = position.ID
-	} else {
-		positionID = position.ID
+
 	}
 
 	// Update the INSERT statement for the profile table
