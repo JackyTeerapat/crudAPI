@@ -56,17 +56,23 @@ type AssessmentRequests struct {
 	AssessmentStart    string `json:"assessment_start"`
 	AssessmentEnd      string `json:"assessment_end"`
 	Project_year       string `json:"project_year"`
+	Project_funding    string `json:"project_funding"`
+	Project_source     string `json:"project_source"`
 	Project_title      string `json:"project_title"`
 	Project_point      int    `json:"project_point"`
 	Project_estimate   bool   `json:"project_estimate"`
 	Project_recommend  bool   `json:"project_recommend"`
 	Project_period     bool   `json:"project_period"`
 	Progress_year      string `json:"progress_year"`
+	Progress_funding   string `json:"progress_funding"`
+	Progress_source    string `json:"progress_source"`
 	Progress_title     string `json:"progress_title"`
 	Progress_estimate  bool   `json:"progress_estimate"`
 	Progress_recommend bool   `json:"progress_recommend"`
 	Progress_period    bool   `json:"progress_period"`
 	Report_year        string `json:"report_year"`
+	Report_funding     string `json:"report_funding"`
+	Report_source      string `json:"report_source"`
 	Report_title       string `json:"report_title"`
 	Report_estimate    bool   `json:"report_estimate"`
 	Report_recommend   bool   `json:"report_recommend"`

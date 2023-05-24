@@ -172,6 +172,8 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 		Project: models.AssessmentProject{
 			Id:                assessment.ProjectID,
 			Project_year:      assessmentRequest.Project_year,
+			Project_funding:   assessmentRequest.Report_funding,
+			Project_source:    assessmentRequest.Project_source,
 			Project_title:     assessmentRequest.Project_title,
 			Project_estimate:  assessmentRequest.Project_estimate,
 			Project_recommend: assessmentRequest.Project_recommend,
@@ -181,6 +183,8 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 		Progress: models.AssessmentProgress{
 			Id:                 assessment.ProgressID,
 			Progress_year:      assessmentRequest.Progress_year,
+			Progress_funding:   assessmentRequest.Project_funding,
+			Progress_source:    assessmentRequest.Progress_source,
 			Progress_title:     assessmentRequest.Progress_title,
 			Progress_estimate:  assessmentRequest.Progress_estimate,
 			Progress_recommend: assessmentRequest.Progress_recommend,
@@ -190,6 +194,8 @@ func (u *AssessmentHandler) update(id string, assessmentRequest models.Assessmen
 		Report: models.AssessmentReport{
 			Id:               assessment.ReportID,
 			Report_year:      assessmentRequest.Report_year,
+			Report_funding:   assessmentRequest.Project_funding,
+			Report_source:    assessmentRequest.Progress_source,
 			Report_title:     assessmentRequest.Report_title,
 			Report_estimate:  assessmentRequest.Report_estimate,
 			Report_recommend: assessmentRequest.Report_recommend,
@@ -225,6 +231,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}()
 	project := models.AssessmentProject{
 		Project_year:      assessmentRequest.Project_year,
+		Project_funding:   assessmentRequest.Project_funding,
+		Project_source:    assessmentRequest.Project_source,
 		Project_title:     assessmentRequest.Project_title,
 		Project_point:     assessmentRequest.Project_point,
 		Project_estimate:  assessmentRequest.Project_estimate,
@@ -242,6 +250,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 
 	progress := models.AssessmentProgress{
 		Progress_year:      assessmentRequest.Progress_year,
+		Progress_funding:   assessmentRequest.Project_funding,
+		Progress_source:    assessmentRequest.Project_source,
 		Progress_title:     assessmentRequest.Progress_title,
 		Progress_estimate:  assessmentRequest.Progress_estimate,
 		Progress_recommend: assessmentRequest.Project_recommend,
@@ -258,6 +268,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	}
 	report := models.AssessmentReport{
 		Report_year:      assessmentRequest.Report_year,
+		Report_funding:   assessmentRequest.Project_funding,
+		Report_source:    assessmentRequest.Report_source,
 		Report_title:     assessmentRequest.Report_title,
 		Report_estimate:  assessmentRequest.Report_estimate,
 		Report_recommend: assessmentRequest.Report_recommend,
