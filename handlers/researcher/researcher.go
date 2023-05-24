@@ -365,7 +365,7 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	researcher.ProfileID = intProfileID
 	//find position name
 	var positionID int
-	err = h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PrefixName).Scan(&positionID).Error
+	err = h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
 
 	if err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, err)
@@ -377,11 +377,13 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	updatedBy := "Champlnwza007"
 
 	// Update the researcher's profile data
-	if err := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
-		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, profileID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
-		return
-	}
+	if err := h.db.Exec("UPDATE profile SET prefix_name = ?, first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
+    researcher.PrefixName, researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, researcher.ProfileID).Error; err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
+    return
+}
+
+
 
 	// Fetch the IDs of all degree records associated with the profile_id
 	var degreeIDs []int
