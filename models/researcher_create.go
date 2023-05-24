@@ -1,16 +1,18 @@
 package models
 
 type ResearcherRequest struct {
-	PrefixName  string               `json:"prefix_name"`
-	FirstName   string               `json:"first_name"`
-	LastName    string               `json:"last_name"`
-	AddressHome string               `json:"address_home"`
-	Degree      []TempDegree_create  `json:"degree"`
-	Program     []TempProgram_create `json:"program"`
-	University  string               `json:"university"`
-	AddressWork string               `json:"address_work"`
-	Email       string               `json:"email"`
-	PhoneNumber string               `json:"phone_number"`
+	PrefixName   string               `json:"prefix_name"`
+	PositionID   int                  `json:"position_id"`
+	PositionName string               `json:"position_name"`
+	FirstName    string               `json:"first_name"`
+	LastName     string               `json:"last_name"`
+	AddressHome  string               `json:"address_home"`
+	Degree       []TempDegree_create  `json:"degree"`
+	Program      []TempProgram_create `json:"program"`
+	University   string               `json:"university"`
+	AddressWork  string               `json:"address_work"`
+	Email        string               `json:"email"`
+	PhoneNumber  string               `json:"phone_number"`
 }
 
 type TempDegree_create struct {

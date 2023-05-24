@@ -3,6 +3,8 @@ package models
 type Researcher_get struct {
 	ProfileID      int               `json:"profile_id"`
 	Profile_status bool              `json:"profile_status"`
+	PositionID     int               `json:"position_id"`
+	PositionName   string            `json:"position_name"`
 	PrefixName     string            `json:"prefix_name"`
 	FirstName      string            `json:"first_name"`
 	LastName       string            `json:"last_name"`
@@ -13,8 +15,13 @@ type Researcher_get struct {
 	PhoneNumber    string            `json:"phone_number"`
 	Degree         []TempDegree_get  `gorm:"-" json:"degree"`
 	Program        []TempProgram_get `gorm:"-" json:"program"`
+	Attach         []TempAttach_get  `gorm:"-" json:"attach"`
 }
-
+type TempAttach_get struct {
+	FileID     int    `json:"file_id"`
+	FileName   string `json:"file_name"`
+	FileAction string `json:"file_action"`
+}
 type TempDegree_get struct {
 	DegreeID         int    `json:"id"`
 	DegreeType       string `json:"degree_type"`
