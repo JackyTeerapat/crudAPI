@@ -2,6 +2,7 @@ package minioclient
 
 import (
 	"CRUD-API/api"
+	"CRUD-API/initializers"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -17,13 +18,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/gorm"
 )
 
 type (
-	MinioClient struct {
-		mc         *minio.Client
+	Uploadfile struct {
 		bucketName string
 		db         *gorm.DB
 	}
@@ -42,61 +41,67 @@ type (
 	}
 )
 
-func MinioClientConnect(db *gorm.DB) *MinioClient {
-	endPoint := os.Getenv("MINIO_ENDPOINT")
-	useSSL := true
-	accessKey := os.Getenv("MINIO_ACCESS_KEY")
-	secretKey := os.Getenv("MINIO_SECRET_KEY")
+func UploadfileHandler(db *gorm.DB) *Uploadfile {
 	bucketName := os.Getenv("MINIO_BUCKET_NAME")
-
-	minioClient, err := minio.New(endPoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: useSSL,
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return &MinioClient{minioClient, bucketName, db}
+	return &Uploadfile{bucketName, db}
 }
 
-func (m *MinioClient) UploadFile(c *gin.Context) {
-	//multi file
-	ctx := c
+func (m *Uploadfile) UploadFile(c *gin.Context) {
+
+	//ประการ context ว่ามี timeout เท่าไร
+	// ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
+
+	//รับข้อมูลจาก form data
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
 		return
 	}
+
+	//ดึงข้อมูล form data จาก field uploadfile
 	files := form.File["uploadfile"]
 
+	// profile_id กับ assessment_id ที่จะลบออก กรณีที่ api error ถ้าเป็น -1 คือไม่ต้องลบ
 	profile_id := -1
 	assessment_id := -1
+
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
 
 	resData := []FileResponseData{}
+
 	for i, file := range files {
 
+		//เช็คเงื่อนไข ป้องกัน error index out of range
 		if i >= len(directory_id) {
 			continue
 		}
 		if i >= len(directory) {
 			continue
 		}
+		//แปลง string เป็น int ถ้า error ให้ข้ามไฟล์นี้
 		row_id, r_err := strconv.Atoi(directory_id[i])
 		if r_err != nil {
 			continue
 		}
+
+		trim_directory := strings.TrimSpace(directory[i])
+
+		//ชื่อไฟล์และ path ที่จะเก็บไฟล์
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
-		target := directory[i] + "/" + fileName
+		target := trim_directory + "/" + fileName
 
+		//ประเภทของไฟล์
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
 		if len(contentType) > 0 {
 			mimeType = contentType[0]
 		}
+		//fileBuffer ที่จะ upload
 		fileBuffer, err := file.Open()
 		if err != nil {
 			log.Panic(err)
@@ -104,31 +109,32 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 
 		fileBuffer.Close()
 
+		//response
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: directory[i],
+			FileType: trim_directory,
 		}
 
+		//อัพเดท db
 		var u_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
 			assessment_id = row_id
-			_, u_err = UpdateAssessment(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, row_id, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, row_id, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProgress(m.db, fileName, trim_directory, row_id, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentReport(m.db, fileName, trim_directory, row_id, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(m.db, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentArticle(m.db, fileName, trim_directory, row_id, false)
 		default:
 			profile_id = row_id
-			u_err = UpSertProfileAttach(m.db, fileName, directory[i], row_id)
+			u_err = UpSertProfileAttach(m.db, fileName, trim_directory, row_id)
 		}
 		if u_err != nil {
-			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
-			c.JSON(http.StatusBadRequest, res)
+			//ถ้า error ให้ลบข้อมูลใน db และลบไฟล์บน minio
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
@@ -136,11 +142,13 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 				DeleteAssessment(m.db, assessment_id)
 			}
 			RollbackDeleteFile(c, m, resData)
+			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
+			c.JSON(http.StatusBadRequest, res)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
-				res := api.ResponseApi(http.StatusBadRequest, nil, err)
-				c.JSON(http.StatusBadRequest, res)
+			//อัพโหลดไฟล์ไปที่ minio
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
 				}
@@ -148,6 +156,8 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
+				res := api.ResponseApi(http.StatusBadRequest, nil, err)
+				c.JSON(http.StatusBadRequest, res)
 				return
 			}
 		}
@@ -159,9 +169,10 @@ func (m *MinioClient) UploadFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadFileBase64(c *gin.Context) {
+func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 
 	var req []MinioInput
 	profile_id := -1
@@ -176,10 +187,12 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 	resData := []FileResponseData{}
 	for _, v := range req {
 
+		trim_directory := strings.TrimSpace(v.DirectoryFile)
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		target := v.DirectoryFile + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -198,25 +211,25 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: v.DirectoryFile,
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch v.DirectoryFile {
+		switch trim_directory {
 		case "assessment":
 			assessment_id = v.DirectoryId
-			_, u_err = UpdateAssessment(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProgress(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentReport(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(m.db, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentArticle(m.db, fileName, trim_directory, v.DirectoryId, false)
 		default:
 			profile_id = v.DirectoryId
-			u_err = UpSertProfileAttach(m.db, fileName, v.DirectoryFile, v.DirectoryId)
+			u_err = UpSertProfileAttach(m.db, fileName, trim_directory, v.DirectoryId)
 		}
 
 		if u_err != nil {
@@ -231,7 +244,8 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
@@ -252,9 +266,10 @@ func (m *MinioClient) UploadFileBase64(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
+func (m *Uploadfile) UploadUpdateFile(c *gin.Context) {
 	//multi file
-	ctx := c
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 
 	form, err := c.MultipartForm()
@@ -281,10 +296,12 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 		if r_err != nil {
 			continue
 		}
+		trim_directory := strings.TrimSpace(directory[i])
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + file.Filename
-		target := directory[i] + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		contentType := file.Header.Values("Content-Type")
 		mimeType := "application/octet-stream"
@@ -300,23 +317,23 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: directory[i],
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessment(tx, fileName, trim_directory, row_id, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, row_id, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentProgress(tx, fileName, trim_directory, row_id, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentReport(tx, fileName, trim_directory, row_id, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(tx, fileName, directory[i], row_id, false)
+			_, u_err = UpdateAssessmentArticle(tx, fileName, trim_directory, row_id, false)
 		default:
-			u_err = UpSertProfileAttach(tx, fileName, directory[i], row_id)
+			u_err = UpSertProfileAttach(tx, fileName, trim_directory, row_id)
 		}
 		if u_err != nil {
 			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
@@ -325,7 +342,8 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				tx.Rollback()
@@ -342,9 +360,9 @@ func (m *MinioClient) UploadUpdateFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
-	ctx := c
-
+func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Minute*5))
+	defer cancel()
 	tx := m.db.Begin()
 	var req []MinioInput
 
@@ -357,10 +375,12 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 	resData := []FileResponseData{}
 	for _, v := range req {
 
+		trim_directory := strings.TrimSpace(v.DirectoryFile)
+
 		timenow := time.Now()
 		timestamp := timenow.Format("20060102-15040506")
 		fileName := timestamp + "-" + v.FileName
-		target := v.DirectoryFile + "/" + fileName
+		target := trim_directory + "/" + fileName
 
 		arr := strings.Split(v.FileBase64, ",")
 		mimeType := "application/octet-stream"
@@ -379,23 +399,23 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 
 		fileData := FileResponseData{
 			FileName: fileName,
-			FileType: v.DirectoryFile,
+			FileType: trim_directory,
 		}
 
 		var u_err error
-		switch v.DirectoryFile {
+		switch trim_directory {
 		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessment(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
-			_, u_err = UpdateAssessmentProject(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
-			_, u_err = UpdateAssessmentProgress(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentProgress(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "report":
-			_, u_err = UpdateAssessmentReport(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentReport(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "article":
-			_, u_err = UpdateAssessmentArticle(tx, fileName, v.DirectoryFile, v.DirectoryId, false)
+			_, u_err = UpdateAssessmentArticle(tx, fileName, trim_directory, v.DirectoryId, false)
 		default:
-			u_err = UpSertProfileAttach(tx, fileName, v.DirectoryFile, v.DirectoryId)
+			u_err = UpSertProfileAttach(tx, fileName, trim_directory, v.DirectoryId)
 		}
 
 		if u_err != nil {
@@ -405,7 +425,8 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
-			if _, err := m.mc.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
+			minioInit := initializers.MinioClientConnect()
+			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
 				c.JSON(http.StatusBadRequest, res)
 				tx.Rollback()
@@ -422,7 +443,8 @@ func (m *MinioClient) UploadUpdateFileBase64(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) GetFile(c *gin.Context) {
+// สำหรับเทส download ฝั่ง frontendไม่ได้ใช้
+func (m *Uploadfile) GetFile(c *gin.Context) {
 	ctx := c
 
 	form, err := c.MultipartForm()
@@ -444,21 +466,22 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 			continue
 		}
 
+		trim_directory := strings.TrimSpace(directory[i])
 		filename := ""
 		var db_err error
-		switch directory[i] {
+		switch trim_directory {
 		case "assessment":
-			filename, db_err = GetAssessment(m.db, directory[i], row_id)
+			filename, db_err = GetAssessment(m.db, trim_directory, row_id)
 		case "project":
-			filename, db_err = GetAssessmentProject(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentProject(m.db, trim_directory, row_id)
 		case "progress":
-			filename, db_err = GetAssessmentProgress(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentProgress(m.db, trim_directory, row_id)
 		case "report":
-			filename, db_err = GetAssessmentReport(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentReport(m.db, trim_directory, row_id)
 		case "article":
-			filename, db_err = GetAssessmentArticle(m.db, directory[i], row_id)
+			filename, db_err = GetAssessmentArticle(m.db, trim_directory, row_id)
 		default:
-			filename, db_err = GetProfileAttach(m.db, directory[i], row_id)
+			filename, db_err = GetProfileAttach(m.db, trim_directory, row_id)
 		}
 
 		resurl := ""
@@ -468,7 +491,8 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 			return
 		} else {
 			reqParams := make(url.Values)
-			presignedURL, err := m.mc.PresignedGetObject(ctx, m.bucketName, directory[i]+"/"+filename, time.Second*24*60*60, reqParams)
+			minioInit := initializers.MinioClientConnect()
+			presignedURL, err := minioInit.PresignedGetObject(ctx, m.bucketName, trim_directory+"/"+filename, time.Second*24*60*60, reqParams)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -478,7 +502,7 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 		}
 		fileData := FileResponseData{
 			FileName: filename,
-			FileType: directory[i],
+			FileType: trim_directory,
 			FileUrl:  resurl,
 		}
 
@@ -492,8 +516,9 @@ func (m *MinioClient) GetFile(c *gin.Context) {
 	return
 }
 
-func (m *MinioClient) DeleteFile(c *gin.Context) {
+func (m *Uploadfile) DeleteFile(c *gin.Context) {
 	ctx := c
+	//แปลง json เป็น model
 	var req []MinioInput
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -528,7 +553,8 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 			return
 		} else {
 			opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-			err := m.mc.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
+			minioInit := initializers.MinioClientConnect()
+			err := minioInit.RemoveObject(ctx, m.bucketName, req[i].DirectoryFile+"/"+filename, opts)
 			if err != nil {
 				res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 				c.JSON(http.StatusInternalServerError, res)
@@ -549,12 +575,13 @@ func (m *MinioClient) DeleteFile(c *gin.Context) {
 	return
 }
 
-func RollbackDeleteFile(ctx context.Context, m *MinioClient, resData []FileResponseData) {
+func RollbackDeleteFile(ctx context.Context, m *Uploadfile, resData []FileResponseData) {
 
 	for _, v := range resData {
 
 		opts := minio.RemoveObjectOptions{GovernanceBypass: true}
-		err := m.mc.RemoveObject(ctx, m.bucketName, v.FileType+"/"+v.FileName, opts)
+		minioInit := initializers.MinioClientConnect()
+		err := minioInit.RemoveObject(ctx, m.bucketName, v.FileType+"/"+v.FileName, opts)
 		if err != nil {
 		}
 

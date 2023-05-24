@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,6 +23,13 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
+	v := validator.New()
+	regexErr := v.Var(body.Password, "required,min=4,max=8,hexadecimal")
+	if regexErr != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("password must be 4-8 character and a-z, A-Z, 0-9"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 	//check username is exist
 	var userExist models.User
 	u.db.Where("username = ?", body.Username).First(&userExist)
@@ -52,7 +60,7 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 	response := models.Register{
 		ID:       user.ID,
 		Username: user.Username,
-		Password: user.Password,
+		Password: body.Password,
 		Role:     user.Role,
 	}
 	res := api.ResponseApi(http.StatusCreated, response, nil)

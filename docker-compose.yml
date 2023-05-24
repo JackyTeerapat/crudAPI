@@ -8,6 +8,8 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - 9000:9000
+    extra_hosts:
+      - "uat-s3.universityapp.net:172.29.106.101"
     env_file:
       - .env
     volumes:

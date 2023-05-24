@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,6 +28,19 @@ func (u *AuthHandler) ChangePassword(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid body"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	v := validator.New()
+	regexErr := v.Var(body.New_password, "required,min=4,max=8,hexadecimal")
+	if regexErr != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("password must be 4-8 character and a-z, A-Z, 0-9"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if body.Old_password == body.New_password {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("can't use the same password"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
