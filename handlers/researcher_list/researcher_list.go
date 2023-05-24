@@ -181,7 +181,7 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		})
 		count++
 	}
-	resDataContent.IsLast = (page + limit) >= count
+	resDataContent.IsLast = (page + limit) >= total_count
 	resDataContent.CurrentPage = req.Page
 	if req.Page < 1 {
 		resDataContent.CurrentPage = req.Page + 1
