@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -80,7 +79,7 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 
 		return
 	}
-	var positions []models.TempPosition_get
+	var positions []models.Position
 	positionRows, err := h.db.Raw("SELECT id, position_name FROM position WHERE id = ?", positionID).Rows()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching position data: %v", err.Error())})
@@ -90,16 +89,15 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	defer positionRows.Close()
 
 	for positionRows.Next() {
-		var position models.TempPosition_get
-		if err := positionRows.Scan(&position.PositionID, &position.PositionName); err != nil {
+		var position models.Position
+		if err := positionRows.Scan(&position.ID, &position.Position_name); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while scanning position data"})
 			return
 		}
 
 		positions = append(positions, position)
 	}
-	researcher.Position = positions[0]
-
+	researcher.PrefixName = positions[0].Position_name
 	// Fetch and add TempProgram data
 	var programs []models.TempProgram_get
 	programRows, err := h.db.Raw("SELECT id, program_name FROM program WHERE profile_id = ?", id).Rows()
@@ -120,69 +118,6 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 		programs = append(programs, program)
 	}
 	researcher.Program = programs
-
-	// Fetch and add TempExperience data
-	var experiences []models.TempExperience_get
-	experienceRows, err := h.db.Raw("SELECT id, experience_type, experience_start, experience_end, experience_university, experience_remark FROM experience WHERE profile_id = ?", id).Rows()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching experience data: %v", err.Error())})
-		return
-	}
-
-	defer experienceRows.Close()
-
-	for experienceRows.Next() {
-		var experience models.TempExperience_get
-		if err := experienceRows.Scan(&experience.ExperienceID, &experience.ExperienceType, &experience.ExperienceStart, &experience.ExperienceEnd, &experience.ExperienceUniversity, &experience.ExperienceRemark); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while scanning experience data"})
-			return
-		}
-
-		experiences = append(experiences, experience)
-	}
-	researcher.Experience = experiences
-
-	// Fetch and add TempAttach data
-	var attaches []models.TempAttach_get
-	attachRows, err := h.db.Raw("SELECT id, file_name, file_action FROM profile_attach WHERE profile_id = ?", id).Rows()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching attach data: %v", err.Error())})
-		return
-	}
-
-	defer attachRows.Close()
-
-	for attachRows.Next() {
-		var attach models.TempAttach_get
-		if err := attachRows.Scan(&attach.FileID, &attach.FileName, &attach.FileAction); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while scanning attach data"})
-			return
-		}
-
-		attaches = append(attaches, attach)
-	}
-	researcher.Attach = attaches
-
-	// Fetch and add TempExplore data
-	var explores []models.TempExplore_get
-	exploreRows, err := h.db.Raw("SELECT id, explore_name, explore_year, explore_detail FROM exploration WHERE profile_id = ?", id).Rows()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching explore data: %v", err.Error())})
-		return
-	}
-
-	defer exploreRows.Close()
-
-	for exploreRows.Next() {
-		var explore models.TempExplore_get
-		if err := exploreRows.Scan(&explore.ExploreID, &explore.ExploreName, &explore.ExploreYear, &explore.ExploreDetail); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while scanning explore data"})
-			return
-		}
-
-		explores = append(explores, explore)
-	}
-	researcher.Explore = explores
 
 	res := api.ResponseApiWithDescription(http.StatusOK, researcher, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
@@ -234,7 +169,7 @@ func (h *ResearcherHandler) ListResearcherbyID(id int) models.Researcher_get {
 		log.Printf("An error occurred while fetching the researcher data from profile: %v", result.Error)
 
 	}
-	var positions []models.TempPosition_get
+	var positions []models.Position
 	positionRows, err := h.db.Raw("SELECT id, position_name FROM position WHERE id = ?", positionID).Rows()
 	if err != nil {
 		log.Printf("An error occurred while fetching position data: %v", err.Error())
@@ -243,14 +178,14 @@ func (h *ResearcherHandler) ListResearcherbyID(id int) models.Researcher_get {
 	defer positionRows.Close()
 
 	for positionRows.Next() {
-		var position models.TempPosition_get
-		if err := positionRows.Scan(&position.PositionID, &position.PositionName); err != nil {
+		var position models.Position
+		if err := positionRows.Scan(&position.ID, &position.Position_name); err != nil {
 			log.Printf("error: An error occurred while scanning position data")
 		}
 
 		positions = append(positions, position)
 	}
-	researcher.Position = positions[0]
+	researcher.PrefixName = positions[0].Position_name
 
 	// Fetch and add TempProgram data
 	var programs []models.TempProgram_get
@@ -270,64 +205,6 @@ func (h *ResearcherHandler) ListResearcherbyID(id int) models.Researcher_get {
 		programs = append(programs, program)
 	}
 	researcher.Program = programs
-
-	// Fetch and add TempExperience data
-	var experiences []models.TempExperience_get
-	experienceRows, err := h.db.Raw("SELECT id, experience_type, experience_start, experience_end, experience_university, experience_remark FROM experience WHERE profile_id = ?", id).Rows()
-	if err != nil {
-
-		log.Printf("An error occurred while fetching experience data: %v", err.Error())
-	}
-
-	defer experienceRows.Close()
-
-	for experienceRows.Next() {
-		var experience models.TempExperience_get
-		if err := experienceRows.Scan(&experience.ExperienceID, &experience.ExperienceType, &experience.ExperienceStart, &experience.ExperienceEnd, &experience.ExperienceUniversity, &experience.ExperienceRemark); err != nil {
-			log.Printf("An error occurred while scanning experience data: %v", err.Error())
-		}
-
-		experiences = append(experiences, experience)
-	}
-	researcher.Experience = experiences
-
-	// Fetch and add TempAttach data
-	var attaches []models.TempAttach_get
-	attachRows, err := h.db.Raw("SELECT id, file_name, file_action FROM profile_attach WHERE profile_id = ?", id).Rows()
-	if err != nil {
-		log.Printf("An error occurred while fetching attach data: %v", err.Error())
-	}
-
-	defer attachRows.Close()
-
-	for attachRows.Next() {
-		var attach models.TempAttach_get
-		if err := attachRows.Scan(&attach.FileID, &attach.FileName, &attach.FileAction); err != nil {
-			log.Printf("An error occurred while scanning attach data: %v", err.Error())
-		}
-
-		attaches = append(attaches, attach)
-	}
-	researcher.Attach = attaches
-
-	// Fetch and add TempExplore data
-	var explores []models.TempExplore_get
-	exploreRows, err := h.db.Raw("SELECT id, explore_name, explore_year, explore_detail FROM exploration WHERE profile_id = ?", id).Rows()
-	if err != nil {
-		log.Printf("An error occurred while fetching explore data: %v", err.Error())
-	}
-
-	defer exploreRows.Close()
-
-	for exploreRows.Next() {
-		var explore models.TempExplore_get
-		if err := exploreRows.Scan(&explore.ExploreID, &explore.ExploreName, &explore.ExploreYear, &explore.ExploreDetail); err != nil {
-			log.Printf("An error occurred while scanning explore data: %v", err.Error())
-		}
-
-		explores = append(explores, explore)
-	}
-	researcher.Explore = explores
 
 	if result.Error != nil || err != nil || errPositionID.Error != nil {
 		return models.Researcher_get{}
@@ -353,22 +230,22 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	updatedBy := "Champlnwza007"
 	profileStatus := true
 
-	//find position name
+	// Find position name
 	var positionID int
-	err := h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
+	err := h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PrefixName).Scan(&positionID).Error
 
 	if err != nil {
 		var position models.Position
 		position.Created_by = createdBy
 		position.Updated_by = updatedBy
-		position.Position_name = researcher.PositionName
+		position.Position_name = researcher.PrefixName
 
 		r := h.db.Create(&position)
 		if err := r.Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
 			return
 		}
-
+		positionID = position.ID
 	}
 
 	// Update the INSERT statement for the profile table
@@ -376,7 +253,7 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy, profileStatus)
 
 	if result.Error != nil {
-		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("position name is not exist in database"))
+		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("position name does not exist in the database"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -388,60 +265,26 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 
 	// Save degree data
 	for _, degree := range researcher.Degree {
-		if err := h.db.Exec("INSERT INTO degree (profile_id, degree_type, degree_program, degree_university, created_by, updated_by) VALUES ( ?, ?, ?, ?, ?, ?)",
+		if err := h.db.Exec("INSERT INTO degree (profile_id, degree_type, degree_program, degree_university, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)",
 			profileID, degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, createdBy, updatedBy).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting degree data: %v", err.Error())})
 			return
 		}
-		var degree models.Degree
-		h.db.Last(&degree)
-
 	}
 
 	// Save program data
 	for _, program := range researcher.Program {
-		if err := h.db.Exec("INSERT INTO program (profile_id, program_name, created_by, updated_by) VALUES ( ?, ?, ?,?)",
+		if err := h.db.Exec("INSERT INTO program (profile_id, program_name, created_by, updated_by) VALUES (?, ?, ?, ?)",
 			profileID, program.ProgramName, createdBy, updatedBy).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting program data: %v", err.Error())})
 			return
 		}
-
 	}
-
-	// Save experience data
-	for _, experience := range researcher.Experience {
-		if err := h.db.Exec("INSERT INTO experience (profile_id, experience_type, experience_start, experience_end, experience_university, experience_remark, created_by, updated_by) VALUES ( ?, ?, ?, ?, ?, ?, ?,?)",
-			profileID, experience.ExperienceType, experience.ExperienceStart, experience.ExperienceEnd, experience.ExperienceUniversity, experience.ExperienceRemark, createdBy, updatedBy).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting experience data: %v", err.Error())})
-			return
-		}
-
-	}
-
-	// Save explore data
-	for _, explore := range researcher.Explore {
-		if err := h.db.Exec("INSERT INTO exploration (profile_id, explore_name, explore_year, explore_detail, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)",
-			profileID, explore.ExploreName, explore.ExploreYear, explore.ExploreDetail, createdBy, updatedBy).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting explore data: %v", err.Error())})
-			return
-		}
-
-	}
-
-	// Save attach data
-	// for _, attach := range researcher.Attach {
-	// 	if err := h.db.Exec("INSERT INTO profile_attach (profile_id, file_name, file_action,file_storage, created_by, updated_by, activated) VALUES (?, ?, ?, ?, ?,?,?)",
-	// 		profileID, attach.FileName, attach.FileAction, attach.File_storage, createdBy, updatedBy, activated).Error; err != nil {
-	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting attach data: %v", err.Error())})
-	// 		return
-	// 	}
-	// }
-	// c.JSON(http.StatusCreated, gin.H{"Suscess": fmt.Sprintf("Profile ID : %v Created", profileID)})
 
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(profileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
-
 }
+
 func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 	profileID := c.Param("id")
 	updatedBy := "Champlnwza007"
@@ -467,137 +310,108 @@ func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 	
 
 }
-func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
-	var researcher models.ResearcherRequest
-	profileID := c.Param("id")
-	if err := c.ShouldBindJSON(&researcher); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if !validateDegreeOrder(researcher.Degree) {
-		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
 
-	intProfileID, err := strconv.Atoi(profileID)
+// func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
+// 	var researcher models.ResearcherRequest
+// 	profileID := c.Param("id")
+// 	if err := c.ShouldBindJSON(&researcher); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	if !validateDegreeOrder(researcher.Degree) {
+// 		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("invalid degree order"))
+// 		c.JSON(http.StatusBadRequest, res)
+// 		return
+// 	}
 
-	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Errorf("error to convert profile ID"))
-		return
-	}
-	researcher.ProfileID = intProfileID
-	//find position name
-	var positionID int
-	err = h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
+// 	intProfileID, err := strconv.Atoi(profileID)
 
-	if err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, err)
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, fmt.Errorf("error to convert profile ID"))
+// 		return
+// 	}
+// 	researcher.ProfileID = intProfileID
+// 	//find position name
+// 	var positionID int
+// 	err = h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID).Error
 
-	// Update createdBy and updatedBy variables
-	updatedBy := "Champlnwza007"
+// 	if err != nil {
+// 		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, err)
+// 		c.JSON(http.StatusBadRequest, res)
+// 		return
+// 	}
 
-	// Update the researcher's profile data
-	if err := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
-		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, profileID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
-		return
-	}
+// 	// Update createdBy and updatedBy variables
+// 	updatedBy := "Champlnwza007"
 
-	// Fetch the IDs of all degree records associated with the profile_id
-	var degreeIDs []int
-	if err := h.db.Raw("SELECT id FROM degree WHERE profile_id = ?", profileID).Pluck("id", &degreeIDs).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching degree ids: %v", err)})
-		return
-	}
+// 	// Update the researcher's profile data
+// 	if err := h.db.Exec("UPDATE profile SET first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
+// 		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, profileID).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
+// 		return
+// 	}
 
-	// Update degree data
-	for i, degree := range researcher.Degree {
-		// Use the degree ID fetched from the database
-		degreeID := degreeIDs[i]
-		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ? WHERE id = ?",
-			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, degreeID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
-			return
-		}
-	}
+// 	// Fetch the IDs of all degree records associated with the profile_id
+// 	var degreeIDs []int
+// 	if err := h.db.Raw("SELECT id FROM degree WHERE profile_id = ?", profileID).Pluck("id", &degreeIDs).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching degree ids: %v", err)})
+// 		return
+// 	}
 
-	// Fetch the IDs of all program records associated with the profile_id
-	var programIDs []int
-	if err := h.db.Raw("SELECT id FROM program WHERE profile_id = ?", profileID).Pluck("id", &programIDs).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching program ids: %v", err)})
-		return
-	}
+// 	// Update degree data
+// 	for i, degree := range researcher.Degree {
+// 		// Use the degree ID fetched from the database
+// 		degreeID := degreeIDs[i]
+// 		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ? WHERE id = ?",
+// 			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, degreeID).Error; err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
+// 			return
+// 		}
+// 	}
 
-	// Update program data
-	for i, program := range researcher.Program {
-		// Use the program ID fetched from the database
-		programID := programIDs[i]
-		if err := h.db.Exec("UPDATE program SET program_name = ?, updated_by = ? WHERE id = ?",
-			program.ProgramName, updatedBy, programID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating program data: %v", err)})
-			return
-		}
-	}
+// 	// Fetch the IDs of all program records associated with the profile_id
+// 	var programIDs []int
+// 	if err := h.db.Raw("SELECT id FROM program WHERE profile_id = ?", profileID).Pluck("id", &programIDs).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching program ids: %v", err)})
+// 		return
+// 	}
 
-	// Fetch the IDs of all experience records associated with the profile_id
-	var experienceIDs []int
-	if err := h.db.Raw("SELECT id FROM experience WHERE profile_id = ?", profileID).Pluck("id", &experienceIDs).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching experience ids: %v", err)})
-		return
-	}
+// 	// Update program data
+// 	for i, program := range researcher.Program {
+// 		// Use the program ID fetched from the database
+// 		programID := programIDs[i]
+// 		if err := h.db.Exec("UPDATE program SET program_name = ?, updated_by = ? WHERE id = ?",
+// 			program.ProgramName, updatedBy, programID).Error; err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating program data: %v", err)})
+// 			return
+// 		}
+// 	}
 
-	// Update experience data
-	for i, experience := range researcher.Experience {
-		// Use the experience ID fetched from the database
-		experienceID := experienceIDs[i]
-		if err := h.db.Exec("UPDATE experience SET experience_type = ?, experience_start = ?, experience_end = ?, experience_university = ?, experience_remark = ?, updated_by = ? WHERE id = ?",
-			experience.ExperienceType, experience.ExperienceStart, experience.ExperienceEnd, experience.ExperienceUniversity, experience.ExperienceRemark, updatedBy, experienceID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating experience data: %v", err)})
-			return
-		}
-	}
+// 	// Fetch the IDs of all experience records associated with the profile_id
+// 	var experienceIDs []int
+// 	if err := h.db.Raw("SELECT id FROM experience WHERE profile_id = ?", profileID).Pluck("id", &experienceIDs).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching experience ids: %v", err)})
+// 		return
+// 	}
 
-	// Fetch the IDs of all explore records associated with the profile_id
-	var exploreIDs []int
-	if err := h.db.Raw("SELECT id FROM exploration WHERE profile_id = ?", profileID).Pluck("id", &exploreIDs).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching explore ids: %v", err)})
-		return
-	}
+// 	// Fetch the IDs of all explore records associated with the profile_id
+// 	var exploreIDs []int
+// 	if err := h.db.Raw("SELECT id FROM exploration WHERE profile_id = ?", profileID).Pluck("id", &exploreIDs).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching explore ids: %v", err)})
+// 		return
+// 	}
 
-	// Update explore data
-	for i, explore := range researcher.Explore {
-		// Use the explore ID fetched from the database
-		exploreID := exploreIDs[i]
-		if err := h.db.Exec("UPDATE exploration SET explore_name = ?, explore_year = ?, explore_detail = ?, updated_by = ? WHERE id = ?",
-			explore.ExploreName, explore.ExploreYear, explore.ExploreDetail, updatedBy, exploreID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating explore data: %v", err)})
-			return
-		}
-	}
-	intProfileID, errProfileID := strconv.Atoi(profileID)
+// 	intProfileID, errProfileID := strconv.Atoi(profileID)
 
-	if errProfileID != nil {
-		fmt.Println("Error converting string to integer:", err)
-		return
-	}
-	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
-	c.JSON(http.StatusCreated, res)
+// 	if errProfileID != nil {
+// 		fmt.Println("Error converting string to integer:", err)
+// 		return
+// 	}
+// 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
+// 	c.JSON(http.StatusCreated, res)
 
-}
+// }
 
-// Update degree data
-//
-//	for _, degree := range researcher.Degree {
-//		if err := h.db.Exec("UPDATE degree SET degree_type = ?, degree_program = ?, degree_university = ?, updated_by = ?, activated = ? WHERE profile_id = ?",
-//			degree.DegreeType, degree.DegreeProgram, degree.DegreeUniversity, updatedBy, activated, profileID).Error; err != nil {
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating degree data: %v", err)})
-//			return
-//		}
-//	}
 func validateDegreeOrder(degrees []models.TempDegree_create) bool {
 	hasBachelor := false
 	hasMaster := false
