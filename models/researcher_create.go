@@ -1,23 +1,18 @@
 package models
 
 type ResearcherRequest struct {
-	ProfileID      int                     `json:"profile_id"`
-	Profile_status bool                    `json:"profile_status"`
-	FirstName      string                  `json:"first_name"`
-	LastName       string                  `json:"last_name"`
-	AddressHome    string                  `json:"address_home"`
-	PositionName   string                  `json:"position_name"`
-	PositionID     int                     `json:"position_id"`
-	University     string                  `json:"university"`
-	AddressWork    string                  `json:"address_work"`
-	Email          string                  `json:"email"`
-	PhoneNumber    string                  `json:"phone_number"`
-	Degree         []TempDegree_create     `json:"degree"`
-	Program        []TempProgram_create    `json:"program"`
-	Experience     []TempExperience_create `json:"experience"`
-	Explore        []TempExplore_create    `json:"explore"`
-
-	// Attach      []TempAttach_create     `json:"attach"`
+	PrefixName   string               `json:"prefix_name"`
+	PositionID   int                  `json:"position_id"`
+	PositionName string               `json:"position_name"`
+	FirstName    string               `json:"first_name"`
+	LastName     string               `json:"last_name"`
+	AddressHome  string               `json:"address_home"`
+	Degree       []TempDegree_create  `json:"degree"`
+	Program      []TempProgram_create `json:"program"`
+	University   string               `json:"university"`
+	AddressWork  string               `json:"address_work"`
+	Email        string               `json:"email"`
+	PhoneNumber  string               `json:"phone_number"`
 }
 
 type TempDegree_create struct {
@@ -45,7 +40,7 @@ type TempExplore_create struct {
 }
 
 type TempAttach_create struct {
-	FileName     string `json:"file_name"`
-	FileAction   string `json:"file_action"`
-	File_storage string `json:"file_storage"`
+	FileName    string `json:"file_name"`
+	FileAction  string `json:"file_action"`
+	FileStorage string `json:"file_storage"`
 }
