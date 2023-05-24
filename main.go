@@ -167,7 +167,7 @@ func main() {
 	researcherHandler := researcher.NewResearcherHandler(db)
 	r.GET("/api/v1/researcher/profile_detail/:id", researcherHandler.ListResearcher)
 	r.POST("/api/v1/researcher/profile", researcherHandler.CreateResearcher)
-	// r.PATCH("/api/v1/researcher/profile/:id", researcherHandler.UpdateResearcher)
+	r.PATCH("/api/v1/researcher/profile/:id", researcherHandler.UpdateResearcher)
 	r.DELETE("/api/v1/researcher/profile/:id", researcherHandler.VSdeleteResearcher)
 
 	//researcher list
