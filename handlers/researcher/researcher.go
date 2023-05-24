@@ -232,10 +232,17 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 
 	// Find position name
 	var positionID int
-	err := h.db.Raw("SELECT id FROM position WHERE position_name = ?", researcher.PrefixName).Scan(&positionID).Error
+	var position models.Position
 
-	if err != nil {
-		var position models.Position
+	// First, try to get the position from the database.
+	result := h.db.Raw("SELECT * FROM position WHERE position_name = ?", researcher.PrefixName).Scan(&position)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"Database query error position": result.Error.Error()})
+		return
+	}
+
+	// If the ID is zero, it means no position was found, so create a new one.
+	if position.ID == 0 {
 		position.Created_by = createdBy
 		position.Updated_by = updatedBy
 		position.Position_name = researcher.PrefixName
@@ -246,17 +253,20 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 			return
 		}
 		positionID = position.ID
+	} else {
+		positionID = position.ID
 	}
 
 	// Update the INSERT statement for the profile table
-	result := h.db.Exec("INSERT INTO profile (first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by, profile_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+	insertResult := h.db.Exec("INSERT INTO profile (first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by, profile_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
 		researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy, profileStatus)
 
-	if result.Error != nil {
+	if insertResult.Error != nil {
 		res := api.ResponseApi(http.StatusBadRequest, researcher.Degree, fmt.Errorf("position name does not exist in the database"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
+
 	var profile models.Profile
 	h.db.Last(&profile)
 	profileID := profile.ID
@@ -300,14 +310,13 @@ func (h *ResearcherHandler) VSdeleteResearcher(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":      200,
-		"description": "SUCCESS",
+		"status":       200,
+		"description":  "SUCCESS",
 		"errorMessage": nil,
 		"data": gin.H{
 			"profile_status": profile_status,
 		},
 	})
-	
 
 }
 

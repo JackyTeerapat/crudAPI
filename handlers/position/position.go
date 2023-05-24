@@ -42,13 +42,12 @@ func (u *PositionHandler) ListPosition(c *gin.Context) {
 	// 	"data":         data,
 	// }
 
-	res := api.ResponseApiWithDescription(http.StatusOK,data, "SUCCESS", nil)
+	res := api.ResponseApiWithDescription(http.StatusOK, data, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 }
 
-
-	// res := api.ResponseApiWithDescription(http.StatusOK, positions, "SUCCESS", nil)
-	// c.JSON(http.StatusOK, res)
+// res := api.ResponseApiWithDescription(http.StatusOK, positions, "SUCCESS", nil)
+// c.JSON(http.StatusOK, res)
 // }
 
 func (u *PositionHandler) GetPositionHandler(c *gin.Context) {
@@ -56,7 +55,12 @@ func (u *PositionHandler) GetPositionHandler(c *gin.Context) {
 	id := c.Param("id")
 	r := u.db.Table("position").Where("id = ?", id).First(&position)
 	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "position not found"})
+		r := u.db.Create(&position)
+		if err := r.Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error to create position": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"Status": "Success create position"})
 		return
 	}
 	if err := r.Error; err != nil {
