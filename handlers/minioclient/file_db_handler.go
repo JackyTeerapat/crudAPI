@@ -199,11 +199,7 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 	} else {
 		//update
 		res_flie_name = profile_attach.File_name
-		profile_attach.File_name = ""
-		profile_attach.File_storage = ""
-		profile_attach.Activated = false
-		profile_attach.UpdatedAt = time.Now()
-		r = db.Table("profile_attach").Select("file_name", "file_storage", "activated", "updated_at").Updates(&profile_attach)
+		r = db.Delete(&models.Profile_attach{}, profile_attach.Id)
 		if err := r.Error; err != nil {
 			return "", err
 		}
