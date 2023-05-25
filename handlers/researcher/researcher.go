@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 type ResearcherHandler struct {
@@ -255,7 +256,7 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 
 	// Find position name
 	var positionID int
-	var position models.Position
+	// var position models.Position
 
 	// First, try to get the position from the database.
 	result := h.db.Raw("SELECT ID FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID)
@@ -265,20 +266,20 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	}
 
 	// If the ID is zero, it means no position was found, so create a new one.
-	if positionID == 0 {
-		position.Created_by = createdBy
-		position.Updated_by = updatedBy
-		position.Position_name = researcher.PositionName
+	// if positionID == 0 {
+	// 	position.Created_by = createdBy
+	// 	position.Updated_by = updatedBy
+	// 	position.Position_name = researcher.PositionName
 
-		r := h.db.Create(&position)
-		if err := r.Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
-			return
-		}
+	// 	r := h.db.Create(&position)
+	// 	if err := r.Error; err != nil {
+	// 		c.JSON(http.StatusInternalServerError, gin.H{"Create position error": err.Error()})
+	// 		return
+	// 	}
 
-		// Assign the ID of the created position to positionID
-		positionID = position.ID
-	}
+	// 	// Assign the ID of the created position to positionID
+	// 	positionID = position.ID
+	// }
 
 	// Update the INSERT statement for the profile table
 	insertResult := h.db.Exec("INSERT INTO profile (prefix_name,first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by, profile_status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
@@ -378,12 +379,10 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 
 	// Update the researcher's profile data
 	if err := h.db.Exec("UPDATE profile SET prefix_name = ?, first_name = ?, last_name = ?, university = ?, address_home = ?, address_work = ?, email = ?, phone_number = ?, position_id = ?, updated_by = ? WHERE id = ?",
-    researcher.PrefixName, researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, researcher.ProfileID).Error; err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
-    return
-}
-
-
+		researcher.PrefixName, researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, updatedBy, researcher.ProfileID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while updating researcher data in the profile table: %v", err)})
+		return
+	}
 
 	// Fetch the IDs of all degree records associated with the profile_id
 	var degreeIDs []int
