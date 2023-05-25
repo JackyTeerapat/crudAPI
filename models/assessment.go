@@ -6,7 +6,7 @@ import (
 
 type Assessment struct {
 	ProfileID               int                `json:"profile_id"`
-	Id                      int                `json:"assessment_id"`
+	Id                      int                `json:"-"`
 	Assessment_start        string             `json:"-"`
 	Assessment_end          string             `json:"-"`
 	Assessment_file_name    string             `json:"-"`
