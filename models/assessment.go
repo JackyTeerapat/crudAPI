@@ -7,10 +7,10 @@ import (
 type Assessment struct {
 	ProfileID               int                `json:"profile_id"`
 	Id                      int                `json:"assessment_id"`
-	Assessment_start        string             `json:"assessment_start"`
-	Assessment_end          string             `json:"assessment_end"`
-	Assessment_file_name    string             `json:"assessment_file_name"`
-	Assessment_file_action  string             `json:"assessment_file_action"`
+	Assessment_start        string             `json:"-"`
+	Assessment_end          string             `json:"-"`
+	Assessment_file_name    string             `json:"-"`
+	Assessment_file_action  string             `json:"-"`
 	Assessment_file_storage string             `json:"-"`
 	ProjectID               int                `json:"-"`
 	Project                 AssessmentProject  `gorm:"foreignkey:ProjectID"`
