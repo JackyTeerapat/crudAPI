@@ -40,8 +40,14 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 	return
 }
 
-func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
+type AssessmentResponse struct {
+	Project  []models.AssessmentProject  `json:"Project"`
+	Progress []models.AssessmentProgress `json:"Progress"`
+	Report   []models.AssessmentReport   `json:"Report"`
+	Article  []models.AssessmentArticle  `json:"Article"`
+}
 
+func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	id := c.Param("id")
 	var project []models.AssessmentProject
 	var progress []models.AssessmentProgress
@@ -88,26 +94,14 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		return
 	}
 
-	responseData := gin.H{}
-
-	if len(project) > 0 {
-		responseData["Project"] = project
-	}
-
-	if len(progress) > 0 {
-		responseData["Progress"] = progress
-	}
-
-	if len(report) > 0 {
-		responseData["Report"] = report
-	}
-
-	if len(article) > 0 {
-		responseData["Article"] = article
+	responseData := AssessmentResponse{
+		Project:  project,
+		Progress: progress,
+		Report:   report,
+		Article:  article,
 	}
 
 	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
-
 	c.JSON(http.StatusOK, res)
 	return
 }
