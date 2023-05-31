@@ -37,36 +37,6 @@ func UpSertProfileAttach(db *gorm.DB, filename, data_type string, profile_id int
 	return nil
 }
 
-func UpdateAssessment(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
-
-	var assessment models.Assessment
-	res_flie_name := ""
-	// เช็คข้อมูลถ้าไม่มีให้ return err ถ้ามีให้ update
-	// ตาราง assessment ทำแบบเดียวกันทั้งหมด
-	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	} else {
-		//update
-		if is_delete {
-			res_flie_name = assessment.Assessment_file_name
-			assessment.Assessment_file_name = ""
-			assessment.Assessment_file_action = ""
-		} else {
-			assessment.Assessment_file_name = filename
-			assessment.Assessment_file_action = data_type
-		}
-		assessment.UpdatedAt = time.Now()
-		r = db.Table("assessment").Select("assessment_file_name", "assessment_file_action", "updated_at").Updates(&assessment)
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	return res_flie_name, nil
-}
-
 func UpdateAssessmentProject(db *gorm.DB, filename, data_type string, profile_id int, is_delete bool) (string, error) {
 
 	var project models.AssessmentProject
@@ -199,11 +169,7 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 	} else {
 		//update
 		res_flie_name = profile_attach.File_name
-		profile_attach.File_name = ""
-		profile_attach.File_storage = ""
-		profile_attach.Activated = false
-		profile_attach.UpdatedAt = time.Now()
-		r = db.Table("profile_attach").Select("file_name", "file_storage", "activated", "updated_at").Updates(&profile_attach)
+		r = db.Delete(&models.Profile_attach{}, profile_attach.Id)
 		if err := r.Error; err != nil {
 			return "", err
 		}
@@ -212,21 +178,6 @@ func DeleteProfileAttach(db *gorm.DB, data_type string, profile_id int) (string,
 }
 
 // สำหรับเทส download ฝั่ง frontendไม่ได้ใช้
-func GetAssessment(db *gorm.DB, data_type string, profile_id int) (string, error) {
-
-	var assessment models.Assessment
-	res_flie_name := ""
-	// check exist
-	r := db.Table("assessment").Where("id = ?", profile_id).First(&assessment)
-	if r.RowsAffected == 0 {
-		if err := r.Error; err != nil {
-			return "", err
-		}
-	}
-	res_flie_name = assessment.Assessment_file_name
-	return res_flie_name, nil
-}
-
 func GetAssessmentProject(db *gorm.DB, data_type string, profile_id int) (string, error) {
 
 	var project models.AssessmentProject

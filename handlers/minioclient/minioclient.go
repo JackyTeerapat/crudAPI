@@ -65,7 +65,6 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 
 	// profile_id กับ assessment_id ที่จะลบออก กรณีที่ api error ถ้าเป็น -1 คือไม่ต้องลบ
 	profile_id := -1
-	assessment_id := -1
 
 	directory := form.Value["directory_file"]
 	directory_id := form.Value["directory_id"]
@@ -118,9 +117,6 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 		//อัพเดท db
 		var u_err error
 		switch trim_directory {
-		case "assessment":
-			assessment_id = row_id
-			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, row_id, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, row_id, false)
 		case "progress":
@@ -138,9 +134,6 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
-			if assessment_id != -1 {
-				DeleteAssessment(m.db, assessment_id)
-			}
 			RollbackDeleteFile(c, m, resData)
 			res := api.ResponseApi(http.StatusBadRequest, nil, u_err)
 			c.JSON(http.StatusBadRequest, res)
@@ -151,9 +144,6 @@ func (m *Uploadfile) UploadFile(c *gin.Context) {
 			if _, err := minioInit.PutObject(ctx, m.bucketName, target, fileBuffer, file.Size, minio.PutObjectOptions{ContentType: mimeType}); err != nil {
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
-				}
-				if assessment_id != -1 {
-					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
 				res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -176,7 +166,6 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 
 	var req []MinioInput
 	profile_id := -1
-	assessment_id := -1
 
 	if err := c.BindJSON(&req); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
@@ -216,9 +205,6 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 
 		var u_err error
 		switch trim_directory {
-		case "assessment":
-			assessment_id = v.DirectoryId
-			_, u_err = UpdateAssessment(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(m.db, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
@@ -238,9 +224,6 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 			if profile_id != -1 {
 				DeleteProfile(m.db, profile_id)
 			}
-			if assessment_id != -1 {
-				DeleteAssessment(m.db, assessment_id)
-			}
 			RollbackDeleteFile(c, m, resData)
 			return
 		} else {
@@ -250,9 +233,6 @@ func (m *Uploadfile) UploadFileBase64(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, res)
 				if profile_id != -1 {
 					DeleteProfile(m.db, profile_id)
-				}
-				if assessment_id != -1 {
-					DeleteAssessment(m.db, assessment_id)
 				}
 				RollbackDeleteFile(c, m, resData)
 				return
@@ -322,8 +302,6 @@ func (m *Uploadfile) UploadUpdateFile(c *gin.Context) {
 
 		var u_err error
 		switch trim_directory {
-		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, trim_directory, row_id, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, row_id, false)
 		case "progress":
@@ -404,8 +382,6 @@ func (m *Uploadfile) UploadUpdateFileBase64(c *gin.Context) {
 
 		var u_err error
 		switch trim_directory {
-		case "assessment":
-			_, u_err = UpdateAssessment(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "project":
 			_, u_err = UpdateAssessmentProject(tx, fileName, trim_directory, v.DirectoryId, false)
 		case "progress":
@@ -470,8 +446,6 @@ func (m *Uploadfile) GetFile(c *gin.Context) {
 		filename := ""
 		var db_err error
 		switch trim_directory {
-		case "assessment":
-			filename, db_err = GetAssessment(m.db, trim_directory, row_id)
 		case "project":
 			filename, db_err = GetAssessmentProject(m.db, trim_directory, row_id)
 		case "progress":
@@ -534,8 +508,6 @@ func (m *Uploadfile) DeleteFile(c *gin.Context) {
 		filename := ""
 		var db_err error
 		switch req[i].DirectoryFile {
-		case "assessment":
-			filename, db_err = UpdateAssessment(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "project":
 			filename, db_err = UpdateAssessmentProject(m.db, "", req[i].DirectoryFile, row_id, true)
 		case "progress":

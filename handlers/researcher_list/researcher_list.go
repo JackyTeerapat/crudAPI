@@ -1,11 +1,14 @@
 package researcher_list
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"CRUD-API/api"
+	"CRUD-API/models"
+	"CRUD-API/models/custom"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -18,20 +21,35 @@ type (
 
 	RequestInput struct {
 		ResearcherName string `json:"researcher_name"`
-		University     string `json:"university"`
-		ExploreYear    string `json:"explore_year"`
-		ProjectTitle   string `json:"project_title"`
+		ProgramName    string `json:"program_name"`
 		Page           int    `json:"page"`
 		Limit          int    `json:"limit"`
 	}
 
 	ResearcherOutput struct {
-		ResearcherName string `json:"researcher_name"`
-		University     string `json:"university"`
-		ExploreYear    string `json:"explore_year"`
-		ProjectTitle   string `json:"project_title"`
-		ProfileStatus  bool   `json:"profile_status"`
-		ResearcherId   int    `json:"researcher_id"`
+		ProfileId     int                `json:"profile_id"`
+		ProfileStatus string             `json:"profile_status"`
+		FirstName     string             `json:"first_name"`
+		LastName      string             `json:"last_name"`
+		PositionId    int                `json:"position_id"`
+		PositionName  string             `json:"position_name"`
+		University    string             `json:"university"`
+		Email         string             `json:"email"`
+		PhoneNumber   string             `json:"phone_number"`
+		Degree        []*ResponseDegree  `json:"degree"`
+		Program       []*ResponseProgram `json:"program"`
+	}
+
+	ResponseDegree struct {
+		Id               int    `json:"id" gorm:"column:id"`
+		DegreeType       string `json:"degree_type" gorm:"column:degree_type"`
+		DegreeProgram    string `json:"degree_program" gorm:"column:degree_program"`
+		DegreeUniversity string `json:"degree_university" gorm:"column:degree_university"`
+	}
+
+	ResponseProgram struct {
+		ProgramId   int    `json:"program_id" gorm:"column:id"`
+		ProgramName string `json:"program_name" gorm:"column:program_name"`
 	}
 
 	ResponseDataContent struct {
@@ -41,6 +59,23 @@ type (
 		CurrentPage int                `json:"current_page"`
 		IsLast      bool               `json:"is_last"`
 	}
+)
+
+const (
+	SELECT    = "SELECT "
+	FROM      = " FROM "
+	AS        = " AS "
+	WHERE     = " WHERE "
+	AND       = " AND "
+	INNERJOIN = " INNER JOIN "
+	UNION     = " UNION "
+	ON        = " ON "
+	ORDERBY   = " ORDER BY "
+	GROUPBY   = " GROUP BY "
+	ASC       = " ASC"
+	DESC      = " DESC"
+	NOTIN     = " NOT IN "
+	OR        = " OR "
 )
 
 func ResearcherListConnection(db *gorm.DB) *ResearcherList {
@@ -64,69 +99,89 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 		limit = req.Limit
 	}
 	page = page * limit
-	sqlQueryStatement := "profile.id as researcher_id, profile.first_name, profile.last_name, profile.university, profile.profile_status, exp.explore_year, assessment_project.project_title"
-	sqlStatement := "SELECT #STATEMENT# FROM (SELECT profile_id, MAX(explore_year) as explore_year FROM exploration #EXPWHERESTATEMENT# GROUP BY profile_id) exp " +
-		"JOIN assessment ON assessment.profile_id = exp.profile_id " +
-		"JOIN assessment_project ON assessment.project_id = assessment_project.id " +
-		"JOIN profile ON profile.id = exp.profile_id " +
-		"WHERE profile.profile_status "
-
-	if req.ResearcherName != "" {
-		lower := strings.ToLower(req.ResearcherName)
-		sqlStatement += " AND (LOWER(profile.first_name) = '" + lower + "' OR LOWER(profile.last_name) = '" + lower + "')"
-	}
-
-	if req.University != "" {
-		lower := strings.ToLower(req.University)
-		sqlStatement += " AND LOWER(profile.university) = '" + lower + "'"
-	}
-
-	if req.ExploreYear != "" {
-		exp_where := " WHERE explore_year = '" + req.ExploreYear + "'"
-		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", exp_where, 1)
+	sql := ""
+	if req.ProgramName != "" {
+		sql = generateQueryByProgramName(req)
 	} else {
-		sqlStatement = strings.Replace(sqlStatement, "#EXPWHERESTATEMENT#", "", 1)
+		sql = generateQuery(req)
 	}
 
-	if req.ProjectTitle != "" {
-		lower := strings.ToLower(req.ProjectTitle)
-		sqlStatement += " AND LOWER(assessment_project.project_title) = '" + lower + "'"
-	}
-
-	total_count, err := CountTotalItem(sqlStatement, u)
+	total_count, err := CountTotalItem(sql, u, c)
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	sqlStatement += " ORDER BY profile.id DESC OFFSET " + strconv.Itoa(page) + " ROWS FETCH NEXT " + strconv.Itoa(limit) + " ROWS ONLY"
+	sql += " ORDER BY profile.id DESC OFFSET " + strconv.Itoa(page) + " ROWS FETCH NEXT " + strconv.Itoa(limit) + " ROWS ONLY"
 
-	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", sqlQueryStatement, 1)
-	list, err := u.db.Raw(sqlStatement).Rows()
-	defer list.Close()
+	withContext := u.db.WithContext(c)
+
+	var result []*custom.Profile
+	tx := withContext.Raw(sql)
+	err = tx.Find(&result).Error
 
 	if err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
-		//c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("An error occurred while fetching data %v", err.Error())})
 		return
+	}
+
+	ids := make([]int, len(result))
+	for i, v := range result {
+		ids[i] = v.ProfileId
+	}
+
+	allDegree, err := findDegreeByProfileIds(ids, u, c)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	degreeMap := make(map[int][]*ResponseDegree)
+	for _, v := range allDegree {
+		degreeMap[v.Profile_id] = append(degreeMap[v.Profile_id], &ResponseDegree{
+			Id:               v.ID,
+			DegreeType:       v.Degree_type,
+			DegreeProgram:    v.Degree_program,
+			DegreeUniversity: v.Degree_university,
+		})
+	}
+
+	allProgram, err := findProgramByProfileIds(ids, u, c)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	programMap := make(map[int][]*ResponseProgram)
+	for _, v := range allProgram {
+		programMap[v.Profile_id] = append(programMap[v.Profile_id], &ResponseProgram{
+			ProgramId:   v.Id,
+			ProgramName: v.Program_name,
+		})
 	}
 
 	var resDataContent ResponseDataContent
 	count := 0
-	for list.Next() {
-		tmp := ResearcherOutput{"", "", "", "", false, 0}
-		first, last := "", ""
-		if err := list.Scan(&tmp.ResearcherId, &first, &last, &tmp.University, &tmp.ProfileStatus, &tmp.ExploreYear, &tmp.ProjectTitle); err != nil {
-			res := api.ResponseApi(http.StatusBadRequest, nil, err)
-			c.JSON(http.StatusBadRequest, res)
-			return
-		}
-		tmp.ResearcherName = first + " " + last
-		resDataContent.Content = append(resDataContent.Content, tmp)
+	for _, v := range result {
+		resDataContent.Content = append(resDataContent.Content, ResearcherOutput{
+			ProfileId:     v.ProfileId,
+			ProfileStatus: v.ProfileStatus,
+			FirstName:     v.FirstName,
+			LastName:      v.LastName,
+			PositionId:    v.PositionId,
+			PositionName:  v.PositionName,
+			University:    v.University,
+			Email:         v.Email,
+			PhoneNumber:   v.Phone_number,
+			Degree:        degreeMap[v.ProfileId],
+			Program:       programMap[v.ProfileId],
+		})
 		count++
 	}
-	resDataContent.IsLast = (page + limit) >= count
+	resDataContent.IsLast = (page + limit) >= total_count
 	resDataContent.CurrentPage = req.Page
 	if req.Page < 1 {
 		resDataContent.CurrentPage = req.Page + 1
@@ -140,13 +195,86 @@ func (u *ResearcherList) ListResearcher(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func CountTotalItem(sqlStatement string, u *ResearcherList) (int, error) {
+func CountTotalItem(sqlStatement string, u *ResearcherList, ctx context.Context) (int, error) {
 	count := 0
-	sqlStatement = strings.Replace(sqlStatement, "#STATEMENT#", "COUNT(*)", 1)
-	row := u.db.Raw(sqlStatement).Row()
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, err
+	sql := "SELECT COUNT(*) FROM (" + sqlStatement + ") T"
+	withContext := u.db.WithContext(ctx)
+
+	tx := withContext.Raw(sql)
+	if err := tx.Find(&count).Error; err != nil {
+		return count, err
 	}
 	return count, nil
+}
+
+func generateQuery(req RequestInput) string {
+	sql := &strings.Builder{}
+
+	sql.WriteString(SELECT)
+	sql.WriteString(" profile.id as profile_id,profile.profile_status,profile.first_name,profile.last_name,profile.university,profile.email,profile.phone_number, ")
+	sql.WriteString(" position.id as position_id,position.position_name ")
+	sql.WriteString(FROM)
+	sql.WriteString("profile")
+	sql.WriteString(INNERJOIN)
+
+	sql.WriteString("position")
+	sql.WriteString(ON)
+	sql.WriteString("position.id = profile.position_id")
+	sql.WriteString(WHERE)
+	sql.WriteString("profile.profile_status")
+
+	if req.ResearcherName != "" {
+		lower := strings.ToLower(req.ResearcherName)
+		sql.WriteString(AND)
+		sql.WriteString("(LOWER(profile.first_name) = '" + lower + "' OR LOWER(profile.last_name) = '" + lower + "')")
+	}
+	return sql.String()
+}
+
+func generateQueryByProgramName(req RequestInput) string {
+	sql := &strings.Builder{}
+
+	sql.WriteString(SELECT)
+	sql.WriteString(" profile.id as profile_id,profile.profile_status,profile.first_name,profile.last_name,profile.university,profile.email,profile.phone_number, ")
+	sql.WriteString(" position.id as position_id,position.position_name ")
+	sql.WriteString(FROM)
+	sql.WriteString("profile")
+
+	sql.WriteString(INNERJOIN)
+	sql.WriteString("position")
+	sql.WriteString(ON)
+	sql.WriteString("position.id = profile.position_id")
+
+	sql.WriteString(INNERJOIN)
+	sql.WriteString("program")
+	sql.WriteString(ON)
+	sql.WriteString("program.profile_id = profile.id")
+
+	sql.WriteString(WHERE)
+	sql.WriteString("profile.profile_status")
+
+	if req.ProgramName != "" {
+		lower := strings.ToLower(req.ProgramName)
+		sql.WriteString(AND)
+		sql.WriteString("LOWER(program.program_name) = '" + lower + "'")
+	}
+
+	if req.ResearcherName != "" {
+		lower := strings.ToLower(req.ResearcherName)
+		sql.WriteString(AND)
+		sql.WriteString("(LOWER(profile.first_name) = '" + lower + "' OR LOWER(profile.last_name) = '" + lower + "')")
+	}
+	return sql.String()
+}
+
+func findDegreeByProfileIds(ids []int, u *ResearcherList, ctx context.Context) (result []*models.Degree, err error) {
+	condition := u.db.WithContext(ctx).Model(&models.Degree{}).Where("profile_id IN (?)", ids)
+	err = condition.Find(&result).Error
+	return result, err
+}
+
+func findProgramByProfileIds(ids []int, u *ResearcherList, ctx context.Context) (result []*models.Program, err error) {
+	condition := u.db.WithContext(ctx).Model(&models.Program{}).Where("profile_id IN (?)", ids)
+	err = condition.Find(&result).Error
+	return result, err
 }

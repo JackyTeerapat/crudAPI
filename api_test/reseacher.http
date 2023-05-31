@@ -1,5 +1,5 @@
 
-GET http://localhost:9000/api/v1/researcher/profile_detail/167
+GET http://localhost:9000/api/v1/researcher/profile_detail/240
 ###
 
 POST http://localhost:9000/api/v1/researcher/profile
@@ -10,6 +10,7 @@ Content-Type: application/json
     "last_name": "Boonprasert",
     "address_home": "33/246",
     "position_name": "รองศาสตราจารย์ ดร.",
+    "prefix_name": "นาย",
     "email": "pimchanok.b@example.com",
     "phone_number": "0981234567",
     "university": "Chulalongkorn University",
@@ -38,34 +39,6 @@ Content-Type: application/json
         {
             "program_name": "R"
         }
-    ],
-    "experience": [
-        {
-            "experience_type": "Internship",
-            "experience_start": "2011",
-            "experience_end": "2012",
-            "experience_university": "Pfizer",
-            "experience_remark": "Studied gene expression patterns in drug development"
-        },
-        {
-            "experience_type": "Full-time",
-            "experience_start": "2014",
-            "experience_end": "2022",
-            "experience_university": "Genentech",
-            "experience_remark": "Conducted research on gene therapies for rare diseases"
-        }
-    ],
-    "explore": [
-        {
-            "explore_name": "Study",
-            "explore_year": "2010",
-            "explore_detail": "Analyzed the role of microRNAs in cancer progression"
-        },
-        {
-            "explore_name": "Volunteering",
-            "explore_year": "2017",
-            "explore_detail": "Educated the public about genetic testing and its implications"
-        }
     ]
 }
 
@@ -73,70 +46,45 @@ Content-Type: application/json
 
 
 ###
-PATCH  http://localhost:9000/api/v1/researcher/profile/1
+PATCH  http://localhost:9000/api/v1/researcher/profile/240
 Content-Type: application/json
 
-
 {
-    "first_name": "Nattapong",
-    "last_name": "Boonyarat",
-    "address_home": "123/456789",
-    "position_name": "รองศาสตราจารย์",
-    "email": "nattapong.b@example.com",
-    "phone_number": "0891234567",
-    "university": "Chulalongkorn University",
-    "address_work": "789 Siam Paragon",
+    "prefix_name": "คุณ",
+    "position_name": "ศาสตราจารย์ ดร.",
+    "first_name": "Champpppp",
+    "last_name": "Champ",
     "degree": [
         {
             "degree_type": "bachelor",
-            "degree_program": "Electrical Engineering",
-            "degree_university": "Chulalongkorn University"
+            "degree_program": "Coputer ",
+            "degree_university": "KMUTT"
         },
         {
             "degree_type": "master",
-            "degree_program": "Artificial Intelligence",
-            "degree_university": "Stanford University"
+            "degree_program": "Finance",
+            "degree_university": "CU"
+        },
+        {
+            "degree_type": "doctor",
+            "degree_program": "Engineering",
+            "degree_university": "TU"
         }
     ],
     "program": [
         {
-            "program_name": "RR"
+            "program_name": "Java"
         },
         {
-            "program_name": "Power BI"
+            "program_name": "Javaworkshop"
         }
     ],
-    "experience": [
-        {
-            "experience_type": "Internship",
-            "experience_start": "2017",
-            "experience_end": "2018",
-            "experience_university": "IBMM",
-            "experience_remark": "Worked on optimizing database systems"
-        },
-        {
-            "experience_type": "Full-time",
-            "experience_start": "2018",
-            "experience_end": "2022",
-            "experience_university": "Google",
-            "experience_remark": "Contributed to the development of search algorithms"
-        }
-    ],
-    "explore": [
-        {
-            "explore_name": "Study",
-            "explore_year": "2016",
-            "explore_detail": "Investigated the use of neural networks in natural language processing"
-        },
-        {
-            "explore_name": "Volunteering",
-            "explore_year": "2020",
-            "explore_detail": "Taught programming to high school students in rural areas"
-        }
-    ]
+    "university": "KMUTNB",
+    "address_home": "1/222",
+    "address_work": "333/44",
+    "email": "Test001@email.com",
+    "phone_number": "0812345678"
 }
-
-
 
 ###
 DELETE   http://localhost:9000/api/v1/researcher/profile/167
