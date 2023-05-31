@@ -41,15 +41,16 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 }
 
 func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
-	var assessment models.Assessment
+
 	id := c.Param("id")
-	r := u.db.Table("assessment").
-		Where("profile_id = ?", id).
-		Preload("Project").
-		Preload("Progress").
-		Preload("Report").
-		Preload("Article").
-		First(&assessment)
+	var project []models.AssessmentProject
+	var progress []models.AssessmentProgress
+	var report []models.AssessmentReport
+	var article []models.AssessmentArticle
+
+	r := u.db.Table("assessment_project").
+		Where("profile_id = ?", id).Find(&project)
+
 	if r.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
 		return
@@ -59,7 +60,54 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	res := api.ResponseApiWithDescription(http.StatusOK, assessment, "SUCCESS", nil)
+
+	r = u.db.Table("assessment_progress").
+		Where("profile_id = ?", id).Find(&progress)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	r = u.db.Table("assessment_report").
+		Where("profile_id = ?", id).Find(&report)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	r = u.db.Table("assessment_article").
+		Where("profile_id = ?", id).Find(&article)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	responseData := gin.H{}
+
+	if len(project) > 0 {
+		responseData["Project"] = project
+	}
+
+	if len(progress) > 0 {
+		responseData["Progress"] = progress
+	}
+
+	if len(report) > 0 {
+		responseData["Report"] = report
+	}
+
+	if len(article) > 0 {
+		responseData["Article"] = article
+	}
+
+	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
+
 	c.JSON(http.StatusOK, res)
 	return
 }
