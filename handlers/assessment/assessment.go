@@ -41,18 +41,19 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 }
 
 type AssessmentResponse struct {
-	Project  []models.AssessmentProject  `json:"Project"`
-	Progress []models.AssessmentProgress `json:"Progress"`
-	Report   []models.AssessmentReport   `json:"Report"`
-	Article  []models.AssessmentArticle  `json:"Article"`
+	profile_id int
+	Project    []models.AssessmentProjectGet  `json:"Project"`
+	Progress   []models.AssessmentProgressGet `json:"Progress"`
+	Report     []models.AssessmentReportGet   `json:"Report"`
+	Article    []models.AssessmentArticleGet  `json:"Article"`
 }
 
 func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 	id := c.Param("id")
-	var project []models.AssessmentProject
-	var progress []models.AssessmentProgress
-	var report []models.AssessmentReport
-	var article []models.AssessmentArticle
+	var project []models.AssessmentProjectGet
+	var progress []models.AssessmentProgressGet
+	var report []models.AssessmentReportGet
+	var article []models.AssessmentArticleGet
 
 	r := u.db.Table("assessment_project").
 		Where("profile_id = ?", id).Find(&project)
@@ -93,12 +94,23 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-
-	responseData := AssessmentResponse{
-		Project:  project,
-		Progress: progress,
-		Report:   report,
-		Article:  article,
+	profileID, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	responseData := struct {
+		ProfileID int                            `json:"profile_id"`
+		Project   []models.AssessmentProjectGet  `json:"Project"`
+		Progress  []models.AssessmentProgressGet `json:"Progress"`
+		Report    []models.AssessmentReportGet   `json:"Report"`
+		Article   []models.AssessmentArticleGet  `json:"Article"`
+	}{
+		ProfileID: profileID,
+		Project:   project,
+		Progress:  progress,
+		Report:    report,
+		Article:   article,
 	}
 
 	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
