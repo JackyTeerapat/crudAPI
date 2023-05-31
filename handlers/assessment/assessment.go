@@ -163,7 +163,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("No data for assessment project")
 		}
 		json.Unmarshal(jsonData, &project)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", id).Updates(&project)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", project.Id).Updates(&project)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -176,7 +176,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("No data for assessment progress")
 		}
 		json.Unmarshal(jsonData, &progress)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", id).Updates(&progress)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", progress.Id).Updates(&progress)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -189,7 +189,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("No data for assessment report")
 		}
 		json.Unmarshal(jsonData, &report)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", id).Updates(&report)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", report.Id).Updates(&report)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -202,7 +202,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("No data for assessment article")
 		}
 		json.Unmarshal(jsonData, &article)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", id).Updates(&article)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", article.Id).Updates(&article)
 		if err := r.Error; err != nil {
 			return body, err
 		}
