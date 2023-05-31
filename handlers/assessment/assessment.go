@@ -40,16 +40,24 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 	return
 }
 
+type AssessmentResponse struct {
+	profile_id int
+	Project    []models.AssessmentProjectGet  `json:"Project"`
+	Progress   []models.AssessmentProgressGet `json:"Progress"`
+	Report     []models.AssessmentReportGet   `json:"Report"`
+	Article    []models.AssessmentArticleGet  `json:"Article"`
+}
+
 func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
-	var assessment models.Assessment
 	id := c.Param("id")
-	r := u.db.Table("assessment").
-		Where("profile_id = ?", id).
-		Preload("Project").
-		Preload("Progress").
-		Preload("Report").
-		Preload("Article").
-		First(&assessment)
+	var project []models.AssessmentProjectGet
+	var progress []models.AssessmentProgressGet
+	var report []models.AssessmentReportGet
+	var article []models.AssessmentArticleGet
+
+	r := u.db.Table("assessment_project").
+		Where("profile_id = ?", id).Find(&project)
+
 	if r.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
 		return
@@ -59,7 +67,53 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	res := api.ResponseApiWithDescription(http.StatusOK, assessment, "SUCCESS", nil)
+
+	r = u.db.Table("assessment_progress").
+		Where("profile_id = ?", id).Find(&progress)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	r = u.db.Table("assessment_report").
+		Where("profile_id = ?", id).Find(&report)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	r = u.db.Table("assessment_article").
+		Where("profile_id = ?", id).Find(&article)
+
+	if r.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, r.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+	profileID, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	responseData := struct {
+		ProfileID int                            `json:"profile_id"`
+		Project   []models.AssessmentProjectGet  `json:"Project"`
+		Progress  []models.AssessmentProgressGet `json:"Progress"`
+		Report    []models.AssessmentReportGet   `json:"Report"`
+		Article   []models.AssessmentArticleGet  `json:"Article"`
+	}{
+		ProfileID: profileID,
+		Project:   project,
+		Progress:  progress,
+		Report:    report,
+		Article:   article,
+	}
+
+	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
 }
