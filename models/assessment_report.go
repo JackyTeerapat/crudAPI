@@ -4,6 +4,7 @@ import "time"
 
 type AssessmentReport struct {
 	Id               int       `json:"report_id"`
+	Profile_id       int       `json:"profile_id"`
 	Report_year      string    `json:"report_year"`
 	Report_funding   string    `json:"report_funding"`
 	Report_source    string    `json:"report_source"`

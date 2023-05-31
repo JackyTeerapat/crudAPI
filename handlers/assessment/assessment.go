@@ -1,8 +1,10 @@
 package assessment
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"CRUD-API/api"
 	"CRUD-API/models"
@@ -69,16 +71,10 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	var checkAs models.Assessment
-	ckeck := u.db.Table("assessment").Where("profile_id = ?", assessment.ProfileID).First(&checkAs)
-	if ckeck.RowsAffected != 0 {
-		e := u.RollbackDeleteProFile(assessment.ProfileID)
-		if e != nil {
-			res := api.ResponseApi(http.StatusBadRequest, nil, e)
-			c.JSON(http.StatusBadRequest, res)
-			return
-		}
-		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("This profile has already create assessment"))
+	var profile models.Profile
+	ckeck := u.db.Table("profile").Where("id = ?", assessment.ProfileID).First(&profile)
+	if ckeck.RowsAffected == 0 {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("No data found for this profile"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -88,24 +84,7 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	var resAssessment models.Assessment
-	r := u.db.Table("assessment").
-		Where("id = ?", body.Id).
-		Preload("Project").
-		Preload("Progress").
-		Preload("Report").
-		Preload("Article").
-		First(&resAssessment)
-	if r.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "assessment not found"})
-		return
-	}
-	if err := r.Error; err != nil {
-		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-		c.JSON(http.StatusInternalServerError, res)
-		return
-	}
-	res := api.ResponseApi(http.StatusCreated, resAssessment, nil)
+	res := api.ResponseApi(http.StatusCreated, body, nil)
 	c.JSON(http.StatusCreated, res)
 }
 
@@ -148,11 +127,21 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	assessmentId, err := strconv.Atoi(id)
+	if err != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert string to int"))
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
 	//อัปเดตข้อมูล assessment ด้วย ID ที่กำหนด
-	var assessment models.Assessment
-	u.db.Table("assessment").Where("profile_id = ?", id).First(&assessment)
-	result, err := u.update(id, assessmentRequest, assessment)
+	var profile models.Profile
+	ckeck := u.db.Table("profile").Where("id = ?", assessmentRequest.ProfileID).First(&profile)
+	if ckeck.RowsAffected == 0 {
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("No data found for this profile"))
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	result, err := u.update(assessmentId, assessmentRequest, profile)
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("database error: %v", err))
 		c.JSON(http.StatusInternalServerError, res)
@@ -163,225 +152,132 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (u *AssessmentHandler) update(id string, assessmentRequest models.AssessmentRequests, assessment models.Assessment) (body models.Assessment, err error) {
-	body = models.Assessment{
-		Id:               assessment.Id,
-		ProfileID:        assessmentRequest.ProfileID,
-		Assessment_start: assessmentRequest.AssessmentStart,
-		Assessment_end:   assessmentRequest.AssessmentEnd,
-		Project: models.AssessmentProject{
-			Id:                assessment.ProjectID,
-			Project_year:      assessmentRequest.Project_year,
-			Project_funding:   assessmentRequest.Report_funding,
-			Project_source:    assessmentRequest.Project_source,
-			Project_title:     assessmentRequest.Project_title,
-			Project_estimate:  assessmentRequest.Project_estimate,
-			Project_recommend: assessmentRequest.Project_recommend,
-			Period:            assessmentRequest.Project_period,
-			Updated_by:        "admin",
-		},
-		Progress: models.AssessmentProgress{
-			Id:                 assessment.ProgressID,
-			Progress_year:      assessmentRequest.Progress_year,
-			Progress_funding:   assessmentRequest.Project_funding,
-			Progress_source:    assessmentRequest.Progress_source,
-			Progress_title:     assessmentRequest.Progress_title,
-			Progress_estimate:  assessmentRequest.Progress_estimate,
-			Progress_recommend: assessmentRequest.Progress_recommend,
-			Period:             assessmentRequest.Progress_period,
-			Updated_by:         "admin",
-		},
-		Report: models.AssessmentReport{
-			Id:               assessment.ReportID,
-			Report_year:      assessmentRequest.Report_year,
-			Report_funding:   assessmentRequest.Project_funding,
-			Report_source:    assessmentRequest.Progress_source,
-			Report_title:     assessmentRequest.Report_title,
-			Report_estimate:  assessmentRequest.Report_estimate,
-			Report_recommend: assessmentRequest.Report_recommend,
-			Period:           assessmentRequest.Report_period,
-			Updated_by:       "admin",
-		},
-		Article: models.AssessmentArticle{
-			Id:                assessment.ArticleID,
-			Article_year:      assessmentRequest.Article_year,
-			Article_title:     assessmentRequest.Article_title,
-			Article_estimate:  assessmentRequest.Article_estimate,
-			Article_recommend: assessmentRequest.Article_recommend,
-			Period:            assessmentRequest.Article_period,
-			Updated_by:        "admin",
-		},
-		Created_by: "admin",
-		Updated_by: "admin",
+func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRequests, profile models.Profile) (body models.AssessmentResponse, err error) {
+	assessmentData := assessmentRequest.Assessment_data
+	switch assessmentRequest.Assessment_type {
+	case "project":
+		jsonData, _ := json.Marshal(assessmentData)
+		var project models.AssessmentProject
+		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&project)
+		if r.RowsAffected == 0 {
+			return body, fmt.Errorf("No data for assessment project")
+		}
+		json.Unmarshal(jsonData, &project)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", id).Updates(&project)
+		if err := r.Error; err != nil {
+			return body, err
+		}
+		assessmentData = project
+	case "progress":
+		jsonData, _ := json.Marshal(assessmentData)
+		var progress models.AssessmentProgress
+		r := u.db.Table("assessment_progress").Where("id = ?", id).Preload("profile").First(&progress)
+		if r.RowsAffected == 0 {
+			return body, fmt.Errorf("No data for assessment progress")
+		}
+		json.Unmarshal(jsonData, &progress)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", id).Updates(&progress)
+		if err := r.Error; err != nil {
+			return body, err
+		}
+		assessmentData = progress
+	case "report":
+		jsonData, _ := json.Marshal(assessmentData)
+		var report models.AssessmentReport
+		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&report)
+		if r.RowsAffected == 0 {
+			return body, fmt.Errorf("No data for assessment report")
+		}
+		json.Unmarshal(jsonData, &report)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", id).Updates(&report)
+		if err := r.Error; err != nil {
+			return body, err
+		}
+		assessmentData = report
+	case "article":
+		jsonData, _ := json.Marshal(assessmentData)
+		var article models.AssessmentArticle
+		r := u.db.Table("assessment_article").Where("id = ?", id).Preload("profile").First(&article)
+		if r.RowsAffected == 0 {
+			return body, fmt.Errorf("No data for assessment article")
+		}
+		json.Unmarshal(jsonData, &article)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", id).Updates(&article)
+		if err := r.Error; err != nil {
+			return body, err
+		}
+		assessmentData = article
+	default:
+		return body, fmt.Errorf("err")
 	}
-	result := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ?", id).Updates(&body)
-	if err := result.Error; err != nil {
-		return body, err
+	body = models.AssessmentResponse{
+		ProfileID:       assessmentRequest.ProfileID,
+		Assessment_type: assessmentRequest.Assessment_type,
+		Assessment_data: assessmentData,
 	}
-
 	return body, err
 
 }
-func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) (body models.Assessment, err error) {
+func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) (body models.AssessmentResponse, err error) {
 	tx := u.db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
-	project := models.AssessmentProject{
-		Project_year:      assessmentRequest.Project_year,
-		Project_funding:   assessmentRequest.Project_funding,
-		Project_source:    assessmentRequest.Project_source,
-		Project_title:     assessmentRequest.Project_title,
-		Project_point:     assessmentRequest.Project_point,
-		Project_estimate:  assessmentRequest.Project_estimate,
-		Project_recommend: assessmentRequest.Project_recommend,
-		Period:            assessmentRequest.Project_period,
-	}
-	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
-		tx.Rollback()
-		e := u.DeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
+	object := assessmentRequest.Assessment_data
+	switch assessmentRequest.Assessment_type {
+	case "project":
+		jsonData, _ := json.Marshal(object)
+		var project models.AssessmentProject
+		project = models.AssessmentProject{
+			Profile_id: assessmentRequest.ProfileID,
 		}
-		return body, err
-	}
-
-	progress := models.AssessmentProgress{
-		Progress_year:      assessmentRequest.Progress_year,
-		Progress_funding:   assessmentRequest.Project_funding,
-		Progress_source:    assessmentRequest.Project_source,
-		Progress_title:     assessmentRequest.Progress_title,
-		Progress_estimate:  assessmentRequest.Progress_estimate,
-		Progress_recommend: assessmentRequest.Project_recommend,
-		Period:             assessmentRequest.Progress_period,
-	}
-
-	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
-		tx.Rollback()
-		e := u.DeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
+		json.Unmarshal(jsonData, &project)
+		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
+			tx.Rollback()
+			return body, err
 		}
-		return body, err
-	}
-	report := models.AssessmentReport{
-		Report_year:      assessmentRequest.Report_year,
-		Report_funding:   assessmentRequest.Project_funding,
-		Report_source:    assessmentRequest.Report_source,
-		Report_title:     assessmentRequest.Report_title,
-		Report_estimate:  assessmentRequest.Report_estimate,
-		Report_recommend: assessmentRequest.Report_recommend,
-		Period:           assessmentRequest.Report_period,
-	}
-
-	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
-		tx.Rollback()
-		e := u.DeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
+	case "progress":
+		jsonData, _ := json.Marshal(object)
+		var progress models.AssessmentProgress
+		progress = models.AssessmentProgress{
+			Profile_id: assessmentRequest.ProfileID,
 		}
-		return body, err
-	}
-	article := models.AssessmentArticle{
-		Article_year:      assessmentRequest.Article_year,
-		Article_title:     assessmentRequest.Article_title,
-		Article_estimate:  assessmentRequest.Article_estimate,
-		Article_recommend: assessmentRequest.Article_recommend,
-		Period:            assessmentRequest.Article_period,
-	}
-
-	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
-		tx.Rollback()
-		e := u.DeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
+		json.Unmarshal(jsonData, &progress)
+		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
+			tx.Rollback()
+			return body, err
 		}
-		return body, err
-	}
-
-	body = models.Assessment{
-		Assessment_start:       assessmentRequest.AssessmentStart,
-		Assessment_end:         assessmentRequest.AssessmentEnd,
-		Assessment_file_action: "assessment",
-		Assessment_file_name:   "",
-		ProjectID:              project.Id,
-		ProgressID:             progress.Id,
-		ProfileID:              assessmentRequest.ProfileID,
-		ReportID:               report.Id,
-		ArticleID:              article.Id,
-		Created_by:             "",
-		Updated_by:             "",
-	}
-
-	if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&body).Error; err != nil {
-		tx.Rollback()
-		e := u.DeleteProFile(assessmentRequest.ProfileID)
-		if e != nil {
-			return body, e
+	case "report":
+		jsonData, _ := json.Marshal(object)
+		var report models.AssessmentReport
+		report = models.AssessmentReport{
+			Profile_id: assessmentRequest.ProfileID,
 		}
+		json.Unmarshal(jsonData, &report)
+		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
+			tx.Rollback()
+			return body, err
+		}
+	case "article":
+		jsonData, _ := json.Marshal(object)
+		var article models.AssessmentArticle
+		article = models.AssessmentArticle{
+			Profile_id: assessmentRequest.ProfileID,
+		}
+		json.Unmarshal(jsonData, &article)
+		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
+			tx.Rollback()
+			return body, err
+		}
+	default:
+		return body, fmt.Errorf("")
+	}
+	body = models.AssessmentResponse{
+		ProfileID:       assessmentRequest.ProfileID,
+		Assessment_type: assessmentRequest.Assessment_type,
+		Assessment_data: object,
 	}
 	return body, err
-}
-
-func (u *AssessmentHandler) RollbackDeleteProFile(profileId int) (err error) {
-	dAssessment := u.db.Where("profile_id = ?", profileId).Delete(&models.Assessment{})
-	if err := dAssessment.Error; err != nil {
-		return err
-	}
-	dProgram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
-	if err = dProgram.Error; err != nil {
-		return err
-	}
-	dProfileAttach := u.db.Where("profile_id = ?", profileId).Delete(&models.Profile_attach{})
-	if err = dProfileAttach.Error; err != nil {
-		return err
-	}
-	dExploration := u.db.Where("profile_id = ?", profileId).Delete(&models.Exploration{})
-	if err = dExploration.Error; err != nil {
-		return err
-	}
-	dExperience := u.db.Where("profile_id = ?", profileId).Delete(&models.Experience{})
-	if err = dExperience.Error; err != nil {
-		return err
-	}
-	dDegree := u.db.Where("profile_id = ?", profileId).Delete(&models.Degree{})
-	if err = dDegree.Error; err != nil {
-		return err
-	}
-	dProfile := u.db.Delete(&models.Profile{}, profileId)
-	if err = dProfile.Error; err != nil {
-		return err
-	}
-
-	return nil
-}
-func (u *AssessmentHandler) DeleteProFile(profileId int) (err error) {
-	dprogram := u.db.Where("profile_id = ?", profileId).Delete(&models.Program{})
-	if err = dprogram.Error; err != nil {
-		return err
-	}
-	dProfileAttach := u.db.Where("profile_id = ?", profileId).Delete(&models.Profile_attach{})
-	if err = dProfileAttach.Error; err != nil {
-		return err
-	}
-	dexploration := u.db.Where("profile_id = ?", profileId).Delete(&models.Exploration{})
-	if err = dexploration.Error; err != nil {
-		return err
-	}
-	dexperience := u.db.Where("profile_id = ?", profileId).Delete(&models.Experience{})
-	if err = dexperience.Error; err != nil {
-		return err
-	}
-	ddegree := u.db.Where("profile_id = ?", profileId).Delete(&models.Degree{})
-	if err = ddegree.Error; err != nil {
-		return err
-	}
-	dprofile := u.db.Delete(&models.Profile{}, profileId)
-	if err = dprofile.Error; err != nil {
-		return err
-	}
-
-	return nil
 }
