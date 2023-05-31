@@ -4,6 +4,7 @@ import "time"
 
 type AssessmentProgress struct {
 	Id                 int       `json:"progress_id"`
+	Profile_id         int       `json:"profile_id"`
 	Progress_year      string    `json:"progress_year"`
 	Progress_funding   string    `json:"progress_funding"`
 	Progress_source    string    `json:"progress_source"`

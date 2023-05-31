@@ -4,6 +4,7 @@ import "time"
 
 type AssessmentProject struct {
 	Id                int       `json:"project_id"`
+	Profile_id        int       `json:"profile_id"`
 	Project_year      string    `json:"project_year"`
 	Project_funding   string    `json:"project_funding"`
 	Project_source    string    `json:"project_source"`

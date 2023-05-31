@@ -4,6 +4,7 @@ import "time"
 
 type AssessmentArticle struct {
 	Id                int       `json:"article_id"`
+	Profile_id        int       `json:"profile_id"`
 	Article_year      string    `json:"article_year"`
 	Article_title     string    `json:"article_title"`
 	Article_estimate  bool      `json:"article_estimate"`
