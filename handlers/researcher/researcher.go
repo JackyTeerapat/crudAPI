@@ -259,10 +259,14 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	// var position models.Position
 
 	// First, try to get the position from the database.
-	result := h.db.Raw("SELECT ID FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"Database query error position": result.Error.Error()})
-		return
+	if researcher.PositionName != "" {
+		result := h.db.Raw("SELECT ID FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID)
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"Database query error position": result.Error.Error()})
+			return
+		}
+	} else {
+		positionID = 8
 	}
 
 	// If the ID is zero, it means no position was found, so create a new one.
