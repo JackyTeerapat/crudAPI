@@ -29,11 +29,12 @@ type (
 	}
 
 	ResponseDataContent struct {
-		Content     []UserOutput `json:"content"`
-		TotalPage   int          `json:"total_page"`
-		TotalObject int          `json:"total_object"`
-		CurrentPage int          `json:"current_page"`
-		IsLast      bool         `json:"is_last"`
+		Content      []UserOutput `json:"content"`
+		TotalPage    int          `json:"total_page"`
+		TotalObject  int          `json:"total_object"`
+		CurrentPage  int          `json:"current_page"`
+		IsLast       bool         `json:"is_last"`
+		ObjectInPage int          `json:"object_in_page"`
 	}
 )
 
@@ -102,7 +103,8 @@ func (u *UserList) ListUser(c *gin.Context) {
 	if req.Page < 1 {
 		resDataContent.CurrentPage = req.Page + 1
 	}
-	resDataContent.TotalObject = count
+	resDataContent.TotalObject = total_count
+	resDataContent.ObjectInPage = count
 	resDataContent.TotalPage = total_count / limit
 	if total_count%limit > 0 {
 		resDataContent.TotalPage++
