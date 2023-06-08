@@ -326,7 +326,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	err2 := h.db.Exec(query)
 	if err2 != nil {
 		fmt.Printf("Failed to close idle connections: %v\n", err2)
-		return
 	}
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(profileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
@@ -462,7 +461,6 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 	err2 := h.db.Exec(query)
 	if err2 != nil {
 		fmt.Printf("Failed to close idle connections: %v\n", err2)
-		return
 	}
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
