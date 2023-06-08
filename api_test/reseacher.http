@@ -1,12 +1,12 @@
 
-GET http://localhost:9000/api/v1/researcher/profile_detail/240
+GET http://localhost:9000/api/v1/researcher/profile_detail/244
 ###
 
 POST http://localhost:9000/api/v1/researcher/profile
 Content-Type: application/json
 
 {
-    "first_name": "Thitisak",
+    "first_name": "Champ",
     "last_name": "Boonprasert",
     "address_home": "33/246",
     "position_name": "รองศาสตราจารย์ ดร.",
@@ -46,18 +46,18 @@ Content-Type: application/json
 
 
 ###
-PATCH  http://localhost:9000/api/v1/researcher/profile/240
+PATCH  http://localhost:9000/api/v1/researcher/profile/244
 Content-Type: application/json
 
 {
     "prefix_name": "คุณ",
     "position_name": "ศาสตราจารย์ ดร.",
-    "first_name": "Champpppp",
+    "first_name": "Thitisak",
     "last_name": "Champ",
     "degree": [
         {
             "degree_type": "bachelor",
-            "degree_program": "Coputer ",
+            "degree_program": "Computer Science",
             "degree_university": "KMUTT"
         },
         {
@@ -87,4 +87,4 @@ Content-Type: application/json
 }
 
 ###
-DELETE   http://localhost:9000/api/v1/researcher/profile/167
+DELETE   http://localhost:9000/api/v1/researcher/profile/240
