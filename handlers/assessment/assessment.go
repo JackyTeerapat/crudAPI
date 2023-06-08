@@ -333,5 +333,19 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Assessment_type: assessmentRequest.Assessment_type,
 		Assessment_data: object,
 	}
+
+
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err)
+		return
+	}
+
 	return body, err
 }
