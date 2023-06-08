@@ -317,17 +317,7 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 			return
 		}
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := h.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-		return
-	}
+
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(profileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
 }
@@ -453,17 +443,7 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 		fmt.Println("Error converting string to integer:", err)
 		return
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := h.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-		return
-	}
+
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
 
