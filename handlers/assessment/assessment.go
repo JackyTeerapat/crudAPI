@@ -34,7 +34,16 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
+	}
 	res := api.ResponseApiWithDescription(http.StatusOK, assessment, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -112,7 +121,16 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		Report:    report,
 		Article:   article,
 	}
-
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
+	}
 	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -128,16 +146,27 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	var profile models.Profile
 	ckeck := u.db.Table("profile").Where("id = ?", assessment.ProfileID).First(&profile)
 	if ckeck.RowsAffected == 0 {
-		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("No data found for this profile"))
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("no data found for this profile"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	body, err := u.create(assessment)
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
+	}
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
+
 	res := api.ResponseApi(http.StatusCreated, body, nil)
 	c.JSON(http.StatusCreated, res)
 }
@@ -183,7 +212,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 	}
 	assessmentId, err := strconv.Atoi(id)
 	if err != nil {
-		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert string to int"))
+		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("failed to convert string to int"))
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
@@ -191,7 +220,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 	var profile models.Profile
 	ckeck := u.db.Table("profile").Where("id = ?", assessmentRequest.ProfileID).First(&profile)
 	if ckeck.RowsAffected == 0 {
-		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("No data found for this profile"))
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("no data found for this profile"))
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -201,7 +230,16 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
+	}
 	res := api.ResponseApi(http.StatusOK, result, nil)
 	c.JSON(http.StatusOK, res)
 }
@@ -214,7 +252,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		var project models.AssessmentProject
 		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&project)
 		if r.RowsAffected == 0 {
-			return body, fmt.Errorf("No data for assessment project")
+			return body, fmt.Errorf("no data for assessment project")
 		}
 		json.Unmarshal(jsonData, &project)
 		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", project.Id).Updates(&project)
@@ -227,7 +265,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		var progress models.AssessmentProgress
 		r := u.db.Table("assessment_progress").Where("id = ?", id).Preload("profile").First(&progress)
 		if r.RowsAffected == 0 {
-			return body, fmt.Errorf("No data for assessment progress")
+			return body, fmt.Errorf("no data for assessment progress")
 		}
 		json.Unmarshal(jsonData, &progress)
 		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", progress.Id).Updates(&progress)
@@ -240,7 +278,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		var report models.AssessmentReport
 		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&report)
 		if r.RowsAffected == 0 {
-			return body, fmt.Errorf("No data for assessment report")
+			return body, fmt.Errorf("no data for assessment report")
 		}
 		json.Unmarshal(jsonData, &report)
 		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", report.Id).Updates(&report)
@@ -253,7 +291,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		var article models.AssessmentArticle
 		r := u.db.Table("assessment_article").Where("id = ?", id).Preload("profile").First(&article)
 		if r.RowsAffected == 0 {
-			return body, fmt.Errorf("No data for assessment article")
+			return body, fmt.Errorf("no data for assessment article")
 		}
 		json.Unmarshal(jsonData, &article)
 		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", article.Id).Updates(&article)
@@ -263,6 +301,16 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		assessmentData = article
 	default:
 		return body, fmt.Errorf("err")
+	}
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
 	}
 	body = models.AssessmentResponse{
 		ProfileID:       assessmentRequest.ProfileID,
@@ -334,7 +382,6 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Assessment_data: object,
 	}
 
-
 	query := `
 	SELECT pg_terminate_backend(pg_stat_activity.pid)
 	FROM pg_stat_activity
@@ -343,8 +390,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 `
 	err2 := u.db.Exec(query)
 	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err)
-		return
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
 	}
 
 	return body, err

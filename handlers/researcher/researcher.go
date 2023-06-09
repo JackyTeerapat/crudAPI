@@ -38,6 +38,16 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	// Execute the query and scan the results into the researcher struct
 	result := h.db.Raw("SELECT id as profile_id, profile_status,prefix_name, first_name, last_name, university, address_home, address_work, email,phone_number FROM profile WHERE id = ?", id).Scan(&researcher)
 
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := h.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
+	}
 	if result.Error != nil {
 		// Handle the error if the query fails
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching the researcher data from profile: %v", result.Error)})

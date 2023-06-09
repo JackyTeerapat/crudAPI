@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -108,6 +109,16 @@ func (u *UserList) ListUser(c *gin.Context) {
 	resDataContent.TotalPage = total_count / limit
 	if total_count%limit > 0 {
 		resDataContent.TotalPage++
+	}
+	query := `
+	SELECT pg_terminate_backend(pg_stat_activity.pid)
+	FROM pg_stat_activity
+	WHERE pg_stat_activity.usename = 'navjsbdt'
+	AND pg_stat_activity.state = 'idle';
+`
+	err2 := u.db.Exec(query)
+	if err2 != nil {
+		fmt.Printf("Failed to close idle connections: %v\n", err2)
 	}
 	res := api.ResponseApi(http.StatusOK, resDataContent, nil)
 	c.JSON(http.StatusOK, res)
