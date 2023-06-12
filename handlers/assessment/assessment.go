@@ -34,7 +34,7 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	
+
 	res := api.ResponseApiWithDescription(http.StatusOK, assessment, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -112,7 +112,7 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		Report:    report,
 		Article:   article,
 	}
-	
+
 	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -295,6 +295,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			tx.Rollback()
 			return body, err
 		}
+		object = project
 	case "progress":
 		jsonData, _ := json.Marshal(object)
 		var progress models.AssessmentProgress
@@ -306,6 +307,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			tx.Rollback()
 			return body, err
 		}
+		object = progress
 	case "report":
 		jsonData, _ := json.Marshal(object)
 		var report models.AssessmentReport
@@ -317,6 +319,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			tx.Rollback()
 			return body, err
 		}
+		object = report
 	case "article":
 		jsonData, _ := json.Marshal(object)
 		var article models.AssessmentArticle
@@ -328,6 +331,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			tx.Rollback()
 			return body, err
 		}
+		object = article
 	default:
 		return body, fmt.Errorf("")
 	}
@@ -336,8 +340,6 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		Assessment_type: assessmentRequest.Assessment_type,
 		Assessment_data: object,
 	}
-
-
 
 	return body, err
 }
