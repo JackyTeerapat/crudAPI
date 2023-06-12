@@ -12,7 +12,6 @@ type AssessmentReport struct {
 	Report_estimate  bool      `json:"report_estimate"`
 	Report_recommend bool      `json:"report_recommend"`
 	Report_creator   string    `json:"report_creator"`
-	Report_type      string    `json:"report_type"`
 	File_name        string    `json:"file_name"`
 	File_action      string    `json:"file_action"`
 	File_storage     string    `json:"-"`
@@ -33,7 +32,6 @@ type AssessmentReportGet struct {
 	Report_estimate  bool      `json:"report_estimate"`
 	Report_recommend bool      `json:"report_recommend"`
 	Report_creator   string    `json:"report_creator"`
-	Report_type      string    `json:"report_type"`
 	File_name        string    `json:"file_name"`
 	File_action      string    `json:"file_action"`
 	File_storage     string    `json:"-"`
