@@ -335,6 +335,7 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 	default:
 		return body, fmt.Errorf("")
 	}
+	tx.Commit()
 	body = models.AssessmentResponse{
 		ProfileID:       assessmentRequest.ProfileID,
 		Assessment_type: assessmentRequest.Assessment_type,
