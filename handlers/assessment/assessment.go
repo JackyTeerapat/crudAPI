@@ -291,11 +291,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &project)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
-		object = project
+		object = &project
 	case "progress":
 		jsonData, _ := json.Marshal(object)
 		var progress models.AssessmentProgress
@@ -303,11 +303,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &progress)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
-		object = progress
+		object = &progress
 	case "report":
 		jsonData, _ := json.Marshal(object)
 		var report models.AssessmentReport
@@ -315,11 +315,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &report)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
-		object = report
+		object = &report
 	case "article":
 		jsonData, _ := json.Marshal(object)
 		var article models.AssessmentArticle
@@ -327,11 +327,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &article)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
-		object = article
+		object = &article
 	default:
 		return body, fmt.Errorf("")
 	}
