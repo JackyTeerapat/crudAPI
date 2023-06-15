@@ -382,7 +382,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		jsonData, _ := json.Marshal(object)
 		var project models.AssessmentProject
 		project = models.AssessmentProject{
-			Profile_id: assessmentRequest.ProfileID,
+			Profile_id:     assessmentRequest.ProfileID,
+			Project_status: true, // Set project_status to true
 		}
 		json.Unmarshal(jsonData, &project)
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
@@ -394,7 +395,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		jsonData, _ := json.Marshal(object)
 		var progress models.AssessmentProgress
 		progress = models.AssessmentProgress{
-			Profile_id: assessmentRequest.ProfileID,
+			Profile_id:      assessmentRequest.ProfileID,
+			Progress_status: true, // Set progress_status to true
 		}
 		json.Unmarshal(jsonData, &progress)
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
@@ -406,7 +408,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		jsonData, _ := json.Marshal(object)
 		var report models.AssessmentReport
 		report = models.AssessmentReport{
-			Profile_id: assessmentRequest.ProfileID,
+			Profile_id:    assessmentRequest.ProfileID,
+			Report_status: true, // Set report_status to true
 		}
 		json.Unmarshal(jsonData, &report)
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
@@ -418,7 +421,8 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 		jsonData, _ := json.Marshal(object)
 		var article models.AssessmentArticle
 		article = models.AssessmentArticle{
-			Profile_id: assessmentRequest.ProfileID,
+			Profile_id:     assessmentRequest.ProfileID,
+			Article_status: true, // Set article_status to true
 		}
 		json.Unmarshal(jsonData, &article)
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
