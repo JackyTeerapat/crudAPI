@@ -313,6 +313,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		if err := r.Error; err != nil {
 			return body, err
 		}
+		project.Project_status = true
 		assessmentData = project
 	case "progress":
 		jsonData, _ := json.Marshal(assessmentData)
@@ -326,6 +327,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		if err := r.Error; err != nil {
 			return body, err
 		}
+		progress.Progress_status = true
 		assessmentData = progress
 	case "report":
 		jsonData, _ := json.Marshal(assessmentData)
@@ -339,6 +341,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		if err := r.Error; err != nil {
 			return body, err
 		}
+		report.Report_status = true
 		assessmentData = report
 	case "article":
 		jsonData, _ := json.Marshal(assessmentData)
@@ -352,6 +355,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 		if err := r.Error; err != nil {
 			return body, err
 		}
+		article.Article_status = true
 		assessmentData = article
 	default:
 		return body, fmt.Errorf("err")
