@@ -183,7 +183,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	assessmentId, err := strconv.Atoi(id)
+	profileId, err := strconv.Atoi(id)
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("failed to convert string to int"))
 		c.JSON(http.StatusInternalServerError, res)
@@ -197,7 +197,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	result, err := u.update(assessmentId, assessmentRequest, profile)
+	result, err := u.update(profileId, assessmentRequest, profile)
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, fmt.Errorf("database error: %v", err))
 		c.JSON(http.StatusInternalServerError, res)
@@ -214,7 +214,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	case "project":
 		jsonData, _ := json.Marshal(assessmentData)
 		var project models.AssessmentProject
-		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&project)
+		r := u.db.Table("assessment_project").Where("profile_id = ?", id).Preload("profile").First(&project)
 		if r.RowsAffected == 0 {
 			return body, fmt.Errorf("no data for assessment project")
 		}
@@ -227,7 +227,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	case "progress":
 		jsonData, _ := json.Marshal(assessmentData)
 		var progress models.AssessmentProgress
-		r := u.db.Table("assessment_progress").Where("id = ?", id).Preload("profile").First(&progress)
+		r := u.db.Table("assessment_progress").Where("profile_id = ?", id).Preload("profile").First(&progress)
 		if r.RowsAffected == 0 {
 			return body, fmt.Errorf("no data for assessment progress")
 		}
@@ -240,7 +240,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	case "report":
 		jsonData, _ := json.Marshal(assessmentData)
 		var report models.AssessmentReport
-		r := u.db.Table("assessment_project").Where("id = ?", id).Preload("profile").First(&report)
+		r := u.db.Table("assessment_project").Where("profile_id = ?", id).Preload("profile").First(&report)
 		if r.RowsAffected == 0 {
 			return body, fmt.Errorf("no data for assessment report")
 		}
@@ -253,7 +253,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	case "article":
 		jsonData, _ := json.Marshal(assessmentData)
 		var article models.AssessmentArticle
-		r := u.db.Table("assessment_article").Where("id = ?", id).Preload("profile").First(&article)
+		r := u.db.Table("assessment_article").Where("profile_id = ?", id).Preload("profile").First(&article)
 		if r.RowsAffected == 0 {
 			return body, fmt.Errorf("no data for assessment article")
 		}
