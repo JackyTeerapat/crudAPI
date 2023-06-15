@@ -144,35 +144,125 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
-	id := c.Param("id")
+type UpdateAssessmentRequest struct {
+	ProfileID      int    `json:"profile_id"`
+	AssessmentType string `json:"assessment_type"`
+	ProjectID      int    `json:"project_id,omitempty"`
+	ProgressID     int    `json:"progress_id,omitempty"`
+	ReportID       int    `json:"report_id,omitempty"`
+	ArticleID      int    `json:"article_id,omitempty"`
+}
 
-	if id == "all" {
-		// ลบข้อมูลทั้งหมดในตาราง assessment
-		if err := u.db.Exec("TRUNCATE TABLE assessment CASCADE").Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+type UpdateAssessmentResponse struct {
+	Data         map[string]bool `json:"data"`
+	Description  string          `json:"description"`
+	ErrorMessage interface{}     `json:"errorMessage"`
+	Status       int             `json:"status"`
+}
+
+func (u *AssessmentHandler) UpdateAssessmentStatusHandler(c *gin.Context) {
+	requestBody := UpdateAssessmentRequest{}
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		res := UpdateAssessmentResponse{
+			Description: "Invalid request body",
+			Status:      http.StatusBadRequest,
 		}
-
-		// ตั้งค่า auto increment primary key เป็น 1
-		if err := u.db.Exec("ALTER TABLE profile ALTER COLUMN id SET DEFAULT nextval('assessment_id_seq'::regclass)").Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		res := api.ResponseApi(http.StatusOK, "deleted", nil)
-		c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	// ลบข้อมูล assessment ตาม id ที่ระบุ
-	r := u.db.Delete(&models.Assessment{}, id)
-	if err := r.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var tableName string
+	var statusField string
+	var assessmentID int
+	switch requestBody.AssessmentType {
+	case "project":
+		tableName = "assessment_project"
+		statusField = "project_status"
+		assessmentID = requestBody.ProjectID
+	case "progress":
+		tableName = "assessment_progress"
+		statusField = "progress_status"
+		assessmentID = requestBody.ProgressID
+	case "report":
+		tableName = "assessment_report"
+		statusField = "report_status"
+		assessmentID = requestBody.ReportID
+	case "article":
+		tableName = "assessment_article"
+		statusField = "article_status"
+		assessmentID = requestBody.ArticleID
+	default:
+		res := UpdateAssessmentResponse{
+			Description: "Invalid assessment type",
+			Status:      http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("assessment with id %s has been deleted.", id)})
+	if assessmentID == 0 {
+		res := UpdateAssessmentResponse{
+			Description: "Invalid assessment ID",
+			Status:      http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	query := u.db.Table(tableName).
+		Where("profile_id = ? AND id = ?", requestBody.ProfileID, assessmentID).
+		Update(statusField, false)
+	if query.RowsAffected == 0 {
+		res := UpdateAssessmentResponse{
+			Description: "Assessment not found",
+			Status:      http.StatusNotFound,
+		}
+		c.JSON(http.StatusNotFound, res)
+		return
+	}
+	if query.Error != nil {
+		res := UpdateAssessmentResponse{
+			Description:  "Database error",
+			ErrorMessage: query.Error,
+			Status:       http.StatusInternalServerError,
+		}
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	responseData := make(map[string]bool)
+	responseData[statusField] = false
+
+	res := UpdateAssessmentResponse{
+		Data:        responseData,
+		Description: "SUCCESS",
+		Status:      http.StatusOK,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (u *AssessmentHandler) updateProjectStatus(profileID string, projectID int, status bool) error {
+	return u.db.Table("assessment_project").
+		Where("profile_id = ? AND id = ?", profileID, projectID).
+		Update("project_status", status).Error
+}
+
+func (u *AssessmentHandler) updateProgressStatus(profileID string, progressID int, status bool) error {
+	return u.db.Table("assessment_progress").
+		Where("profile_id = ? AND id = ?", profileID, progressID).
+		Update("progress_status", status).Error
+}
+
+func (u *AssessmentHandler) updateReportStatus(profileID string, reportID int, status bool) error {
+	return u.db.Table("assessment_report").
+		Where("profile_id = ? AND id = ?", profileID, reportID).
+		Update("report_status", status).Error
+}
+
+func (u *AssessmentHandler) updateArticleStatus(profileID string, articleID int, status bool) error {
+	return u.db.Table("assessment_article").
+		Where("profile_id = ? AND id = ?", profileID, articleID).
+		Update("article_status", status).Error
 }
 
 func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {

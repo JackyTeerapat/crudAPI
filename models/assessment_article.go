@@ -10,6 +10,7 @@ type AssessmentArticle struct {
 	Article_estimate  bool      `json:"article_estimate"`
 	Article_recommend bool      `json:"article_recommend"`
 	Article_type      string    `json:"article_type"`
+	Article_status    bool      `json:"article_status"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
 	File_storage      string    `json:"-"`
@@ -27,6 +28,7 @@ type AssessmentArticleGet struct {
 	Article_estimate  bool      `json:"article_estimate"`
 	Article_recommend bool      `json:"article_recommend"`
 	Article_type      string    `json:"article_type"`
+	Article_status    bool      `json:"article_status"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
 	File_storage      string    `json:"-"`
