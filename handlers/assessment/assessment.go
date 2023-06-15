@@ -145,55 +145,56 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 }
 
 func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
-	profileID := c.Param("profile_id")
-
 	// Parse the request body
-	var requestData struct {
+	var requestBody struct {
 		ProfileID      int    `json:"profile_id"`
 		AssessmentType string `json:"assessment_type"`
-		ProjectID      int    `json:"project_id"`
+		AssessmentID   int    `json:"assessment_id"`
 	}
-
-	if err := c.ShouldBindJSON(&requestData); err != nil {
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		res := api.ResponseApi(http.StatusBadRequest, nil, err)
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	// Update the status fields based on the assessment type
-	switch requestData.AssessmentType {
+	// Update the assessment status based on the assessment type
+	var tableName string
+	switch requestBody.AssessmentType {
 	case "project":
-		if err := u.updateProjectStatus(profileID, requestData.ProjectID, false); err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		}
+		tableName = "assessment_project"
 	case "progress":
-		if err := u.updateProgressStatus(profileID, requestData.ProjectID, false); err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		}
+		tableName = "assessment_progress"
 	case "report":
-		if err := u.updateReportStatus(profileID, requestData.ProjectID, false); err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		}
+		tableName = "assessment_report"
 	case "article":
-		if err := u.updateArticleStatus(profileID, requestData.ProjectID, false); err != nil {
-			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
-			c.JSON(http.StatusInternalServerError, res)
-			return
-		}
+		tableName = "assessment_article"
 	default:
-		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid assessment type"))
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid assessment type"})
 		return
 	}
 
-	//res := api.ResponseApi(http.StatusOK, nil, "Status updated successfully")
-	res := api.ResponseApi(http.StatusOK, "SUCCESS", nil)
+	result := u.db.Table(tableName).
+		Where("profile_id = ? AND id = ?", requestBody.ProfileID, requestBody.AssessmentID).
+		Updates(map[string]interface{}{"assessment_status": false})
+	if result.Error != nil {
+		res := api.ResponseApi(http.StatusInternalServerError, nil, result.Error)
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	// Prepare the response body
+	responseData := struct {
+		ProfileID      int    `json:"profile_id"`
+		AssessmentType string `json:"assessment_type"`
+		AssessmentID   int    `json:"assessment_id"`
+	}{
+		ProfileID:      requestBody.ProfileID,
+		AssessmentType: requestBody.AssessmentType,
+		AssessmentID:   requestBody.AssessmentID,
+	}
+
+	// Send the response
+	res := api.ResponseApi(http.StatusOK, responseData, nil)
 	c.JSON(http.StatusOK, res)
 }
 
