@@ -13,6 +13,7 @@ type AssessmentProject struct {
 	Project_estimate  bool      `json:"project_estimate"`
 	Project_recommend bool      `json:"project_recommend"`
 	Project_creator   string    `json:"project_creator"`
+	Project_status    string    `json:"project_status"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
 	File_storage      string    `json:"-"`
@@ -33,6 +34,7 @@ type AssessmentProjectGet struct {
 	Project_estimate  bool      `json:"project_estimate"`
 	Project_recommend bool      `json:"project_recommend"`
 	Project_creator   string    `json:"project_creator"`
+	Project_status    string    `json:"project_status"`
 	File_name         string    `json:"file_name"`
 	File_action       string    `json:"file_action"`
 	File_storage      string    `json:"-"`

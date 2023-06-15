@@ -172,34 +172,80 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 }
 
 func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
-	id := c.Param("id")
+	profileID := c.Param("profile_id")
 
-	if id == "all" {
-		// ลบข้อมูลทั้งหมดในตาราง assessment
-		if err := u.db.Exec("TRUNCATE TABLE assessment CASCADE").Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	// Parse the request body
+	var requestData struct {
+		ProfileID      int    `json:"profile_id"`
+		AssessmentType string `json:"assessment_type"`
+		ProjectID      int    `json:"project_id"`
+	}
 
-		// ตั้งค่า auto increment primary key เป็น 1
-		if err := u.db.Exec("ALTER TABLE profile ALTER COLUMN id SET DEFAULT nextval('assessment_id_seq'::regclass)").Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		res := api.ResponseApi(http.StatusOK, "deleted", nil)
-		c.JSON(http.StatusOK, res)
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		res := api.ResponseApi(http.StatusBadRequest, nil, err)
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	// ลบข้อมูล assessment ตาม id ที่ระบุ
-	r := u.db.Delete(&models.Assessment{}, id)
-	if err := r.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// Update the status fields based on the assessment type
+	switch requestData.AssessmentType {
+	case "project":
+		if err := u.updateProjectStatus(profileID, requestData.ProjectID, false); err != nil {
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
+			return
+		}
+	case "progress":
+		if err := u.updateProgressStatus(profileID, requestData.ProjectID, false); err != nil {
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
+			return
+		}
+	case "report":
+		if err := u.updateReportStatus(profileID, requestData.ProjectID, false); err != nil {
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
+			return
+		}
+	case "article":
+		if err := u.updateArticleStatus(profileID, requestData.ProjectID, false); err != nil {
+			res := api.ResponseApi(http.StatusInternalServerError, nil, err)
+			c.JSON(http.StatusInternalServerError, res)
+			return
+		}
+	default:
+		res := api.ResponseApi(http.StatusBadRequest, nil, fmt.Errorf("invalid assessment type"))
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("assessment with id %s has been deleted.", id)})
+	//res := api.ResponseApi(http.StatusOK, nil, "Status updated successfully")
+	res := api.ResponseApi(http.StatusOK, "SUCCESS", nil)
+	c.JSON(http.StatusOK, res)
+}
+
+func (u *AssessmentHandler) updateProjectStatus(profileID string, projectID int, status bool) error {
+	return u.db.Table("assessment_project").
+		Where("profile_id = ? AND id = ?", profileID, projectID).
+		Update("project_status", status).Error
+}
+
+func (u *AssessmentHandler) updateProgressStatus(profileID string, progressID int, status bool) error {
+	return u.db.Table("assessment_progress").
+		Where("profile_id = ? AND id = ?", profileID, progressID).
+		Update("progress_status", status).Error
+}
+
+func (u *AssessmentHandler) updateReportStatus(profileID string, reportID int, status bool) error {
+	return u.db.Table("assessment_report").
+		Where("profile_id = ? AND id = ?", profileID, reportID).
+		Update("report_status", status).Error
+}
+
+func (u *AssessmentHandler) updateArticleStatus(profileID string, articleID int, status bool) error {
+	return u.db.Table("assessment_article").
+		Where("profile_id = ? AND id = ?", profileID, articleID).
+		Update("article_status", status).Error
 }
 
 func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
