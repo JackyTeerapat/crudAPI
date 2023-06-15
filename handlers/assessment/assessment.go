@@ -144,21 +144,21 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
-	// Parse the request body
+func (u *AssessmentHandler) UpdateAssessmentStatusHandler(c *gin.Context) {
+
 	var requestBody struct {
 		ProfileID      int    `json:"profile_id"`
 		AssessmentType string `json:"assessment_type"`
 		AssessmentID   int    `json:"assessment_id"`
 	}
+
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		res := api.ResponseApi(http.StatusBadRequest, nil, err)
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Update the assessment status based on the assessment type
 	var tableName string
+
 	switch requestBody.AssessmentType {
 	case "project":
 		tableName = "assessment_project"
@@ -173,16 +173,23 @@ func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
 		return
 	}
 
+	query := fmt.Sprintf("profile_id = ? AND id = ?", requestBody.ProfileID, requestBody.AssessmentID)
+
 	result := u.db.Table(tableName).
-		Where("profile_id = ? AND id = ?", requestBody.ProfileID, requestBody.AssessmentID).
-		Updates(map[string]interface{}{"assessment_status": false})
+		Where(query).
+		Updates(map[string]interface{}{
+			"project_status":  false,
+			"progress_status": false,
+			"report_status":   false,
+			"article_status":  false,
+		})
+
 	if result.Error != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, result.Error)
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	// Prepare the response body
 	responseData := struct {
 		ProfileID      int    `json:"profile_id"`
 		AssessmentType string `json:"assessment_type"`
@@ -193,8 +200,7 @@ func (u *AssessmentHandler) DeleteAssessmentHandler(c *gin.Context) {
 		AssessmentID:   requestBody.AssessmentID,
 	}
 
-	// Send the response
-	res := api.ResponseApi(http.StatusOK, responseData, nil)
+	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 }
 
