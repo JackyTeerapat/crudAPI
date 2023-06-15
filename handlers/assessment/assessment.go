@@ -144,63 +144,100 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
+type UpdateAssessmentRequest struct {
+	ProfileID      int    `json:"profile_id"`
+	AssessmentType string `json:"assessment_type"`
+	ProjectID      int    `json:"project_id,omitempty"`
+	ProgressID     int    `json:"progress_id,omitempty"`
+	ReportID       int    `json:"report_id,omitempty"`
+	ArticleID      int    `json:"article_id,omitempty"`
+}
+
+type UpdateAssessmentResponse struct {
+	Data         map[string]bool `json:"data"`
+	Description  string          `json:"description"`
+	ErrorMessage interface{}     `json:"errorMessage"`
+	Status       int             `json:"status"`
+}
+
 func (u *AssessmentHandler) UpdateAssessmentStatusHandler(c *gin.Context) {
-
-	var requestBody struct {
-		ProfileID      int    `json:"profile_id"`
-		AssessmentType string `json:"assessment_type"`
-		AssessmentID   int    `json:"assessment_id"`
-	}
-
+	requestBody := UpdateAssessmentRequest{}
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		res := UpdateAssessmentResponse{
+			Description: "Invalid request body",
+			Status:      http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
 	var tableName string
-
+	var statusField string
+	var assessmentID int
 	switch requestBody.AssessmentType {
 	case "project":
 		tableName = "assessment_project"
+		statusField = "project_status"
+		assessmentID = requestBody.ProjectID
 	case "progress":
 		tableName = "assessment_progress"
+		statusField = "progress_status"
+		assessmentID = requestBody.ProgressID
 	case "report":
 		tableName = "assessment_report"
+		statusField = "report_status"
+		assessmentID = requestBody.ReportID
 	case "article":
 		tableName = "assessment_article"
+		statusField = "article_status"
+		assessmentID = requestBody.ArticleID
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid assessment type"})
+		res := UpdateAssessmentResponse{
+			Description: "Invalid assessment type",
+			Status:      http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	query := fmt.Sprintf("profile_id = ? AND id = ?", requestBody.ProfileID, requestBody.AssessmentID)
+	if assessmentID == 0 {
+		res := UpdateAssessmentResponse{
+			Description: "Invalid assessment ID",
+			Status:      http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
 
-	result := u.db.Table(tableName).
-		Where(query).
-		Updates(map[string]interface{}{
-			"project_status":  false,
-			"progress_status": false,
-			"report_status":   false,
-			"article_status":  false,
-		})
-
-	if result.Error != nil {
-		res := api.ResponseApi(http.StatusInternalServerError, nil, result.Error)
+	query := u.db.Table(tableName).
+		Where("profile_id = ? AND id = ?", requestBody.ProfileID, assessmentID).
+		Update(statusField, false)
+	if query.RowsAffected == 0 {
+		res := UpdateAssessmentResponse{
+			Description: "Assessment not found",
+			Status:      http.StatusNotFound,
+		}
+		c.JSON(http.StatusNotFound, res)
+		return
+	}
+	if query.Error != nil {
+		res := UpdateAssessmentResponse{
+			Description:  "Database error",
+			ErrorMessage: query.Error,
+			Status:       http.StatusInternalServerError,
+		}
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	responseData := struct {
-		ProfileID      int    `json:"profile_id"`
-		AssessmentType string `json:"assessment_type"`
-		AssessmentID   int    `json:"assessment_id"`
-	}{
-		ProfileID:      requestBody.ProfileID,
-		AssessmentType: requestBody.AssessmentType,
-		AssessmentID:   requestBody.AssessmentID,
-	}
+	responseData := make(map[string]bool)
+	responseData[statusField] = false
 
-	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
+	res := UpdateAssessmentResponse{
+		Data:        responseData,
+		Description: "SUCCESS",
+		Status:      http.StatusOK,
+	}
 	c.JSON(http.StatusOK, res)
 }
 

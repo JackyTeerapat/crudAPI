@@ -12,7 +12,7 @@ type AssessmentProgress struct {
 	Progress_estimate  bool      `json:"progress_estimate"`
 	Progress_recommend bool      `json:"progress_recommend"`
 	Progress_creator   string    `json:"progress_creator"`
-	Progress_status    string    `json:"progress_status"`
+	Progress_status    bool      `json:"progress_status"`
 	File_name          string    `json:"file_name"`
 	File_action        string    `json:"file_action"`
 	File_storage       string    `json:"-"`
@@ -33,7 +33,7 @@ type AssessmentProgressGet struct {
 	Progress_estimate  bool      `json:"progress_estimate"`
 	Progress_recommend bool      `json:"progress_recommend"`
 	Progress_creator   string    `json:"progress_creator"`
-	Progress_status    string    `json:"progress_status"`
+	Progress_status    bool      `json:"progress_status"`
 	File_name          string    `json:"file_name"`
 	File_action        string    `json:"file_action"`
 	File_storage       string    `json:"-"`
