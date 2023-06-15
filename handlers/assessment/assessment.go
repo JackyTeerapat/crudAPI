@@ -34,16 +34,7 @@ func (u *AssessmentHandler) ListAssessment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	res := api.ResponseApiWithDescription(http.StatusOK, assessment, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -121,16 +112,7 @@ func (u *AssessmentHandler) GetAssessmentHandler(c *gin.Context) {
 		Report:    report,
 		Article:   article,
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	res := api.ResponseApiWithDescription(http.StatusOK, responseData, "SUCCESS", nil)
 	c.JSON(http.StatusOK, res)
 	return
@@ -151,16 +133,7 @@ func (u *AssessmentHandler) CreateAssessmentHandler(c *gin.Context) {
 		return
 	}
 	body, err := u.create(assessment)
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	if err != nil {
 		res := api.ResponseApi(http.StatusInternalServerError, nil, err)
 		c.JSON(http.StatusInternalServerError, res)
@@ -276,16 +249,7 @@ func (u *AssessmentHandler) UpdateAssessmentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, res)
 		return
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	res := api.ResponseApi(http.StatusOK, result, nil)
 	c.JSON(http.StatusOK, res)
 }
@@ -348,16 +312,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	default:
 		return body, fmt.Errorf("err")
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	body = models.AssessmentResponse{
 		ProfileID:       assessmentRequest.ProfileID,
 		Assessment_type: assessmentRequest.Assessment_type,
@@ -382,10 +337,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &project)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&project).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
+		object = &project
 	case "progress":
 		jsonData, _ := json.Marshal(object)
 		var progress models.AssessmentProgress
@@ -393,10 +349,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &progress)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&progress).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
+		object = &progress
 	case "report":
 		jsonData, _ := json.Marshal(object)
 		var report models.AssessmentReport
@@ -404,10 +361,11 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &report)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&report).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
+		object = &report
 	case "article":
 		jsonData, _ := json.Marshal(object)
 		var article models.AssessmentArticle
@@ -415,28 +373,19 @@ func (u *AssessmentHandler) create(assessmentRequest models.AssessmentRequests) 
 			Profile_id: assessmentRequest.ProfileID,
 		}
 		json.Unmarshal(jsonData, &article)
-		if err := u.db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Create(&article).Error; err != nil {
 			tx.Rollback()
 			return body, err
 		}
+		object = &article
 	default:
 		return body, fmt.Errorf("")
 	}
+	tx.Commit()
 	body = models.AssessmentResponse{
 		ProfileID:       assessmentRequest.ProfileID,
 		Assessment_type: assessmentRequest.Assessment_type,
 		Assessment_data: object,
-	}
-
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
 	}
 
 	return body, err

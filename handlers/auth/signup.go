@@ -64,16 +64,7 @@ func (u *AuthHandler) SignUp(c *gin.Context) {
 		Role:     user.Role,
 	}
 
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := u.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	res := api.ResponseApi(http.StatusCreated, response, nil)
 	c.JSON(http.StatusCreated, res)
 }

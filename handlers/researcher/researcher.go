@@ -38,16 +38,6 @@ func (h *ResearcherHandler) ListResearcher(c *gin.Context) {
 	// Execute the query and scan the results into the researcher struct
 	result := h.db.Raw("SELECT id as profile_id, profile_status,prefix_name, first_name, last_name, university, address_home, address_work, email,phone_number FROM profile WHERE id = ?", id).Scan(&researcher)
 
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := h.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
 	if result.Error != nil {
 		// Handle the error if the query fails
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while fetching the researcher data from profile: %v", result.Error)})
@@ -267,12 +257,24 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	var positionID int
 	// var position models.Position
 
-	// First, try to get the position from the database.
 	if researcher.PositionName != "" {
-		result := h.db.Raw("SELECT ID FROM position WHERE position_name = ?", researcher.PositionName).Scan(&positionID)
-		if result.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"Database query error position": result.Error.Error()})
+		rows, err := h.db.Raw("SELECT ID FROM position WHERE position_name = ?", researcher.PositionName).Rows()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"Database query error position": err.Error()})
 			return
+		}
+		defer rows.Close()
+		if !rows.Next() {
+			c.JSON(http.StatusInternalServerError, "Database query error position")
+			return
+		} else {
+			// proceed with your logic that assumes a position was found
+
+			err := rows.Scan(&positionID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"Database row scan error": err.Error()})
+				return
+			}
 		}
 	} else {
 		positionID = 8
@@ -293,7 +295,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 	// 	// Assign the ID of the created position to positionID
 	// 	positionID = position.ID
 	// }
-
 	// Update the INSERT statement for the profile table
 	insertResult := h.db.Exec("INSERT INTO profile (prefix_name,first_name, last_name, university, address_home, address_work, email, phone_number, position_id, created_by, updated_by, profile_status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
 		researcher.PrefixName, researcher.FirstName, researcher.LastName, researcher.University, researcher.AddressHome, researcher.AddressWork, researcher.Email, researcher.PhoneNumber, positionID, createdBy, updatedBy, profileStatus)
@@ -326,16 +327,6 @@ func (h *ResearcherHandler) CreateResearcher(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An error occurred while inserting program data: %v", err.Error())})
 			return
 		}
-	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := h.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
 	}
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(profileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
@@ -462,16 +453,7 @@ func (h *ResearcherHandler) UpdateResearcher(c *gin.Context) {
 		fmt.Println("Error converting string to integer:", err)
 		return
 	}
-	query := `
-	SELECT pg_terminate_backend(pg_stat_activity.pid)
-	FROM pg_stat_activity
-	WHERE pg_stat_activity.usename = 'navjsbdt'
-	AND pg_stat_activity.state = 'idle';
-`
-	err2 := h.db.Exec(query)
-	if err2 != nil {
-		fmt.Printf("Failed to close idle connections: %v\n", err2)
-	}
+
 	res := api.ResponseApiWithDescription(http.StatusCreated, h.ListResearcherbyID(intProfileID), "CREATED SUCCESS", nil)
 	c.JSON(http.StatusCreated, res)
 
