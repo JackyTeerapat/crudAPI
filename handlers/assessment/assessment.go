@@ -304,15 +304,12 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 	case "project":
 		jsonData, _ := json.Marshal(assessmentData)
 		var project models.AssessmentProject
-		project = models.AssessmentProject{
-			Project_status: true,
-		}
 		r := u.db.Table("assessment_project").Where("profile_id = ?", id).Preload("profile").First(&project)
 		if r.RowsAffected == 0 {
 			return body, fmt.Errorf("no data for assessment project")
 		}
 		json.Unmarshal(jsonData, &project)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", project.Id).Updates(&project)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_project").Where("id = ?", project.Id).Select("*").Updates(&project)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -328,7 +325,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("no data for assessment progress")
 		}
 		json.Unmarshal(jsonData, &progress)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", progress.Id).Updates(&progress)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_progress").Where("id = ?", progress.Id).Select("*").Updates(&progress)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -344,7 +341,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("no data for assessment report")
 		}
 		json.Unmarshal(jsonData, &report)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", report.Id).Updates(&report)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_report").Where("id = ?", report.Id).Select("*").Updates(&report)
 		if err := r.Error; err != nil {
 			return body, err
 		}
@@ -360,7 +357,7 @@ func (u *AssessmentHandler) update(id int, assessmentRequest models.AssessmentRe
 			return body, fmt.Errorf("no data for assessment article")
 		}
 		json.Unmarshal(jsonData, &article)
-		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", article.Id).Updates(&article)
+		r = u.db.Session(&gorm.Session{FullSaveAssociations: true}).Table("assessment_article").Where("id = ?", article.Id).Select("*").Updates(&article)
 		if err := r.Error; err != nil {
 			return body, err
 		}
